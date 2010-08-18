@@ -9,11 +9,27 @@ To use the "saml2idp" app, you must download and install these libraries:
 - M2Crypto @ http://chandlerproject.org/bin/view/Projects/MeTooCrypto
 - PySAML @ http://github.com/tachang/PySAML
 
+UBUNTU Packages
+===============
+M2Crypto is also available as a system package for Ubuntu (at least on 9.10).
+The name is 'python-m2crypto'. You can use the "Synaptic Package Manager" or
+the "apt-get" command-line program to install it.
+
 FOR PRE-EXISTING PROJECTS
 =========================
 For existing projects, you will also need to:
 - Enable the Django auth system. (http://docs.djangoproject.com/en/dev/topics/auth/)
+- If you haven't set up login templates, you can just reuse the ones from this
+  project under "templates/registration".
 - Download and install the "saml2idp" app from this project site.
+- Add 'saml2idp' to the INSTALLED_APPS list in settings.py.
+- Add this line to your top-level urlpatterns (in urls.py usually):
+
+    urlpatterns = patterns('',
+    ...
+        (r'^idp/', include('saml2idp.urls')),
+    ...
+    )
 
 FOR THE INCLUDED SAMPLE PROJECT
 ===============================
