@@ -1,0 +1,46 @@
+ACKNOWLEDGEMENTS
+================
+First, special thanks for the idea and some starter code to:
+http://robinelvin.wordpress.com/2009/09/04/saml-with-django/
+
+PRE-REQUISITES
+==============
+To use the "saml2idp" app, you must download and install these libraries:
+- M2Crypto @ http://chandlerproject.org/bin/view/Projects/MeTooCrypto
+- PySAML @ http://github.com/tachang/PySAML
+
+FOR PRE-EXISTING PROJECTS
+=========================
+For existing projects, you will also need to:
+- Enable the Django auth system. (http://docs.djangoproject.com/en/dev/topics/auth/)
+- Download and install the "saml2idp" app from this project site.
+
+FOR THE INCLUDED SAMPLE PROJECT
+===============================
+This project comes with a working sample Django project called "idptest".
+You can download it and run it as-is, using standard Django commands:
+
+$ cd path/to/idptest
+$ python manage.py syncdb
+$ python manage.py runserver
+
+INTEGRATION WITH django-saml2-sp
+================================
+A reference Service Point has been implementated in the django-saml2-sp project
+at http://code.google.com/p/django-saml2-sp/. (Or will be soon.)
+
+You can run that sample project at the same time as the sample project here.
+You can even run them using Django's built-in test server, like this:
+
+In the first terminal window:
+$ cd path/to/idptest/
+$ python manage.py runserver 8000
+
+In the second terminal window:
+$ cd path/to/sptest/
+$ python manage.py runserver 9000
+
+You can browse to the Service Point @ http://127.0.0.1:9000/ to get the flow
+started. Make sure to watch the output in each window, to see the order of
+message flow.
+
