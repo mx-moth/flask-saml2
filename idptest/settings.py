@@ -97,5 +97,3 @@ INSTALLED_APPS = (
     # 'django.contrib.admin',
     'saml2idp',
 )
-
-SAML2IDP_SIGNING = True

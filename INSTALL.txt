@@ -44,7 +44,8 @@ OpenSSL Key and Certificate Files
 =================================
 OpenSSL signing requires creation of a key and a certificate file. The "keys"
 folder contains the "mk_keys.sh" Bash Script, which will walk you through the
-process.  (Sorry, I don't have any help for Windows users.)
+process.  (Sorry, I don't have any help for non-linux users, but I would be
+happy to include it, if someone contributes it.)
 
 You can turn on the "signing" feature by adding this entry to your settings.py:
 
