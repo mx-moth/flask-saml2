@@ -1,0 +1,13 @@
+{% extends "saml2idp/base.html" %}
+
+{% block content %}
+<div id="sso_continue_to_idp_instruction">
+You are now signed in at the Identity Provider.
+Click Continue to return to the Service Point.
+</div>
+<form method="post" action="{{ response_url }}">
+   <input type="hidden" name="SAMLResponse" value="{{ saml_response }}" />
+   <input type="hidden" name="RelayState" value="{{ token }}" />
+   <input type="submit" value="Continue" />
+ </form>
+ {% endblock content %}

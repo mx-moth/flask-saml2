@@ -97,3 +97,5 @@ INSTALLED_APPS = (
     # 'django.contrib.admin',
     'saml2idp',
 )
+
+LOGIN_REDIRECT_URL = '/idp/sso/post/response/'
