@@ -21,4 +21,4 @@ except:
 try:
     SP_RESPONSE_URL = settings.SP_RESPONSE_URL
 except:
-    SP_RESPONSE_URL = 'http://127.0.0.1:8000/sp/sso/post/response/'
+    SP_RESPONSE_URL = 'http://127.0.0.1:9000/sp/sso/post/response/'
