@@ -67,13 +67,16 @@ You can even run them using Django's built-in test server, like this:
 
 In the first terminal window:
 $ cd path/to/idptest/
+$ python manage.py syncdb
+    NOTE: Don't forget to create a user account, which you will use to login.
 $ python manage.py runserver 8000
 
 In the second terminal window:
 $ cd path/to/sptest/
+$ python manage.py syncdb
+    NOTE: Create a different user account, so it doesn't conflict with the other.
 $ python manage.py runserver 9000
 
 You can browse to the Service Point @ http://127.0.0.1:9000/ to get the flow
 started. Make sure to watch the output in each window, to see the order of
 message flow.
-
