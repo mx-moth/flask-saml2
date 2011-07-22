@@ -10,12 +10,12 @@ ADMINS = (
 MANAGERS = ADMINS
 
 import os
-LOCAL_ROOT = os.getcwd()
+PROJECT_ROOT = os.getcwd()
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': '%s/idptest.sqlite' % LOCAL_ROOT,                      # Or path to database file if using sqlite3.
+        'NAME': '%s/idptest.sqlite' % PROJECT_ROOT,                      # Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
@@ -84,7 +84,7 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    '%s/templates' % LOCAL_ROOT,
+    '%s/templates' % PROJECT_ROOT,
 )
 
 INSTALLED_APPS = (
@@ -94,8 +94,6 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
-    # Uncomment the next line to enable the admin:
-    # 'django.contrib.admin',
     'saml2idp',
 )
 
