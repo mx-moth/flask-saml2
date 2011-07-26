@@ -23,6 +23,10 @@ DATABASES = {
     }
 }
 
+# Backwards-compatibility for Django 1.1:
+DATABASE_ENGINE = 'sqlite3'
+DATABASE_NAME = DATABASES['default']['NAME']
+
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 # although not all choices may be available on all operating systems.
@@ -75,7 +79,6 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
 )
 
 ROOT_URLCONF = 'idptest.urls'
@@ -93,7 +96,6 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
-    'django.contrib.messages',
     'saml2idp',
 )
 
