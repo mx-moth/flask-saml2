@@ -8,6 +8,7 @@ from django.shortcuts import render_to_response
 from django.views.decorators.csrf import csrf_view_exempt, csrf_response_exempt
 import saml2idp_settings
 import codex
+from misc import get_acs_url
 
 
 @login_required
@@ -97,7 +98,16 @@ def sso_handle_incoming_post_request(request):
     A Service Point has just POSTed an auth request.
     """
     #TODO: Do we need to actually do anything with the POST['Request']?
-    token = request.POST.get('RelayState', None)
+    #TODO: Break this out into separate GET/POST views, or rename.
+    if request.method == 'GET':
+        token = request.GET.get('RelayState', None)
+        saml_request = request.GET.get('SAMLRequest', None)
+        xml = codex.decode_base64_and_inflate(saml_request)
+        #XXX: What do I do with the xml now?
+        acs_url = get_acs_url(xml)
+        request.session['ACS_URL'] = acs_url
+    else:
+        token = request.POST.get('RelayState', None)
     request.session['RelayState'] = token
     tv = {
         'token': token,
@@ -118,8 +128,9 @@ def sso_post_response(request):
     saml_response = codex.deflate_and_base64_encode(assertion)
 
     token = request.session.get('RelayState', None)
+    acs_url = request.session.get('ACS_URL', saml2idp_settings.SP_RESPONSE_URL)
     tv = {
-        'response_url': saml2idp_settings.SP_RESPONSE_URL,
+        'response_url': acs_url,
         'saml_response': saml_response,
         'token': token,
     }
