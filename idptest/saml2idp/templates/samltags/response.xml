@@ -1,13 +1,16 @@
-{% load samltags %}<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
+{% load samltags %}
+<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
                 xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
                 ID="{{ saml_response.id }}"
                 Version="2.0"
                 IssueInstant="{{ saml_response.issue_instant }}"
                 Destination="{{ saml_request.acs_url }}"
                 InResponseTo="{{ saml_request.id }}"
-                >{% if issuer %}
-    <saml:Issuer>{{ issuer }}</saml:Issuer>{% endif %}{% if response.signature %}{% signature_xml response.signature %}{% endif %}
+                >
+{% if issuer %}    <saml:Issuer>{{ issuer }}</saml:Issuer>{% endif %}
+{% if response.signature %}{% signature_xml response.signature %}{% endif %}
     <samlp:Status>
         <samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success" />
     </samlp:Status>
-{% assertion_xml saml_request assertion issuer %}</samlp:Response>
+{% assertion_xml saml_request assertion issuer %}
+</samlp:Response>
