@@ -8,7 +8,7 @@
                 InResponseTo="{{ saml_request.id }}"
                 >
 {% if issuer %}    <saml:Issuer>{{ issuer }}</saml:Issuer>{% endif %}
-{% if response.signature %}{% signature_xml response.signature %}{% endif %}
+{% if signature %}{% signature_xml signature %}{% endif %}
     <samlp:Status>
         <samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success" />
     </samlp:Status>

@@ -75,6 +75,7 @@ assertion_signature = {
 signed_assertion = dict(assertion.items()) # deepcopy
 signed_assertion['signature'] = assertion_signature
 
+
 def ws_strip(src):
     """
     Returns src stripped of leading and trailing whitespace and blank lines.
@@ -139,8 +140,6 @@ class TestAssertionXML(TestXML):
         self._test('assertion_with_issuer', saml_request, assertion, issuer)
 
     def test_assertion_with_signature(self):
-        signed_assertion = dict(assertion.items()) # deepcopy
-        signed_assertion['signature'] = assertion_signature
         self._test('assertion_with_signature',
                    saml_request, signed_assertion, issuer)
 
@@ -167,6 +166,10 @@ class TestResponseXML(TestXML):
 
     def test_response_simple(self):
         self._test("response_simple", saml_request, saml_response, assertion)
+
+    def test_response_with_signature(self):
+        self._test('response_with_signature', saml_request, saml_response,
+                   signed_assertion, issuer, signature)
 
 class TestSignatureXML(TestXML):
     """
