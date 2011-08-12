@@ -6,10 +6,11 @@ from django import template
 register = template.Library()
 
 @register.inclusion_tag('samltags/assertion.xml')
-def assertion_xml(saml_request, assertion,issuer=None):
+def assertion_xml(saml_request, assertion, issuer=None):
     return {
         'assertion': assertion,
         'issuer': issuer,
+        'saml_request': saml_request,
     }
 
 @register.inclusion_tag('samltags/response.xml')

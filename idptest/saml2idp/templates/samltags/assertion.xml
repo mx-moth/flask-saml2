@@ -1,16 +1,10 @@
-{% load samltags %}
-    <saml:Assertion xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+{% load samltags %}    <saml:Assertion xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                     xmlns:xs="http://www.w3.org/2001/XMLSchema"
                     ID="{{ assertion.id }}"
                     Version="2.0"
                     IssueInstant="{{ assertion.issue_instant }}"
-                    >
-{% if issuer %}
-        <saml:Issuer>{{ issuer }}</saml:Issuer>
-{% endif %}
-{% if assertion.signature %}
-    {% signature_xml assertion.signature %}
-{% endif %}
+                    >{% if issuer %}
+        <saml:Issuer>{{ issuer }}</saml:Issuer>{% endif %}{% if assertion.signature %}{% signature_xml assertion.signature %}{% endif %}
         <saml:Subject>
             <saml:NameID SPNameQualifier="{{ saml_request.audience }}"
                          Format="urn:oasis:names:tc:SAML:2.0:nameid-format:email"
@@ -22,7 +16,7 @@
                                               />
             </saml:SubjectConfirmation>
         </saml:Subject>
-        <saml:Conditions NotBefore="{{ assertion.issue_instant }}"
+        <saml:Conditions NotBefore="{{ assertion.not_before }}"
                          NotOnOrAfter="{{ assertion.not_on_or_after }}"
                          >
             <saml:AudienceRestriction>
@@ -30,7 +24,7 @@
             </saml:AudienceRestriction>
         </saml:Conditions>
         <saml:AuthnStatement AuthnInstant="{{ assertion.issue_instant }}"
-                             SessionNotOnOrAfter="{{ assertion.not_on_or_after }}"
+                             SessionNotOnOrAfter="{{ assertion.session.not_on_or_after }}"
                              SessionIndex="{{ assertion.session.index }}"
                              >
             <saml:AuthnContext>
