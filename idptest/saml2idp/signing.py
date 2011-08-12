@@ -4,6 +4,7 @@ Signing code goes here.
 import hashlib
 import M2Crypto
 import base64
+from django.template import Context, Template
 import saml2idp_settings
 
 class Signer(object):
@@ -34,7 +35,7 @@ class Signer(object):
         f.close()
         return certificate
 
-    def get_signature(self, unsigned_subject):
+    def get_signature(self, ref_uri, unsigned_subject):
         """
         Returns signature (digest, value, certificate) tuple, all base64-encoded.
         """
@@ -44,10 +45,51 @@ class Signer(object):
 
         private_key = self.get_private_key()
         m = M2Crypto.RSA.load_key_string(private_key)
-        signature = m.sign(hash.digest(),"sha1")
-        value = base64.b64encode(signature)
+        sha1_value = m.sign(hash.digest(),"sha1")
+        value = base64.b64encode(sha1_value)
 
         certificate = self.get_certificate()
         cert = base64.b64encode(certificate)
 
-        return (digest, value, cert)
+        signature = ( {
+            'reference_uri': ref_uri,
+            'digest': digest,
+            'value': value,
+            'certificate': cert,
+        } )
+        return signature
+
+    def get_assertion_signature(self, saml_request, assertion, issuer):
+        """
+        Returns a signature for the (unsigned) assertion.
+        """
+        t = Template(
+            '{% load samltags %}'
+            '{% assertion_xml saml_request assertion issuer %}'
+        )
+        c = Context({
+            'saml_request': saml_request,
+            'assertion': assertion,
+            'issuer': issuer,
+        })
+        unsigned = t.render(c)
+        signature = self.get_signature(assertion['id'], unsigned)
+        return signature
+
+    def get_response_signature(self, saml_request, saml_response, assertion, issuer):
+        """
+        Returns a signature for the entire (unsigned) response.
+        """
+        t = Template(
+            '{% load samltags %}'
+            '{% response_xml saml_request saml_response assertion issuer %}'
+        )
+        c = Context({
+            'saml_request': saml_request,
+            'saml_response': saml_response,
+            'assertion': assertion,
+            'issuer': issuer,
+        })
+        unsigned = t.render(c)
+        signature = self.get_signature(saml_response['id'], unsigned)
+        return signature

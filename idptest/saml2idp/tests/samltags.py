@@ -39,58 +39,11 @@ assertion = {
 
 issuer = 'http://127.0.0.1/simplesaml/saml2/idp/metadata.php'
 
-def get_assertion_signature():
-    """
-    Returns a signature for the (unsigned) assertion.
-    """
-    t = Template(
-        '{% load samltags %}'
-        '{% assertion_xml saml_request assertion issuer %}'
-    )
-    c = Context({
-        'saml_request': saml_request,
-        'assertion': assertion,
-        'issuer': issuer,
-    })
-    unsigned = t.render(c)
-    signer = signing.Signer(TEST_KEY, TEST_CERT)
-    digest, value, cert = signer.get_signature(unsigned)
-    signature = ( {
-        'reference_uri': assertion['id'],
-        'digest': digest,
-        'value': value,
-        'certificate': cert,
-    } )
-    return signature
-
-def get_signature():
-    """
-    Returns a signature for the entire (unsigned) response.
-    """
-    t = Template(
-        '{% load samltags %}'
-        '{% response_xml saml_request saml_response assertion issuer %}'
-    )
-    c = Context({
-        'saml_request': saml_request,
-        'saml_response': saml_response,
-        'assertion': assertion,
-        'issuer': issuer,
-    })
-    unsigned = t.render(c)
-    signer = signing.Signer(TEST_KEY, TEST_CERT)
-    digest, value, cert = signer.get_signature(unsigned)
-    signature = ( {
-        'reference_uri': saml_response['id'],
-        'digest': digest,
-        'value': value,
-        'certificate': cert,
-    } )
-    return signature
-
-signature = get_signature()
+# Sign stuff.
+signer = signing.Signer(TEST_KEY, TEST_CERT)
+signature = signer.get_response_signature(saml_request, saml_response, assertion, issuer)
 signed_assertion = dict(assertion.items()) # deepcopy
-signed_assertion['signature'] = get_assertion_signature()
+signed_assertion['signature'] = signer.get_assertion_signature(saml_request, assertion, issuer)
 
 def ws_strip(src):
     """
