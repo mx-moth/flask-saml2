@@ -33,12 +33,56 @@ assertion = {
 
 issuer = 'http://127.0.0.1/simplesaml/saml2/idp/metadata.php'
 
-signature = {
+CERTIFICATE = (
+    'MIICgTCCAeoCCQCbOlrWDdX7FTANBgkqhkiG9w0BAQUFADCBhDELMAkGA1UE'
+    'BhMCTk8xGDAWBgNVBAgTD0FuZHJlYXMgU29sYmVyZzEMMAoGA1UEBxMDRm9v'
+    'MRAwDgYDVQQKEwdVTklORVRUMRgwFgYDVQQDEw9mZWlkZS5lcmxhbmcubm8x'
+    'ITAfBgkqhkiG9w0BCQEWEmFuZHJlYXNAdW5pbmV0dC5ubzAeFw0wNzA2MTUx'
+    'MjAxMzVaFw0wNzA4MTQxMjAxMzVaMIGEMQswCQYDVQQGEwJOTzEYMBYGA1UE'
+    'CBMPQW5kcmVhcyBTb2xiZXJnMQwwCgYDVQQHEwNGb28xEDAOBgNVBAoTB1VO'
+    'SU5FVFQxGDAWBgNVBAMTD2ZlaWRlLmVybGFuZy5ubzEhMB8GCSqGSIb3DQEJ'
+    'ARYSYW5kcmVhc0B1bmluZXR0Lm5vMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCB'
+    'iQKBgQDivbhR7P516x/S3BqKxupQe0LONoliupiBOesCO3SHbDrl3+q9Ibfn'
+    'fmE04rNuMcPsIxB161TdDpIesLCn7c8aPHISKOtPlAeTZSnb8QAu7aRjZq3+'
+    'PbrP5uW3TcfCGPtKTytHOge/OlJbo078dVhXQ14d1EDwXJW1rRXuUt4C8QID'
+    'AQABMA0GCSqGSIb3DQEBBQUAA4GBACDVfp86HObqY+e8BUoWQ9+VMQx1ASDo'
+    'hBjwOsg2WykUqRXF+dLfcUH9dWR63CtZIKFDbStNomPnQz7nbK+onygwBspV'
+    'EbnHuUihZq3ZUdmumQqCw4Uvs/1Uvq3orOo/WJVhTyvLgFVK2QarQ4/67OZf'
+    'Hd7R+POBXhophSMv1ZOo'
+)
+signature = { # For the entire response.
     'reference_uri': '#_2972e82c07bb5453956cc11fb19cad97ed26ff8bb4',
     'digest': 'hI+IRHRPC77suriMAt4gVVCcQgc=',
-    'value': 'JJObb8Wc37VgBpD1bxMm6pStovjiK7wbL9U/vI1f3aIjIZrtZ2XfwzZiXoDROS0Aov33lNhM9yypZepQJpRrABZoxhcpg03C0GBhyREBC2HtWvmMaA6GP5oiojPJ1VCF3ArECht1RSMISLak/YxqiP6vgnQfZkuiKcaA8vEpAsI=',
-    'certificate': 'MIICgTCCAeoCCQCbOlrWDdX7FTANBgkqhkiG9w0BAQUFADCBhDELMAkGA1UEBhMCTk8xGDAWBgNVBAgTD0FuZHJlYXMgU29sYmVyZzEMMAoGA1UEBxMDRm9vMRAwDgYDVQQKEwdVTklORVRUMRgwFgYDVQQDEw9mZWlkZS5lcmxhbmcubm8xITAfBgkqhkiG9w0BCQEWEmFuZHJlYXNAdW5pbmV0dC5ubzAeFw0wNzA2MTUxMjAxMzVaFw0wNzA4MTQxMjAxMzVaMIGEMQswCQYDVQQGEwJOTzEYMBYGA1UECBMPQW5kcmVhcyBTb2xiZXJnMQwwCgYDVQQHEwNGb28xEDAOBgNVBAoTB1VOSU5FVFQxGDAWBgNVBAMTD2ZlaWRlLmVybGFuZy5ubzEhMB8GCSqGSIb3DQEJARYSYW5kcmVhc0B1bmluZXR0Lm5vMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDivbhR7P516x/S3BqKxupQe0LONoliupiBOesCO3SHbDrl3+q9IbfnfmE04rNuMcPsIxB161TdDpIesLCn7c8aPHISKOtPlAeTZSnb8QAu7aRjZq3+PbrP5uW3TcfCGPtKTytHOge/OlJbo078dVhXQ14d1EDwXJW1rRXuUt4C8QIDAQABMA0GCSqGSIb3DQEBBQUAA4GBACDVfp86HObqY+e8BUoWQ9+VMQx1ASDohBjwOsg2WykUqRXF+dLfcUH9dWR63CtZIKFDbStNomPnQz7nbK+onygwBspVEbnHuUihZq3ZUdmumQqCw4Uvs/1Uvq3orOo/WJVhTyvLgFVK2QarQ4/67OZfHd7R+POBXhophSMv1ZOo',
+    'value': (
+        'JJObb8Wc37VgBpD1bxMm6pStovjiK7wbL9U/vI1f3aIjIZrtZ2XfwzZiXoDR'
+        'OS0Aov33lNhM9yypZepQJpRrABZoxhcpg03C0GBhyREBC2HtWvmMaA6GP5oi'
+        'ojPJ1VCF3ArECht1RSMISLak/YxqiP6vgnQfZkuiKcaA8vEpAsI='
+    ),
+    'certificate': CERTIFICATE,
 }
+
+assertion_signature = {
+    'reference_uri': '#_7ccdda8bc6b328570c03b218d7521772998da45374',
+    'digest': '+MLL+uOK47d8SFFIBVrvSUl8Q9c=',
+    'value': (
+        'hd75jI5uTh29dZvQ3cT31+Fypw5xTyMCrsAoDWI++e7ybwIjq3AGC6k+jM+C'
+        '0aZacjmKAAbDBkSb9QXvNX0cHf8A6qSmab1hIZ33Yd/XCO1y9uoHPB1bLayg'
+        '1dCGjwPxAOuFZzx6O7kdo5UzUa3YNFCCNZboAcFnwhZfCHDax9Y='
+    ),
+    'certificate': CERTIFICATE,
+}
+
+signed_assertion = dict(assertion.items()) # deepcopy
+signed_assertion['signature'] = assertion_signature
+
+def ws_strip(src):
+    """
+    Returns src stripped of leading and trailing whitespace and blank lines.
+    """
+    stripped = '\n'.join( [
+        line.strip() for line in src.split('\n') if line.strip() != ''
+    ] )
+    return stripped
 
 class TestXML(TestCase):
     """
@@ -68,7 +112,7 @@ class TestXML(TestCase):
 
         # Assert.
         msg = "Did not get expected XML. See %s." % gotfilename
-        self.assertEqual(got, exp, msg)
+        self.assertEqual(ws_strip(got), ws_strip(exp), msg)
 
 
 class TestAssertionXML(TestXML):
@@ -94,11 +138,18 @@ class TestAssertionXML(TestXML):
     def test_assertion_with_issuer(self):
         self._test('assertion_with_issuer', saml_request, assertion, issuer)
 
+    def test_assertion_with_signature(self):
+        signed_assertion = dict(assertion.items()) # deepcopy
+        signed_assertion['signature'] = assertion_signature
+        self._test('assertion_with_signature',
+                   saml_request, signed_assertion, issuer)
+
 class TestResponseXML(TestXML):
     """
     Tests for the entire Response.
     """
-    def _test(self, expfile, saml_request, saml_response, assertion, issuer=None, signature=None):
+    def _test(self, expfile, saml_request, saml_response, assertion,
+                    issuer=None, signature=None):
         # Arrange.
         t = Template(
             '{% load samltags %}'
