@@ -2,7 +2,7 @@
     <ds:SignedInfo>
         <ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" />
         <ds:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1" />
-        <ds:Reference URI="{{ signature.reference_uri }}">
+        <ds:Reference URI="#{{ signature.reference_uri }}">
             <ds:Transforms>
                 <ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" />
                 <ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" />

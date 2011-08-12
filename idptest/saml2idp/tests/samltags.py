@@ -1,9 +1,15 @@
 """
 Tests of samltags template tags library.
 """
+from django.conf import settings
 from django.test import TestCase
 from django.template import Context, Template
 from saml2idp.templatetags.samltags import assertion_xml
+from saml2idp import signing
+
+# Always use our sample keys for testing.
+TEST_KEY = settings.PROJECT_ROOT + '/keys/sample/sample-private-key.pem'
+TEST_CERT = settings.PROJECT_ROOT + '/keys/sample/sample-certificate.pem'
 
 EXPECTED_XML_FILENAME = 'saml2idp/tests/expected/%s.xml'
 
@@ -33,48 +39,58 @@ assertion = {
 
 issuer = 'http://127.0.0.1/simplesaml/saml2/idp/metadata.php'
 
-CERTIFICATE = (
-    'MIICgTCCAeoCCQCbOlrWDdX7FTANBgkqhkiG9w0BAQUFADCBhDELMAkGA1UE'
-    'BhMCTk8xGDAWBgNVBAgTD0FuZHJlYXMgU29sYmVyZzEMMAoGA1UEBxMDRm9v'
-    'MRAwDgYDVQQKEwdVTklORVRUMRgwFgYDVQQDEw9mZWlkZS5lcmxhbmcubm8x'
-    'ITAfBgkqhkiG9w0BCQEWEmFuZHJlYXNAdW5pbmV0dC5ubzAeFw0wNzA2MTUx'
-    'MjAxMzVaFw0wNzA4MTQxMjAxMzVaMIGEMQswCQYDVQQGEwJOTzEYMBYGA1UE'
-    'CBMPQW5kcmVhcyBTb2xiZXJnMQwwCgYDVQQHEwNGb28xEDAOBgNVBAoTB1VO'
-    'SU5FVFQxGDAWBgNVBAMTD2ZlaWRlLmVybGFuZy5ubzEhMB8GCSqGSIb3DQEJ'
-    'ARYSYW5kcmVhc0B1bmluZXR0Lm5vMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCB'
-    'iQKBgQDivbhR7P516x/S3BqKxupQe0LONoliupiBOesCO3SHbDrl3+q9Ibfn'
-    'fmE04rNuMcPsIxB161TdDpIesLCn7c8aPHISKOtPlAeTZSnb8QAu7aRjZq3+'
-    'PbrP5uW3TcfCGPtKTytHOge/OlJbo078dVhXQ14d1EDwXJW1rRXuUt4C8QID'
-    'AQABMA0GCSqGSIb3DQEBBQUAA4GBACDVfp86HObqY+e8BUoWQ9+VMQx1ASDo'
-    'hBjwOsg2WykUqRXF+dLfcUH9dWR63CtZIKFDbStNomPnQz7nbK+onygwBspV'
-    'EbnHuUihZq3ZUdmumQqCw4Uvs/1Uvq3orOo/WJVhTyvLgFVK2QarQ4/67OZf'
-    'Hd7R+POBXhophSMv1ZOo'
-)
-signature = { # For the entire response.
-    'reference_uri': '#_2972e82c07bb5453956cc11fb19cad97ed26ff8bb4',
-    'digest': 'hI+IRHRPC77suriMAt4gVVCcQgc=',
-    'value': (
-        'JJObb8Wc37VgBpD1bxMm6pStovjiK7wbL9U/vI1f3aIjIZrtZ2XfwzZiXoDR'
-        'OS0Aov33lNhM9yypZepQJpRrABZoxhcpg03C0GBhyREBC2HtWvmMaA6GP5oi'
-        'ojPJ1VCF3ArECht1RSMISLak/YxqiP6vgnQfZkuiKcaA8vEpAsI='
-    ),
-    'certificate': CERTIFICATE,
-}
+def get_assertion_signature():
+    """
+    Returns a signature for the (unsigned) assertion.
+    """
+    t = Template(
+        '{% load samltags %}'
+        '{% assertion_xml saml_request assertion issuer %}'
+    )
+    c = Context({
+        'saml_request': saml_request,
+        'assertion': assertion,
+        'issuer': issuer,
+    })
+    unsigned = t.render(c)
+    signer = signing.Signer(TEST_KEY, TEST_CERT)
+    digest, value, cert = signer.get_signature(unsigned)
+    signature = ( {
+        'reference_uri': assertion['id'],
+        'digest': digest,
+        'value': value,
+        'certificate': cert,
+    } )
+    return signature
 
-assertion_signature = {
-    'reference_uri': '#_7ccdda8bc6b328570c03b218d7521772998da45374',
-    'digest': '+MLL+uOK47d8SFFIBVrvSUl8Q9c=',
-    'value': (
-        'hd75jI5uTh29dZvQ3cT31+Fypw5xTyMCrsAoDWI++e7ybwIjq3AGC6k+jM+C'
-        '0aZacjmKAAbDBkSb9QXvNX0cHf8A6qSmab1hIZ33Yd/XCO1y9uoHPB1bLayg'
-        '1dCGjwPxAOuFZzx6O7kdo5UzUa3YNFCCNZboAcFnwhZfCHDax9Y='
-    ),
-    'certificate': CERTIFICATE,
-}
+def get_signature():
+    """
+    Returns a signature for the entire (unsigned) response.
+    """
+    t = Template(
+        '{% load samltags %}'
+        '{% response_xml saml_request saml_response assertion issuer %}'
+    )
+    c = Context({
+        'saml_request': saml_request,
+        'saml_response': saml_response,
+        'assertion': assertion,
+        'issuer': issuer,
+    })
+    unsigned = t.render(c)
+    signer = signing.Signer(TEST_KEY, TEST_CERT)
+    digest, value, cert = signer.get_signature(unsigned)
+    signature = ( {
+        'reference_uri': saml_response['id'],
+        'digest': digest,
+        'value': value,
+        'certificate': cert,
+    } )
+    return signature
 
+signature = get_signature()
 signed_assertion = dict(assertion.items()) # deepcopy
-signed_assertion['signature'] = assertion_signature
-
+signed_assertion['signature'] = get_assertion_signature()
 
 def ws_strip(src):
     """
@@ -143,6 +159,7 @@ class TestAssertionXML(TestXML):
         self._test('assertion_with_signature',
                    saml_request, signed_assertion, issuer)
 
+
 class TestResponseXML(TestXML):
     """
     Tests for the entire Response.
@@ -170,6 +187,7 @@ class TestResponseXML(TestXML):
     def test_response_with_signature(self):
         self._test('response_with_signature', saml_request, saml_response,
                    signed_assertion, issuer, signature)
+
 
 class TestSignatureXML(TestXML):
     """
