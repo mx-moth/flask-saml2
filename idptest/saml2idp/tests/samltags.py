@@ -14,6 +14,11 @@ saml_request = {
     'audience': 'google.com',
 }
 
+saml_response = {
+    'id': '_2972e82c07bb5453956cc11fb19cad97ed26ff8bb4',
+    'issue_instant': '2011-08-11T23:38:34Z',
+}
+
 assertion = {
     'id': '_7ccdda8bc6b328570c03b218d7521772998da45374',
     'issue_instant': '2011-08-11T23:38:34Z',
@@ -88,6 +93,29 @@ class TestAssertionXML(TestXML):
 
     def test_assertion_with_issuer(self):
         self._test('assertion_with_issuer', saml_request, assertion, issuer)
+
+class TestResponseXML(TestXML):
+    """
+    Tests for the entire Response.
+    """
+    def _test(self, expfile, saml_request, saml_response, assertion, issuer=None, signature=None):
+        # Arrange.
+        t = Template(
+            '{% load samltags %}'
+            '{% response_xml saml_request saml_response assertion issuer signature %}'
+        )
+        c = Context({
+            'saml_request': saml_request,
+            'saml_response': saml_response,
+            'assertion': assertion,
+            'issuer': issuer,
+            'signature': signature,
+
+        })
+        self._test_base(expfile, t, c)
+
+    def test_response_simple(self):
+        self._test("response_simple", saml_request, saml_response, assertion)
 
 class TestSignatureXML(TestXML):
     """

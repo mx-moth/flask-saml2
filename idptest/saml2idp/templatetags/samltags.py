@@ -16,6 +16,7 @@ def assertion_xml(saml_request, assertion, issuer=None):
 @register.inclusion_tag('samltags/response.xml')
 def response_xml(saml_request, saml_response, assertion, issuer=None, signature=None):
     return {
+        'saml_request': saml_request,
         'saml_response': saml_response,
         'issuer': issuer,
         'signature': signature,
