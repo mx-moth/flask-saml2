@@ -25,6 +25,7 @@ assertion = {
     },
     'subject': { 'email': 'student@abrickaday.com' },
 }
+issuer = 'http://127.0.0.1/simplesaml/saml2/idp/metadata.php'
 
 class TestAssertionXML(TestCase):
     """
@@ -38,7 +39,7 @@ class TestAssertionXML(TestCase):
         # Arrange.
         t = Template(
             '{% load samltags %}'
-            '{% assertion_xml saml_request assertion %}'
+            '{% assertion_xml saml_request assertion issuer %}'
         )
         c = Context({
             'saml_request': saml_request,
@@ -67,3 +68,6 @@ class TestAssertionXML(TestCase):
 
     def test_assertion_without_issuer(self):
         self._test('assertion_without_issuer', saml_request, assertion)
+
+    def test_assertion_with_issuer(self):
+        self._test('assertion_with_issuer', saml_request, assertion, issuer)
