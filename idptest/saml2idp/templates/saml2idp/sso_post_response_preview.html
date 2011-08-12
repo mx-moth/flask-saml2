@@ -1,0 +1,16 @@
+{% extends "saml2idp/base.html" %}
+
+{% block content %}
+<div id="sso_continue_to_idp_instruction">
+This is the assertion that will be used, as well as its encoded value.
+</div>
+<form method="post" action="">
+{% comment %}
+   <textarea name="Assertion" rows="10" cols="80">{{ assertion }}</textarea><br/>
+   <textarea name="SAMLResponse" rows="10" cols="80">{{ saml_response }}</textarea><br/>
+   <input type="checkbox">Use this assertion</input>
+{% endcomment %}
+   {{ form.as_p }}
+   <input type="submit" value="OK" />
+ </form>
+ {% endblock content %}

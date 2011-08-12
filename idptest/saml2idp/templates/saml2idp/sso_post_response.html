@@ -6,7 +6,8 @@ You are now signed in at the Identity Provider.
 Click Continue to return to the Service Point.
 </div>
 <form method="post" action="{{ response_url }}">
-   <input type="hidden" name="SAMLResponse" value="{{ saml_response }}" />
+   <xmp>{{ assertion }}</xmp><br/>
+   <textarea name="SAMLResponse" rows="10" cols="80">{{ saml_response }}</textarea><br/>
    <input type="hidden" name="RelayState" value="{{ token }}" />
    <input type="submit" value="Continue" />
  </form>
