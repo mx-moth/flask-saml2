@@ -28,3 +28,18 @@ def signature_xml(signature):
     return {
         'signature': signature,
     }
+
+@register.tag
+def indent(parser, token):
+    spaces = int(token.split_contents()[1])
+    nodelist = parser.parse(('endindent',))
+    parser.delete_first_token()
+    return Indent(nodelist, spaces)
+
+class Indent(template.Node):
+    def __init__(self, nodelist, spaces):
+        self.nodelist = nodelist
+        self.spaces = ' ' * spaces
+    def render(self, context):
+        output = self.nodelist.render(context)
+        return '\n'.join([ self.spaces + line for line in output.split('\n') ])

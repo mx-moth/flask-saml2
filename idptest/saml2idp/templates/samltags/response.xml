@@ -8,9 +8,9 @@
                 InResponseTo="{{ saml_request.id }}"
                 >
 {% if issuer %}    <saml:Issuer>{{ issuer }}</saml:Issuer>{% endif %}
-{% if signature %}{% signature_xml signature %}{% endif %}
+{% if signature %}{% indent 4 %}{% signature_xml signature %}{% endindent %}{% endif %}
     <samlp:Status>
-        <samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success" />
+        <samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"></samlp:StatusCode>
     </samlp:Status>
-{% assertion_xml saml_request assertion issuer %}
+{% indent 4 %}{% assertion_xml saml_request assertion issuer %}{% endindent %}
 </samlp:Response>

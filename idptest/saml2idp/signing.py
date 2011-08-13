@@ -6,6 +6,7 @@ import M2Crypto
 import base64
 from django.template import Context, Template
 import saml2idp_settings
+from misc import canonicalize, ws_strip
 
 class Signer(object):
     """
@@ -39,8 +40,10 @@ class Signer(object):
         """
         Returns signature (digest, value, certificate) tuple, all base64-encoded.
         """
+        c14n_subject = canonicalize(ws_strip(unsigned_subject))
+
         hash = hashlib.sha1()
-        hash.update(unsigned_subject)
+        hash.update(c14n_subject)
         digest = base64.b64encode(hash.digest())
 
         private_key = self.get_private_key()
@@ -49,7 +52,7 @@ class Signer(object):
         value = base64.b64encode(sha1_value)
 
         certificate = self.get_certificate()
-        cert = base64.b64encode(certificate)
+        cert = ''.join( certificate.split('\n')[1:-2] )
 
         signature = ( {
             'reference_uri': ref_uri,
