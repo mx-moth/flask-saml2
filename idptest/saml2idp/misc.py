@@ -40,12 +40,25 @@ def ws_strip(src):
     return stripped
 
 from BeautifulSoup import BeautifulStoneSoup
-def get_acs_url(assertion_xml):
+def get_acs_url(request_xml):
     """
     Returns the value of the AssertionConsumerServiceURL attribute.
     NOTE: This should be part of the underlying SAML library, probably.
     """
     #XXX: This is a horrible hack. It could be more elegant.
-    soup = BeautifulStoneSoup(assertion_xml)
+    soup = BeautifulStoneSoup(request_xml)
     url = soup.findAll()[0]['assertionconsumerserviceurl']
     return url
+
+def parse_saml_request(request_xml):
+    """
+    Returns various attributes from request_xml.
+    NOTE: This should be part of the underlying SAML library, probably.
+    """
+    #XXX: This is a horrible hack. It could be more elegant.
+    soup = BeautifulStoneSoup(request_xml)
+    request = soup.findAll()[0]
+    tmp = {}
+    tmp['ACS_URL'] = request['assertionconsumerserviceurl']
+    tmp['request_id'] = request['id']
+    return tmp

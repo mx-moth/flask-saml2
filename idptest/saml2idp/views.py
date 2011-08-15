@@ -10,9 +10,10 @@ from django.views.decorators.csrf import csrf_view_exempt, csrf_response_exempt
 import saml2idp_settings
 import base64
 import codex
-from misc import get_acs_url
+from misc import get_acs_url, parse_saml_request
 import signing
 from django.template import Context, Template
+import xml
 
 
 @login_required
@@ -57,15 +58,66 @@ from django.template import Context, Template
 #    response = SAML.Response(assertion, privatekey, certificate)
 #    return HttpResponse(response,  mimetype='text/xml')
 
+#def _get_saml_response_xml(request):
+#    """
+#    Return a SAML assertion for the user.
+#    If appropriate, add signing to it.
+#    """
+#    saml_request = {
+#        'id': request.session['request_id'],
+#        'acs_url': request.session['ACS_URL'],
+#        'audience': request.session['ACS_URL'], #HACK
+#    }
+#    saml_response = {
+#        'id': '_2972e82c07bb5453956cc11fb19cad97ed26ff8bb4',
+#        'issue_instant': '2011-08-11T23:38:34Z',
+#    }
+#    assertion = {
+#        'id': '_7ccdda8bc6b328570c03b218d7521772998da45374',
+#        'issue_instant': '2011-08-11T23:38:34Z',
+#        'not_before': '2011-08-11T23:38:04Z',
+#        'not_on_or_after': '2011-08-11T23:43:34Z',
+#        'session': {
+#            'index': '_ee277dff4e2db138d25dfcea7ccdf1d1db9ddea3f5',
+#            'not_on_or_after': '2011-08-12T07:38:34Z',
+#        },
+#        'subject': { 'email': 'randomuser@example.com' },
+#    }
+#    issuer = 'http://127.0.0.1:8000/' #TODO: Make this a setting?
+#
+#    if saml2idp_settings.SAML2IDP_SIGNING:
+#        # Sign the assertion.
+#        signer = signing.Signer()
+#        assertion['signature'] = signer.get_assertion_signature(saml_request, assertion, issuer)
+#
+#        # Now, sign the response.
+#        response_signature = signer.get_response_signature(saml_request, saml_response, assertion, issuer)
+#
+#    # Finally, generate XML.
+#    t = Template(
+#        '{% load samltags %}'
+#        '{% response_xml saml_request saml_response assertion issuer signature %}'
+#    )
+#    c = Context({
+#        'saml_request': saml_request,
+#        'saml_response': saml_response,
+#        'assertion': assertion,
+#        'issuer': issuer,
+#        'signature': response_signature,
+#
+#    })
+#    response_xml = t.render(c)
+#    return response_xml
+
 def _get_saml_response_xml(request):
     """
     Return a SAML assertion for the user.
     If appropriate, add signing to it.
     """
     saml_request = {
-        'id': 'mpjibjdppiodcpciaefmdahiipjpcghdcfjodkbi',
+        'id': request.session['request_id'],
         'acs_url': request.session['ACS_URL'],
-        'audience': 'example.net',
+        'audience': request.session['ACS_URL'], #HACK
     }
     saml_response = {
         'id': '_2972e82c07bb5453956cc11fb19cad97ed26ff8bb4',
@@ -82,31 +134,12 @@ def _get_saml_response_xml(request):
         },
         'subject': { 'email': 'randomuser@example.com' },
     }
-    issuer = "Test Issuer" # try this first; YAGNI?
+    issuer = 'http://127.0.0.1:8000/' #TODO: Make this a setting?
 
-    if saml2idp_settings.SAML2IDP_SIGNING:
-        # Sign the assertion.
-        signer = signing.Signer()
-        assertion['signature'] = signer.get_assertion_signature(saml_request, assertion, issuer)
-
-        # Now, sign the response.
-        response_signature = signer.get_response_signature(saml_request, saml_response, assertion, issuer)
-
-    # Finally, generate XML.
-    t = Template(
-        '{% load samltags %}'
-        '{% response_xml saml_request saml_response assertion issuer signature %}'
-    )
-    c = Context({
-        'saml_request': saml_request,
-        'saml_response': saml_response,
-        'assertion': assertion,
-        'issuer': issuer,
-        'signature': response_signature,
-
-    })
-    response_xml = t.render(c)
+    assertion_xml = xml.get_assertion_xml(saml_request, assertion, issuer, signed=saml2idp_settings.SAML2IDP_SIGNING)
+    response_xml = xml.get_response_xml(saml_request, saml_response, assertion, issuer, signed=saml2idp_settings.SAML2IDP_SIGNING)
     return response_xml
+
 
 #def _get_saml_assertion_pysaml(user):
 #    """
@@ -158,9 +191,10 @@ def sso_handle_incoming_post_request(request):
         token = request.GET.get('RelayState', None)
         saml_request = request.GET.get('SAMLRequest', None)
         xml = codex.decode_base64_and_inflate(saml_request)
-        #XXX: What do I do with the xml now?
-        acs_url = get_acs_url(xml)
-        request.session['ACS_URL'] = acs_url
+        ##XXX: What do I do with the xml now?
+        #acs_url = get_acs_url(xml)
+
+        request.session.update(parse_saml_request(xml))
     else:
         token = request.POST.get('RelayState', None)
     request.session['RelayState'] = token
@@ -173,7 +207,7 @@ def sso_handle_incoming_post_request(request):
 class PreviewForm(forms.Form):
     bigtext = { 'rows': 8, 'cols': 80 }
     assertion = forms.CharField(max_length=10000, widget=forms.Textarea(attrs=bigtext))
-    response = forms.CharField(max_length=10000, widget=forms.Textarea(attrs=bigtext))
+    encoded = forms.CharField(max_length=10000, widget=forms.Textarea(attrs=bigtext))
     is_ok = forms.BooleanField(required=False)
 
 @login_required
@@ -189,15 +223,15 @@ def sso_post_response_preview(request):
             assertion = form.cleaned_data['assertion']
             if form.cleaned_data['is_ok']:
                 request.session['Assertion'] = assertion
-                request.session['SAMLResponse'] = form.cleaned_data['response']
+                request.session['SAMLResponse'] = form.cleaned_data['encoded']
                 return redirect('/idp/sso/post/response/')
     else:
         assertion = _get_saml_response_xml(request)
 
-    response = base64.b64encode(assertion)
+    encoded = base64.b64encode(assertion)
     init = {
         'assertion': assertion,
-        'response': response,
+        'encoded': encoded,
     }
     form = PreviewForm(initial=init)
 

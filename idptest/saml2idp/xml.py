@@ -60,6 +60,8 @@ def get_response_xml(saml_request, saml_response, assertion, issuer, signed=Fals
         'signature_xml': None,
     })
     unsigned = _get_xml(t, c)
+    logging.debug('Unsigned:')
+    logging.debug(unsigned)
     if not signed:
         return unsigned
 
@@ -67,6 +69,9 @@ def get_response_xml(saml_request, saml_response, assertion, issuer, signed=Fals
     signature_xml = get_signature_xml(create_signature(unsigned, saml_response['id']))
     c['signature_xml'] = signature_xml
     signed = _get_xml(t, c)
+
+    logging.debug('Signed:')
+    logging.debug(signed)
     return signed
 
 def create_signature(unsigned_xml, reference_uri):
