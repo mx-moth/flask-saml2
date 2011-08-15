@@ -6,7 +6,7 @@ import M2Crypto
 import base64
 from django.template import Context, Template
 import saml2idp_settings
-from misc import canonicalize, ws_strip
+from misc import canonicalize, strip_blank_lines
 
 class Signer(object):
     """
@@ -32,18 +32,18 @@ class Signer(object):
     def get_certificate(self):
         """ Returns the certificate value from the certificate file. """
         f = open(self.certificate_file, "r")
-        certificate = f.read()
+        data = f.read()
         f.close()
+        certificate = ''.join( data.split('\n')[1:-2] )
         return certificate
 
     def get_signature(self, ref_uri, unsigned_subject):
         """
         Returns signature (digest, value, certificate) tuple, all base64-encoded.
+        Assumes unsigned_subject is already canonical XML.
         """
-        c14n_subject = canonicalize(ws_strip(unsigned_subject))
-
         hash = hashlib.sha1()
-        hash.update(c14n_subject)
+        hash.update(unsigned_subject)
         digest = base64.b64encode(hash.digest())
 
         private_key = self.get_private_key()
@@ -51,8 +51,7 @@ class Signer(object):
         sha1_value = m.sign(hash.digest(),"sha1")
         value = base64.b64encode(sha1_value)
 
-        certificate = self.get_certificate()
-        cert = ''.join( certificate.split('\n')[1:-2] )
+        cert = self.get_certificate()
 
         signature = ( {
             'reference_uri': ref_uri,

@@ -1,15 +1,14 @@
 """
 Miscellaneous methods that should be elsewhere eventually.
 """
-from xml.dom import minidom
-from xml.dom.ext import c14n
-from BeautifulSoup import BeautifulStoneSoup
+#from xml.dom import minidom
+#from xml.dom.ext import c14n
 
-def canonicalize_pyxml(xml):
-    """ Returns Canonicalized XML. """
-    doc = minidom.parseString(xml)
-    canonicalized = c14n.Canonicalize(doc)
-    return canonicalized
+#def canonicalize_pyxml(xml):
+#    """ Returns Canonicalized XML. """
+#    doc = minidom.parseString(xml)
+#    canonicalized = c14n.Canonicalize(doc)
+#    return canonicalized
 
 from StringIO import StringIO
 from lxml import etree
@@ -22,7 +21,7 @@ def canonicalize_lxml(src):
 
 canonicalize = canonicalize_lxml
 
-def ws_strip(src):
+def strip_blank_lines(src):
     """
     Returns src stripped of blank lines that result from Django's templates.
     """
@@ -31,6 +30,16 @@ def ws_strip(src):
     ] )
     return stripped
 
+def ws_strip(src):
+    """
+    Returns src stripped of whitespace and blank lines from Django's templates.
+    """
+    stripped = ''.join( [
+        line.strip() for line in src.split('\n') if line.strip() != ''
+    ] )
+    return stripped
+
+from BeautifulSoup import BeautifulStoneSoup
 def get_acs_url(assertion_xml):
     """
     Returns the value of the AssertionConsumerServiceURL attribute.

@@ -8,90 +8,144 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response, redirect
 from django.views.decorators.csrf import csrf_view_exempt, csrf_response_exempt
 import saml2idp_settings
+import base64
 import codex
 from misc import get_acs_url
+import signing
+from django.template import Context, Template
 
 
 @login_required
-def saml_assert(request):
-#TODO: Make constants into settings in saml2idp_settings.py
+#def saml_assert(request):
+##TODO: Make constants into settings in saml2idp_settings.py
+#
+#    # Copied verbatim from http://robinelvin.wordpress.com/2009/09/04/saml-with-django/
+#    # Enable SAML logging if needed for debugging
+#    # SAML.log(logging.DEBUG, "PySAML.log")
+#
+#    # The subject of the assertion. Usually an e-mail address or username.
+#    subject = SAML.Subject(request.user.email,"urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress")
+#
+#    # The authentication statement which is how the person is proving he really is that person. Usually a password.
+#    authStatement = SAML.AuthenticationStatement(subject,"urn:oasis:names:tc:SAML:1.0:am:password",None)
+#
+#    # Create a conditions timeframe of 5 minutes (period in which assertion is valid)
+#    notBefore = time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime())
+#    notOnOrAfter = time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime(time.time() + 5))
+#    conditions = SAML.Conditions(notBefore, notOnOrAfter)
+#
+#    # Create the actual assertion
+#    assertion = SAML.Assertion(authStatement, "Test Issuer", conditions)
+#
+#    if not saml2idp_settings.SAML2IDP_SIGNING:
+#        return HttpResponse(assertion,  mimetype='text/xml')
+#
+#    # At this point I have an assertion. To sign the assertion I need to put it
+#    # into a SAML response object.
+#
+#    # Open up private key file
+#    privateKeyFile = open(saml2idp_settings.SAML2IDP_PRIVATE_KEY_FILE, "r")
+#    privatekey = privateKeyFile.read()
+#    privateKeyFile.close()
+#
+#    # Open up the certificate
+#    certificateFile = open(saml2idp_settings.SAML2IDP_CERTIFICATE_FILE, "r")
+#    certificate = certificateFile.read()
+#    certificateFile.close()
+#
+#    # Sign with the private key but also include the certificate in the SAML response
+#    response = SAML.Response(assertion, privatekey, certificate)
+#    return HttpResponse(response,  mimetype='text/xml')
 
-    # Copied verbatim from http://robinelvin.wordpress.com/2009/09/04/saml-with-django/
-    # Enable SAML logging if needed for debugging
-    # SAML.log(logging.DEBUG, "PySAML.log")
-
-    # The subject of the assertion. Usually an e-mail address or username.
-    subject = SAML.Subject(request.user.email,"urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress")
-
-    # The authentication statement which is how the person is proving he really is that person. Usually a password.
-    authStatement = SAML.AuthenticationStatement(subject,"urn:oasis:names:tc:SAML:1.0:am:password",None)
-
-    # Create a conditions timeframe of 5 minutes (period in which assertion is valid)
-    notBefore = time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime())
-    notOnOrAfter = time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime(time.time() + 5))
-    conditions = SAML.Conditions(notBefore, notOnOrAfter)
-
-    # Create the actual assertion
-    assertion = SAML.Assertion(authStatement, "Test Issuer", conditions)
-
-    if not saml2idp_settings.SAML2IDP_SIGNING:
-        return HttpResponse(assertion,  mimetype='text/xml')
-
-    # At this point I have an assertion. To sign the assertion I need to put it
-    # into a SAML response object.
-
-    # Open up private key file
-    privateKeyFile = open(saml2idp_settings.SAML2IDP_PRIVATE_KEY_FILE, "r")
-    privatekey = privateKeyFile.read()
-    privateKeyFile.close()
-
-    # Open up the certificate
-    certificateFile = open(saml2idp_settings.SAML2IDP_CERTIFICATE_FILE, "r")
-    certificate = certificateFile.read()
-    certificateFile.close()
-
-    # Sign with the private key but also include the certificate in the SAML response
-    response = SAML.Response(assertion, privatekey, certificate)
-    return HttpResponse(response,  mimetype='text/xml')
-
-def _get_saml_assertion(user):
+def _get_saml_response_xml(request):
     """
     Return a SAML assertion for the user.
     If appropriate, add signing to it.
     """
-    # The subject of the assertion. Usually an e-mail address or username.
-    subject = SAML.Subject(user.email,"urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress")
+    saml_request = {
+        'id': 'mpjibjdppiodcpciaefmdahiipjpcghdcfjodkbi',
+        'acs_url': request.session['ACS_URL'],
+        'audience': 'example.net',
+    }
+    saml_response = {
+        'id': '_2972e82c07bb5453956cc11fb19cad97ed26ff8bb4',
+        'issue_instant': '2011-08-11T23:38:34Z',
+    }
+    assertion = {
+        'id': '_7ccdda8bc6b328570c03b218d7521772998da45374',
+        'issue_instant': '2011-08-11T23:38:34Z',
+        'not_before': '2011-08-11T23:38:04Z',
+        'not_on_or_after': '2011-08-11T23:43:34Z',
+        'session': {
+            'index': '_ee277dff4e2db138d25dfcea7ccdf1d1db9ddea3f5',
+            'not_on_or_after': '2011-08-12T07:38:34Z',
+        },
+        'subject': { 'email': 'randomuser@example.com' },
+    }
+    issuer = "Test Issuer" # try this first; YAGNI?
 
-    # The authentication statement which is how the person is proving he really is that person. Usually a password.
-    authStatement = SAML.AuthenticationStatement(subject,"urn:oasis:names:tc:SAML:1.0:am:password",None)
+    if saml2idp_settings.SAML2IDP_SIGNING:
+        # Sign the assertion.
+        signer = signing.Signer()
+        assertion['signature'] = signer.get_assertion_signature(saml_request, assertion, issuer)
 
-    # Create a conditions timeframe of 5 minutes (period in which assertion is valid)
-    notBefore = time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime())
-    notOnOrAfter = time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime(time.time() + 5))
-    conditions = SAML.Conditions(notBefore, notOnOrAfter)
+        # Now, sign the response.
+        response_signature = signer.get_response_signature(saml_request, saml_response, assertion, issuer)
 
-    # Create the actual assertion
-    assertion = SAML.Assertion(authStatement, "Test Issuer", conditions)
+    # Finally, generate XML.
+    t = Template(
+        '{% load samltags %}'
+        '{% response_xml saml_request saml_response assertion issuer signature %}'
+    )
+    c = Context({
+        'saml_request': saml_request,
+        'saml_response': saml_response,
+        'assertion': assertion,
+        'issuer': issuer,
+        'signature': response_signature,
 
-    if not saml2idp_settings.SAML2IDP_SIGNING:
-        return assertion.getXML()
+    })
+    response_xml = t.render(c)
+    return response_xml
 
-    # At this point I have an assertion. To sign the assertion I need to put it
-    # into a SAML response object.
+#def _get_saml_assertion_pysaml(user):
+#    """
+#    Returns a SAML assertion for the user. Based on samltags tab library.
+#    """
+#    # The subject of the assertion. Usually an e-mail address or username.
+#    subject = SAML.Subject(user.email,"urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress")
+#
+#    # The authentication statement which is how the person is proving he really is that person. Usually a password.
+#    authStatement = SAML.AuthenticationStatement(subject,"urn:oasis:names:tc:SAML:1.0:am:password",None)
+#
+#    # Create a conditions timeframe of 5 minutes (period in which assertion is valid)
+#    notBefore = time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime())
+#    notOnOrAfter = time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime(time.time() + 5))
+#    conditions = SAML.Conditions(notBefore, notOnOrAfter)
+#
+#    # Create the actual assertion
+#    assertion = SAML.Assertion(authStatement, "Test Issuer", conditions)
+#
+#    if not saml2idp_settings.SAML2IDP_SIGNING:
+#        return assertion.getXML()
+#
+#    # At this point I have an assertion. To sign the assertion I need to put it
+#    # into a SAML response object.
+#
+#    # Open up private key file
+#    privateKeyFile = open(saml2idp_settings.SAML2IDP_PRIVATE_KEY_FILE, "r")
+#    privatekey = privateKeyFile.read()
+#    privateKeyFile.close()
+#
+#    # Open up the certificate
+#    certificateFile = open(saml2idp_settings.SAML2IDP_CERTIFICATE_FILE, "r")
+#    certificate = certificateFile.read()
+#    certificateFile.close()
+#
+#    # Sign with the private key but also include the certificate in the SAML response
+#    signed_assertion = SAML.Response(assertion, privatekey, certificate)
+#    return signed_assertion.getXML()
 
-    # Open up private key file
-    privateKeyFile = open(saml2idp_settings.SAML2IDP_PRIVATE_KEY_FILE, "r")
-    privatekey = privateKeyFile.read()
-    privateKeyFile.close()
-
-    # Open up the certificate
-    certificateFile = open(saml2idp_settings.SAML2IDP_CERTIFICATE_FILE, "r")
-    certificate = certificateFile.read()
-    certificateFile.close()
-
-    # Sign with the private key but also include the certificate in the SAML response
-    signed_assertion = SAML.Response(assertion, privatekey, certificate)
-    return signed_assertion.getXML()
 
 @csrf_view_exempt
 def sso_handle_incoming_post_request(request):
@@ -138,9 +192,9 @@ def sso_post_response_preview(request):
                 request.session['SAMLResponse'] = form.cleaned_data['response']
                 return redirect('/idp/sso/post/response/')
     else:
-        assertion = _get_saml_assertion(request.user)
+        assertion = _get_saml_response_xml(request)
 
-    response = codex.deflate_and_base64_encode(assertion)
+    response = base64.b64encode(assertion)
     init = {
         'assertion': assertion,
         'response': response,
