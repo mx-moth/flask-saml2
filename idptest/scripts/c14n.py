@@ -22,7 +22,7 @@ if __name__=="__main__":
         print "Usage: c14n [--fix] FILENAMES"
     else:
         for filename in args:
-            print 'Processing ' + filename + '...'
+           # print 'Processing ' + filename + '...'
             f = open(filename, "r")
             data = f.read()
             f.close()

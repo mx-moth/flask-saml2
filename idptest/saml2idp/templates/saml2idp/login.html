@@ -1,0 +1,21 @@
+{% extends "saml2idp/base.html" %}
+
+{% block content %}
+<div id="logged_in_message">
+You are now signed in at the Identity Provider.<br />
+Click Continue to return to the Service Point.
+</div>
+<form method="post" action="{{ acs_url }}">
+    <input type="hidden" name="RelayState" value="{{ relay_state }}" />
+    <input type="hidden" name="SAMLResponse" value="{{ saml_response }}" />
+    <input type="submit" value="Continue" />
+</form>
+{% if autosubmit %}
+<script language="javascript">
+<!--
+/* Automatically submit the form. */
+document.forms[0].submit();
+//-->
+</script>
+{% endif %}
+{% endblock content %}

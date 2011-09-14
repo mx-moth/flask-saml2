@@ -1,16 +1,15 @@
 from django.conf import settings
 
-#TODO: Add settings so that signed stuff works in views.py
 try:
-    SAML2IDP_SIGNING = settings.SAML2IDP_SIGNING
+    #TODO: Some SAML Requestors may disallow this?
+    SAML2IDP_AUTOSUBMIT = settings.SAML2IDP_AUTOSUBMIT
 except:
-    SAML2IDP_SIGNING = False # by default
+    SAML2IDP_AUTOSUBMIT = True
 
-# If using relative paths, be careful!
 try:
-    SAML2IDP_PRIVATE_KEY_FILE = settings.SAML2IDP_PRIVATE_KEY_FILE
+    SAML2IDP_ISSUER = settings.SAML2IDP_ISSUER
 except:
-    SAML2IDP_PRIVATE_KEY_FILE = 'keys/private-key.pem'
+    SAML2IDP_ISSUER = 'http://127.0.0.1:8000'
 
 # If using relative paths, be careful!
 try:
@@ -18,7 +17,19 @@ try:
 except:
     SAML2IDP_CERTIFICATE_FILE = 'keys/certificate.pem'
 
+# If using relative paths, be careful!
 try:
-    SP_RESPONSE_URL = settings.SP_RESPONSE_URL
+    SAML2IDP_PRIVATE_KEY_FILE = settings.SAML2IDP_PRIVATE_KEY_FILE
 except:
-    SP_RESPONSE_URL = 'http://127.0.0.1:9000/sp/sso/post/response/'
+    SAML2IDP_PRIVATE_KEY_FILE = 'keys/private-key.pem'
+
+try:
+    SAML2IDP_SIGNING = settings.SAML2IDP_SIGNING
+except:
+    SAML2IDP_SIGNING = True # by default
+
+try:
+    SAML2IDP_VALID_ACS = settings.SAML2IDP_VALID_ACS
+except:
+    #NOTE: If this is empty, SAML2IDP will be effectively disabled.
+    SAML2IDP_VALID_ACS = []

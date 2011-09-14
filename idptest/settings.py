@@ -103,3 +103,7 @@ LOGIN_REDIRECT_URL = '/idp/sso/post/response/preview/'
 SAML2IDP_SIGNING = True
 SAML2IDP_PRIVATE_KEY_FILE = PROJECT_ROOT + '/keys/sample/sample-private-key.pem'
 SAML2IDP_CERTIFICATE_FILE = PROJECT_ROOT + '/keys/sample/sample-certificate.pem'
+
+# Setup logging.
+import logging
+logging.basicConfig(filename='/home/john/code/saml/idp/idptest/saml2idp.log', format='%(asctime)s: %(message)s', level=logging.DEBUG)

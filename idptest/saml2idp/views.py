@@ -1,265 +1,227 @@
+# Python imports:
+import base64
+import logging
 import time
-import SAML
-from django import forms
-from django.conf import settings
+import uuid
+# Django/other library imports:
+from django.contrib import auth
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.views import auth_login
-from django.http import HttpResponse
 from django.shortcuts import render_to_response, redirect
 from django.views.decorators.csrf import csrf_view_exempt, csrf_response_exempt
-import saml2idp_settings
-import base64
+# saml2idp app imports:
 import codex
-from misc import get_acs_url, parse_saml_request
-import signing
-from django.template import Context, Template
-import xml
+import saml2idp_settings
+import validation
+import xml_parse
+import xml_render
 
+MINUTES = 60
+HOURS = 60 * MINUTES
 
-@login_required
-#def saml_assert(request):
-##TODO: Make constants into settings in saml2idp_settings.py
-#
-#    # Copied verbatim from http://robinelvin.wordpress.com/2009/09/04/saml-with-django/
-#    # Enable SAML logging if needed for debugging
-#    # SAML.log(logging.DEBUG, "PySAML.log")
-#
-#    # The subject of the assertion. Usually an e-mail address or username.
-#    subject = SAML.Subject(request.user.email,"urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress")
-#
-#    # The authentication statement which is how the person is proving he really is that person. Usually a password.
-#    authStatement = SAML.AuthenticationStatement(subject,"urn:oasis:names:tc:SAML:1.0:am:password",None)
-#
-#    # Create a conditions timeframe of 5 minutes (period in which assertion is valid)
-#    notBefore = time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime())
-#    notOnOrAfter = time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime(time.time() + 5))
-#    conditions = SAML.Conditions(notBefore, notOnOrAfter)
-#
-#    # Create the actual assertion
-#    assertion = SAML.Assertion(authStatement, "Test Issuer", conditions)
-#
-#    if not saml2idp_settings.SAML2IDP_SIGNING:
-#        return HttpResponse(assertion,  mimetype='text/xml')
-#
-#    # At this point I have an assertion. To sign the assertion I need to put it
-#    # into a SAML response object.
-#
-#    # Open up private key file
-#    privateKeyFile = open(saml2idp_settings.SAML2IDP_PRIVATE_KEY_FILE, "r")
-#    privatekey = privateKeyFile.read()
-#    privateKeyFile.close()
-#
-#    # Open up the certificate
-#    certificateFile = open(saml2idp_settings.SAML2IDP_CERTIFICATE_FILE, "r")
-#    certificate = certificateFile.read()
-#    certificateFile.close()
-#
-#    # Sign with the private key but also include the certificate in the SAML response
-#    response = SAML.Response(assertion, privatekey, certificate)
-#    return HttpResponse(response,  mimetype='text/xml')
-
-#def _get_saml_response_xml(request):
-#    """
-#    Return a SAML assertion for the user.
-#    If appropriate, add signing to it.
-#    """
-#    saml_request = {
-#        'id': request.session['request_id'],
-#        'acs_url': request.session['ACS_URL'],
-#        'audience': request.session['ACS_URL'], #HACK
-#    }
-#    saml_response = {
-#        'id': '_2972e82c07bb5453956cc11fb19cad97ed26ff8bb4',
-#        'issue_instant': '2011-08-11T23:38:34Z',
-#    }
-#    assertion = {
-#        'id': '_7ccdda8bc6b328570c03b218d7521772998da45374',
-#        'issue_instant': '2011-08-11T23:38:34Z',
-#        'not_before': '2011-08-11T23:38:04Z',
-#        'not_on_or_after': '2011-08-11T23:43:34Z',
-#        'session': {
-#            'index': '_ee277dff4e2db138d25dfcea7ccdf1d1db9ddea3f5',
-#            'not_on_or_after': '2011-08-12T07:38:34Z',
-#        },
-#        'subject': { 'email': 'randomuser@example.com' },
-#    }
-#    issuer = 'http://127.0.0.1:8000/' #TODO: Make this a setting?
-#
-#    if saml2idp_settings.SAML2IDP_SIGNING:
-#        # Sign the assertion.
-#        signer = signing.Signer()
-#        assertion['signature'] = signer.get_assertion_signature(saml_request, assertion, issuer)
-#
-#        # Now, sign the response.
-#        response_signature = signer.get_response_signature(saml_request, saml_response, assertion, issuer)
-#
-#    # Finally, generate XML.
-#    t = Template(
-#        '{% load samltags %}'
-#        '{% response_xml saml_request saml_response assertion issuer signature %}'
-#    )
-#    c = Context({
-#        'saml_request': saml_request,
-#        'saml_response': saml_response,
-#        'assertion': assertion,
-#        'issuer': issuer,
-#        'signature': response_signature,
-#
-#    })
-#    response_xml = t.render(c)
-#    return response_xml
-
-def _get_saml_response_xml(request):
+def get_email(request):
     """
-    Return a SAML assertion for the user.
-    If appropriate, add signing to it.
+    Returns the user's email address for standard Django user accounts.
+    If you have a special user type object, you probably will need to write
+    a function with this signature, and specify that function as an optional
+    parameter to the login_continue view. See that view for more info.
     """
-    saml_request = {
-        'id': request.session['request_id'],
-        'acs_url': request.session['ACS_URL'],
-        'audience': request.session['ACS_URL'], #HACK
-    }
-    saml_response = {
-        'id': '_2972e82c07bb5453956cc11fb19cad97ed26ff8bb4',
-        'issue_instant': '2011-08-11T23:38:34Z',
-    }
-    assertion = {
-        'id': '_7ccdda8bc6b328570c03b218d7521772998da45374',
-        'issue_instant': '2011-08-11T23:38:34Z',
-        'not_before': '2011-08-11T23:38:04Z',
-        'not_on_or_after': '2011-08-11T23:43:34Z',
-        'session': {
-            'index': '_ee277dff4e2db138d25dfcea7ccdf1d1db9ddea3f5',
-            'not_on_or_after': '2011-08-12T07:38:34Z',
-        },
-        'subject': { 'email': 'randomuser@example.com' },
-    }
-    issuer = 'http://127.0.0.1:8000/' #TODO: Make this a setting?
+    return request.user.email
 
-    assertion_xml = xml.get_assertion_xml(saml_request, assertion, issuer, signed=saml2idp_settings.SAML2IDP_SIGNING)
-    response_xml = xml.get_response_xml(saml_request, saml_response, assertion, issuer, signed=saml2idp_settings.SAML2IDP_SIGNING)
-    return response_xml
+def get_random_id():
+    random_id = uuid.uuid4().hex
+    return random_id
 
-
-#def _get_saml_assertion_pysaml(user):
-#    """
-#    Returns a SAML assertion for the user. Based on samltags tab library.
-#    """
-#    # The subject of the assertion. Usually an e-mail address or username.
-#    subject = SAML.Subject(user.email,"urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress")
-#
-#    # The authentication statement which is how the person is proving he really is that person. Usually a password.
-#    authStatement = SAML.AuthenticationStatement(subject,"urn:oasis:names:tc:SAML:1.0:am:password",None)
-#
-#    # Create a conditions timeframe of 5 minutes (period in which assertion is valid)
-#    notBefore = time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime())
-#    notOnOrAfter = time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime(time.time() + 5))
-#    conditions = SAML.Conditions(notBefore, notOnOrAfter)
-#
-#    # Create the actual assertion
-#    assertion = SAML.Assertion(authStatement, "Test Issuer", conditions)
-#
-#    if not saml2idp_settings.SAML2IDP_SIGNING:
-#        return assertion.getXML()
-#
-#    # At this point I have an assertion. To sign the assertion I need to put it
-#    # into a SAML response object.
-#
-#    # Open up private key file
-#    privateKeyFile = open(saml2idp_settings.SAML2IDP_PRIVATE_KEY_FILE, "r")
-#    privatekey = privateKeyFile.read()
-#    privateKeyFile.close()
-#
-#    # Open up the certificate
-#    certificateFile = open(saml2idp_settings.SAML2IDP_CERTIFICATE_FILE, "r")
-#    certificate = certificateFile.read()
-#    certificateFile.close()
-#
-#    # Sign with the private key but also include the certificate in the SAML response
-#    signed_assertion = SAML.Response(assertion, privatekey, certificate)
-#    return signed_assertion.getXML()
-
+def get_time_string(delta=0):
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime(time.time() + delta))
 
 @csrf_view_exempt
-def sso_handle_incoming_post_request(request):
+def login_post(request):
     """
-    A Service Point has just POSTed an auth request.
+    SALESFORCE SPECIFIC.
+    Receives a *POST* SAML 2.0 AuthnRequest from a Service Point and
+    stores it in the session prior to enforcing login.
     """
-    #TODO: Do we need to actually do anything with the POST['Request']?
-    #TODO: Break this out into separate GET/POST views, or rename.
-    if request.method == 'GET':
-        token = request.GET.get('RelayState', None)
-        saml_request = request.GET.get('SAMLRequest', None)
-        xml = codex.decode_base64_and_inflate(saml_request)
-        ##XXX: What do I do with the xml now?
-        #acs_url = get_acs_url(xml)
+    if request.method != 'POST':
+        raise Exception('Not a POST.') #TODO: Return a SAML 2.0 Error Assertion???
+    # Store these values now, because Django's login cycle won't preserve them.
+    request.session['SAMLRequest'] = request.POST['SAMLRequest']
+    request.session['RelayState'] = request.POST['RelayState']
+    return redirect('login_continue')
 
-        request.session.update(parse_saml_request(xml))
-    else:
-        token = request.POST.get('RelayState', None)
-    request.session['RelayState'] = token
-    tv = {
-        'token': token,
-        'login_url': settings.LOGIN_URL,
-    }
-    return render_to_response('saml2idp/sso_incoming_request.html', tv)
-
-class PreviewForm(forms.Form):
-    bigtext = { 'rows': 8, 'cols': 80 }
-    assertion = forms.CharField(max_length=10000, widget=forms.Textarea(attrs=bigtext))
-    encoded = forms.CharField(max_length=10000, widget=forms.Textarea(attrs=bigtext))
-    is_ok = forms.BooleanField(required=False)
-
-@login_required
-@csrf_view_exempt
-def sso_post_response_preview(request):
-    """
-    Preview the assertion, to allow changes prior to submitting.
-    Mainly for debugging.
-    """
-    if request.method == 'POST':
-        form = PreviewForm(request.POST)
-        if form.is_valid():
-            assertion = form.cleaned_data['assertion']
-            if form.cleaned_data['is_ok']:
-                request.session['Assertion'] = assertion
-                request.session['SAMLResponse'] = form.cleaned_data['encoded']
-                return redirect('/idp/sso/post/response/')
-    else:
-        assertion = _get_saml_response_xml(request)
-
-    encoded = base64.b64encode(assertion)
-    init = {
-        'assertion': assertion,
-        'encoded': encoded,
-    }
-    form = PreviewForm(initial=init)
-
-    tv = {
-        'form': form,
-    }
-    return render_to_response('saml2idp/sso_post_response_preview.html', tv)
 
 @login_required
 @csrf_response_exempt
-def sso_post_response(request):
+def login_continue(request, *args, **kwargs):
     """
-    Returns an HTML form that will POST back to the Service Point.
+    SALESFORCE SPECIFIC.
+    Presents a SAML 2.0 Assertion for POSTing back to the Service Point.
     """
-    #TODO: Only allow this view to accept POSTs from trusted sites.
-    #TODO: Will the @login_required work right? If not, we need to 'remember'
-    #      the POST data and do the authentication in this view.
-    #assertion = _get_saml_assertion(request.user)
-    #saml_response = codex.deflate_and_base64_encode(assertion)
-    assertion = request.session.get('Assertion')
-    saml_response = request.session.get('SAMLResponse', None)
+    # First, handle any optional parameters.
+    get_email_function = kwargs.get('get_email_function', get_email)
+    validate_user_function = kwargs.get('validate_user_function', validation.validate_user)
 
-    token = request.session.get('RelayState', None)
-    acs_url = request.session.get('ACS_URL', saml2idp_settings.SP_RESPONSE_URL)
-    tv = {
-        'response_url': acs_url,
-        'assertion': assertion,
-        'saml_response': saml_response,
-        'token': token,
+    # Retrieve the AuthnRequest from the session.
+    msg = request.session['SAMLRequest']
+    relay_state = request.session['RelayState']
+
+    # Read the request.
+    xml = base64.b64decode(msg) # SALESFORCE
+    logging.debug('login view received xml: ' + xml)
+    request_params = xml_parse.parse_request(xml)
+
+    validation.validate_request(request_params)
+
+    # Just in case downstream code wants to filter by some user criteria:
+    try:
+        validate_user_function(request)
+    except:
+        return render_to_response('saml2idp/invalid_user.html')
+
+    # Build the Assertion.
+    system_params = {
+        'ISSUER': saml2idp_settings.SAML2IDP_ISSUER,
     }
-    return render_to_response('saml2idp/sso_post_response.html', tv)
+
+    # Guess at the Audience.
+    audience = request_params['DESTINATION']
+    if not audience:
+        audience = request_params['PROVIDER_NAME']
+    audience = 'https://saml.salesforce.com' # SALESFORCE
+
+    email = get_email_function(request)
+
+    assertion_id = get_random_id()
+    session_index = request.session.session_key
+    assertion_params = {
+        'ASSERTION_ID': assertion_id,
+        'ASSERTION_SIGNATURE': '', # it's unsigned
+        'AUDIENCE': audience, # YAGNI? See note in xml_templates.py.
+        'AUTH_INSTANT': get_time_string(),
+        'ISSUE_INSTANT': get_time_string(),
+        'NOT_BEFORE': get_time_string(-1 * HOURS), #TODO: Make these settings.
+        'NOT_ON_OR_AFTER': get_time_string(15 * MINUTES),
+        'SESSION_INDEX': session_index,
+        'SESSION_NOT_ON_OR_AFTER': get_time_string(8 * HOURS),
+        'SP_NAME_QUALIFIER': audience,
+        'SUBJECT_EMAIL': email
+    }
+    assertion_params.update(system_params)
+    assertion_params.update(request_params)
+
+    # Build the SAML Response.
+    assertion_xml = xml_render.get_assertion_salesforce_xml(assertion_params, signed=True)
+    response_id = get_random_id()
+    response_params = {
+        'ASSERTION': assertion_xml,
+        'ISSUE_INSTANT': get_time_string(),
+        'RESPONSE_ID': response_id,
+        'RESPONSE_SIGNATURE': '', # initially unsigned
+    }
+    response_params.update(system_params)
+    response_params.update(request_params)
+
+    # Present the Response. (Because Django has already enforced login.)
+    acs_url = request_params['ACS_URL']
+
+    response_xml = xml_render.get_response_xml(response_params, signed=True)
+    encoded_xml = codex.nice64(response_xml)
+    autosubmit = saml2idp_settings.SAML2IDP_AUTOSUBMIT
+    tv = {
+        'acs_url': acs_url,
+        'saml_response': encoded_xml,
+        'relay_state': relay_state,
+        'autosubmit': autosubmit,
+    }
+    return render_to_response('saml2idp/login.html', tv)
+
+@login_required
+@csrf_view_exempt
+@csrf_response_exempt
+def login(request):
+    """
+    GOOGLE APPS SPECIFIC.
+    Receives a *GET* SAML 2.0 AuthnRequest from a Service Point and
+    presents a SAML 2.0 Assertion for POSTing back to the Service Point.
+    """
+    #TODO: Probably, we'll need some optional parameters, like in login_continue().
+
+    # Receive the AuthnRequest.
+    if request.method != 'GET':
+        # Django will mess up POST data, due to @login_required.
+        raise Exception('Not a GET.') #TODO: Return a SAML 2.0 Error Assertion???
+
+    msg = request.GET['SAMLRequest']
+    relay_state = request.GET['RelayState']
+
+    # Read the request.
+    xml = codex.decode_base64_and_inflate(msg)
+    logging.debug('login view received xml: ' + xml)
+    request_params = xml_parse.parse_request(xml)
+
+    validation.validate_request(request_params)
+
+    # Build the Assertion.
+    system_params = {
+        'ISSUER': saml2idp_settings.SAML2IDP_ISSUER,
+    }
+
+    # Guess at the Audience.
+    #audience = request_params['DESTINATION']
+    #if not audience:
+    audience = request_params['PROVIDER_NAME']
+
+    email = request.user.email
+
+    assertion_id = get_random_id()
+    session_index = request.session.session_key
+    assertion_params = {
+        'ASSERTION_ID': assertion_id,
+        'ASSERTION_SIGNATURE': '', # it's unsigned
+        'AUDIENCE': audience, # YAGNI? See note in xml_templates.py.
+        'AUTH_INSTANT': get_time_string(),
+        'ISSUE_INSTANT': get_time_string(),
+        'NOT_BEFORE': get_time_string(-1 * HOURS), #TODO: Make these settings.
+        'NOT_ON_OR_AFTER': get_time_string(15 * MINUTES),
+        'SESSION_INDEX': session_index,
+        'SESSION_NOT_ON_OR_AFTER': get_time_string(8 * HOURS),
+        'SP_NAME_QUALIFIER': audience,
+        'SUBJECT_EMAIL': email
+    }
+    assertion_params.update(system_params)
+    assertion_params.update(request_params)
+
+    # Build the SAML Response.
+    assertion_xml = xml_render.get_assertion_google_xml(assertion_params, signed=True)
+    response_id = get_random_id()
+    response_params = {
+        'ASSERTION': assertion_xml,
+        'ISSUE_INSTANT': get_time_string(),
+        'RESPONSE_ID': response_id,
+        'RESPONSE_SIGNATURE': '', # initially unsigned
+    }
+    response_params.update(system_params)
+    response_params.update(request_params)
+
+    # Present the Response. (Because Django has already enforced login.)
+    acs_url = request_params['ACS_URL']
+
+    response_xml = xml_render.get_response_xml(response_params, signed=True)
+    encoded_xml = codex.nice64(response_xml)
+    autosubmit = saml2idp_settings.SAML2IDP_AUTOSUBMIT
+    tv = {
+        'acs_url': acs_url,
+        'saml_response': encoded_xml,
+        'relay_state': relay_state,
+        'autosubmit': autosubmit,
+    }
+    return render_to_response('saml2idp/login.html', tv)
+
+@csrf_view_exempt
+def logout(request):
+    """
+    Receives a SAML 2.0 LogoutRequest from a Service Point,
+    logs out the user and returns a standard logged-out page.
+    """
+    auth.logout(request)
+    tv = {}
+    return render_to_response('saml2idp/logged_out.html', tv)

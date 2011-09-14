@@ -8,6 +8,7 @@ PRE-REQUISITES
 To use the "saml2idp" app, you must download and install these libraries:
 - M2Crypto @ http://chandlerproject.org/bin/view/Projects/MeTooCrypto
 - PySAML @ http://github.com/tachang/PySAML
+- python-lasso (Python Bindings for LASSO)
 
 UBUNTU Packages
 ===============
