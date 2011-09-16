@@ -106,4 +106,4 @@ SAML2IDP_CERTIFICATE_FILE = PROJECT_ROOT + '/keys/sample/sample-certificate.pem'
 
 # Setup logging.
 import logging
-logging.basicConfig(filename='/home/john/code/saml/idp/idptest/saml2idp.log', format='%(asctime)s: %(message)s', level=logging.DEBUG)
+logging.basicConfig(filename=PROJECT_ROOT + '/saml2idp.log', format='%(asctime)s: %(message)s', level=logging.DEBUG)
