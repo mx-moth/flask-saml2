@@ -1,14 +1,8 @@
-ACKNOWLEDGEMENTS
-================
-First, special thanks for the idea and some starter code to:
-http://robinelvin.wordpress.com/2009/09/04/saml-with-django/
-
 PRE-REQUISITES
 ==============
 To use the "saml2idp" app, you must download and install these libraries:
 - M2Crypto @ http://chandlerproject.org/bin/view/Projects/MeTooCrypto
-- PySAML @ http://github.com/tachang/PySAML
-- python-lasso (Python Bindings for LASSO)
+
 
 UBUNTU Packages
 ===============
@@ -16,14 +10,38 @@ M2Crypto is also available as a system package for Ubuntu (at least on 9.10).
 The name is 'python-m2crypto'. You can use the "Synaptic Package Manager" or
 the "apt-get" command-line program to install it.
 
-FOR PRE-EXISTING PROJECTS
-=========================
+
+RUNNING THE SAMPLE PROJECT
+==========================
+This project comes with a working sample Django project called "idptest".
+You can download it and run it as-is, using standard Django commands:
+
+$ svn co https://django-saml2-idp.googlecode.com/svn/trunk django-saml2-idp-readonly
+$ cd django-saml2-idp-readonly/idptest
+$ python manage.py syncdb
+$ python manage.py runserver
+
+
+INCLUDING THE SAML2IDP APP IN A DJANGO PROJECT
+==============================================
+
+Enable the Django Auth system
+-----------------------------
 For existing projects, you will also need to:
 - Enable the Django auth system. (http://docs.djangoproject.com/en/dev/topics/auth/)
 - If you haven't set up login templates, you can just reuse the ones from this
   project under "templates/registration".
-- Download and install the "saml2idp" app from this project site.
-- Add 'saml2idp' to the INSTALLED_APPS list in settings.py.
+
+Get the code for the saml2idp app
+---------------------------------
+- Download and install the "saml2idp" app from this project site:
+
+$ svn co https://django-saml2-idp.googlecode.com/svn/trunk/idptest/saml2idp
+$ cd saml2idp
+$ sudo python setup.py install
+
+Configure the URLs
+------------------
 - Add this line to your top-level urlpatterns (in urls.py usually):
 
     urlpatterns = patterns('',
@@ -32,14 +50,30 @@ For existing projects, you will also need to:
     ...
     )
 
-FOR THE INCLUDED SAMPLE PROJECT
-===============================
-This project comes with a working sample Django project called "idptest".
-You can download it and run it as-is, using standard Django commands:
+Set appropriate settings
+------------------------
+- SAML2IDP_PROCESSORS - REQUIRED.
+    Add the classname for each processor that will be used to handle SAML 2.0
+    AuthnRequests. By default, this value is:
 
-$ cd path/to/idptest
-$ python manage.py syncdb
-$ python manage.py runserver
+    SAML2IDP_PROCESSOR_CLASSES = [
+        'saml2idp.salesforce.Processor',
+        'saml2idp.google_apps.Processor',
+    ]
+
+- SAML2IDP_VALID_ACS_URL - REQUIRED.
+    Add the AssertionConsumerServiceURL to this setting for each ServicePoint
+    that you wish to use.
+
+
+- SAML2IDP_SIGNING - OPTIONAL, but recommended.
+    (Required for integration with Google Apps and SalesForce.)
+    See the ``OpenSSL'' section for more details.
+
+- INSTALLED_APPS - OPTIONAL.
+    Add 'saml2idp' If you want to include the saml2idp tests, add 'saml2idp'
+    to the INSTALLED_APPS list in settings.py.
+
 
 OpenSSL Key and Certificate Files
 =================================
@@ -57,27 +91,3 @@ You can turn on the "signing" feature by adding this entry to your settings.py:
 When signing is enabled, the "saml2idp" views will be signed with the key and
 the certificate; in other words, this Identity Provider will identify itself
 much more securely.
-
-INTEGRATION WITH django-saml2-sp
-================================
-A reference Service Point has been implementated in the django-saml2-sp project
-at http://code.google.com/p/django-saml2-sp/. (Or will be soon.)
-
-You can run that sample project at the same time as the sample project here.
-You can even run them using Django's built-in test server, like this:
-
-In the first terminal window:
-$ cd path/to/idptest/
-$ python manage.py syncdb
-    NOTE: Don't forget to create a user account, which you will use to login.
-$ python manage.py runserver 8000
-
-In the second terminal window:
-$ cd path/to/sptest/
-$ python manage.py syncdb
-    NOTE: Create a different user account, so it doesn't conflict with the other.
-$ python manage.py runserver 9000
-
-You can browse to the Service Point @ http://127.0.0.1:9000/ to get the flow
-started. Make sure to watch the output in each window, to see the order of
-message flow.

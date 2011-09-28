@@ -1,0 +1,48 @@
+NOTES FOR DEVELOPERS
+====================
+
+Philosophy
+----------
+In order to keep things as simple as possible:
+1. The Identity Provider code is separate from the Service Point code.
+    (How often will you want a site to be both?)
+2. The views don't do any SAML or XML processing themselves.
+3. Processing takes place in "Processor" classes.
+4. Each Processor class is essentially vendor-specific implementation code.
+    (Maybe in the future, we'll have a generic, all-purpose processor.
+     Want to implement it?)
+5. We don't handle or produce metadata (yet).
+
+
+Processors
+----------
+Take a look at saml2idp.base.Processor. It's pretty well commented.
+
+Look at the _reset() method for a list of internal class variables that matter.
+
+You probably can get away with sub-classing one of the other processors
+and just overriding the method(s) that matter.
+
+For example, if you want to use a different type of Subject, you can override
+the _determine_subject() method.
+
+If you want to have tighter control over who will be allowed to authenticate,
+override the _validate_user() method.
+
+If you want tighter control over which AuthnRequests to allow, override the
+_validate_request() method.
+
+
+URLs
+----
+The regular URLs will work just fine. But, if you want, you can override each
+view's URL. Make sure that you use named URLs, esp. for "login_process":
+
+    urls = (
+        ...
+        r('^custom/login/url$', 'saml2idp.login_begin', name='login_begin'),
+        r('^custom/process/url$', 'saml2idp.login_process', name='login_process'),
+        r('^custom/logout/url$', 'saml2idp.logout', name='logout'),
+
+        ...
+    )

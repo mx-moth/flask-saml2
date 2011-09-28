@@ -1,0 +1,32 @@
+INTEGRATION WITH django-saml2-sp
+================================
+A reference Service Point has been implementated in the django-saml2-sp project
+at http://code.google.com/p/django-saml2-sp/.
+
+BIG FAT WARNING
+---------------
+NOTE: Currently, the django-saml2-sp implementation is only compatible with
+tag "demo1" of this project, available at:
+
+    https://django-saml2-idp.googlecode.com/svn/tags/demo1
+
+RUNNING BOTH PROJECTS TOGETHER
+==============================
+You can run that sample project at the same time as the sample project here.
+You can even run them using Django's built-in test server, like this:
+
+In the first terminal window:
+$ cd path/to/idptest/
+$ python manage.py syncdb
+    NOTE: Don't forget to create a user account, which you will use to login.
+$ python manage.py runserver 8000
+
+In the second terminal window:
+$ cd path/to/sptest/
+$ python manage.py syncdb
+    NOTE: Create a different user account, so it doesn't conflict with the other.
+$ python manage.py runserver 9000
+
+You can browse to the Service Point @ http://127.0.0.1:9000/ to get the flow
+started. Make sure to watch the URL and output in each window, to see the order
+of message flow.

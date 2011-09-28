@@ -1,2 +1,2 @@
-#from samltags import *
 from signing import *
+from views import *

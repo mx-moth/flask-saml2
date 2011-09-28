@@ -1,4 +1,4 @@
-#Borrowed from:
+# Portions borrowed from:
 # http://stackoverflow.com/questions/1089662/python-inflate-and-deflate-implementations
 import zlib
 import base64

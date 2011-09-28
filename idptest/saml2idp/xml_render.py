@@ -4,7 +4,7 @@ Functions for creating XML output.
 import logging
 import string
 from xml_signing import get_signature_xml
-from xml_templates import ASSERTION_GOOGLE, ASSERTION_SALESFORCE, RESPONSE
+from xml_templates import ASSERTION_GOOGLE_APPS, ASSERTION_SALESFORCE, RESPONSE
 
 def _get_assertion_xml(template, parameters, signed=False):
     # Reset signature.
@@ -28,8 +28,8 @@ def _get_assertion_xml(template, parameters, signed=False):
     logging.debug(signed)
     return signed
 
-def get_assertion_google_xml(parameters, signed=False):
-    return _get_assertion_xml(ASSERTION_GOOGLE, parameters, signed)
+def get_assertion_googleapps_xml(parameters, signed=False):
+    return _get_assertion_xml(ASSERTION_GOOGLE_APPS, parameters, signed)
 
 def get_assertion_salesforce_xml(parameters, signed=False):
     return _get_assertion_xml(ASSERTION_SALESFORCE, parameters, signed)

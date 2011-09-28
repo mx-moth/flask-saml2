@@ -1,4 +1,4 @@
-How to test with a Google Apps Test Account
+INTEGRATION WITH A GOOGLE APPS TEST ACCOUNT
 ===========================================
 
 Setup a Google Apps Test Account
@@ -37,6 +37,8 @@ When you have uploaded your certificate, the page will say:
 
 "A certificate file has been uploaded"
 
+WARNING: BE SURE TO CLICK "SAVE" AFTER UPLOADING A CERTIFICATE.
+
 5. Second, enter the SAML 2.0 IdP URLs.
 
 For an unmodified saml2idp, you should use these:
@@ -44,9 +46,9 @@ For an unmodified saml2idp, you should use these:
 Enable Single Sign-on: checked
 Sign-in page URL     : http://127.0.0.1:8000/idp/login/
 Sign-out page URL    : http://127.0.0.1:8000/idp/logout/
-Change password URL  : http://127.0.0.1:8000/accounts/password/change/
+Change password URL* : http://127.0.0.1:8000/accounts/password/change/
 
-NOTE: The change password URL isn't yet supported by saml2idp.
+*NOTE: The change password URL isn't yet supported by saml2idp.
 
 6. Save changes.
 
@@ -61,29 +63,56 @@ NOTE: Go ahead and setup a super user account when prompted.
     Enter the email address that Google is expecting. It should be
     what you entered when you setup your test account in step 1.
 
-8. Run the Django test server.
+8. Ensure that you have enabled the Google Apps processor. In settings.py:
 
-$ ./manage.py runserver
+    SAML2IDP_PROCESSOR_CLASSES = [
+        ...
+        'saml2idp.google_apps.Processor',
+        ...
+    ]
 
-Login using SAML 2.0
---------------------
+9. Add YOURDOMAIN as a valid AssertionConsumerServiceURL. In settings.py:
+
+    SAML2IDP_VALID_ACS = [
+        ...
+        'https://www.google.com/a/YOURDOMAIN/acs',
+        ...
+    ]
+
+10. Run the Django test server.
+
+    $ ./manage.py runserver
+
+Login and logout using SAML 2.0
+-------------------------------
 At this point, I highly recommend starting the SAML Tracer plugin for Firefox:
 https://addons.mozilla.org/en-US/firefox/addon/saml-tracer/
 
-9. Open the GMAIL URL for your sample domain:
+11. Open the GMAIL URL for your sample domain:
 
 http://mail.google.com/a/YOURDOMAIN
 
 Google will redirect to your test IdP's login page.
 
-10. Login using your local IdP.
+12. Login using your local IdP.
 
 After logging in (using your superuser account), your IdP will redirect back
 to Google Mail.
 
-Issue #4: At present, Google doesn't like the SAML 2.0 assertion we sent it:
-    http://code.google.com/p/django-saml2-idp/issues/detail?id=4
-
-11. Logout as normal.
+13. Logout as normal.
 
 Google Mail will redirect to your local IdP's logout page.
+
+TROUBLESHOOTING
+===============
+1. Google Apps says, "cannot parse the response."
+    Something is broken. Please report this to us.
+
+2. Google Apps says something about "unauthorized."
+
+    a. Ensure that you have uploaded the correct public key.
+    b. Ensure that the email address that Django has is the same as what you
+         configured for your Google Apps user account.
+
+Unfortunately, Google Apps isn't very forthcoming with error messages, so it's
+hard to debug.

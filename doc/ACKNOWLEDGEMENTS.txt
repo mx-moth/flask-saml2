@@ -1,0 +1,12 @@
+ACKNOWLEDGEMENTS
+================
+First, special thanks for the idea and some starter code to:
+http://robinelvin.wordpress.com/2009/09/04/saml-with-django/
+
+Thanks to Steve Moitozo II and the Polder Consortium for advice.
+
+Thanks to Olav Morken for the invaluable SAML Tracer.
+    Firefox Plugin: https://addons.mozilla.org/en-US/firefox/addon/saml-tracer/
+    Source code: https://github.com/UNINETT/SAML-tracer
+
+Thanks to the simpleSAMLphp team for a fairly easy-to-use implementation.

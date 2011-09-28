@@ -37,8 +37,8 @@ SIGNATURE = (
 '</ds:Signature>'
 )
 
-# Minimal assertion for Google Apps (at this point).
-ASSERTION_GOOGLE = (
+# Minimal assertion for Google Apps:
+ASSERTION_GOOGLE_APPS = (
     '<saml:Assertion xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" '
             'ID="${ASSERTION_ID}" '
             'IssueInstant="${ISSUE_INSTANT}" '
@@ -46,8 +46,8 @@ ASSERTION_GOOGLE = (
         '<saml:Issuer>${ISSUER}</saml:Issuer>'
         '${ASSERTION_SIGNATURE}'
         '<saml:Subject>'
-            '<saml:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:email" SPNameQualifier="${SP_NAME_QUALIFIER}">'
-            '${SUBJECT_EMAIL}'
+            '<saml:NameID Format="${SUBJECT_FORMAT}" SPNameQualifier="${SP_NAME_QUALIFIER}">'
+            '${SUBJECT}'
             '</saml:NameID>'
             '<saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">'
                 '<saml:SubjectConfirmationData '
@@ -56,15 +56,8 @@ ASSERTION_GOOGLE = (
             '</saml:SubjectConfirmation>'
         '</saml:Subject>'
         '<saml:Conditions NotBefore="${NOT_BEFORE}" NotOnOrAfter="${NOT_ON_OR_AFTER}">'
-# For the moment, leave this out, for google apps. YAGNI? See views.py
-#            '<saml:AudienceRestriction>'
-#                '<saml:Audience>${AUDIENCE}</saml:Audience>'
-#            '</saml:AudienceRestriction>'
         '</saml:Conditions>'
         '<saml:AuthnStatement AuthnInstant="${AUTH_INSTANT}"'
-# Trouble in session land:
-#            ' SessionNotOnOrAfter="${SESSION_NOT_ON_OR_AFTER}"'
-#            ' SessionIndex="${SESSION_INDEX}"'
             '>'
             '<saml:AuthnContext>'
                 '<saml:AuthnContextClassRef>urn:oasis:names:tc:SAML:2.0:ac:classes:Password</saml:AuthnContextClassRef>'
@@ -73,7 +66,7 @@ ASSERTION_GOOGLE = (
     '</saml:Assertion>'
 )
 
-# Minimal assertion for Google Apps (at this point).
+# Minimal assertion for SalesForce:
 ASSERTION_SALESFORCE = (
     '<saml:Assertion xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" '
             'ID="${ASSERTION_ID}" '
@@ -82,8 +75,8 @@ ASSERTION_SALESFORCE = (
         '<saml:Issuer>${ISSUER}</saml:Issuer>'
         '${ASSERTION_SIGNATURE}'
         '<saml:Subject>'
-            '<saml:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:email" SPNameQualifier="${SP_NAME_QUALIFIER}">'
-            '${SUBJECT_EMAIL}'
+            '<saml:NameID Format="${SUBJECT_FORMAT}" SPNameQualifier="${SP_NAME_QUALIFIER}">'
+            '${SUBJECT}'
             '</saml:NameID>'
             '<saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">'
                 '<saml:SubjectConfirmationData '
@@ -97,9 +90,6 @@ ASSERTION_SALESFORCE = (
             '</saml:AudienceRestriction>'
         '</saml:Conditions>'
         '<saml:AuthnStatement AuthnInstant="${AUTH_INSTANT}"'
-# Trouble in session land:
-#            ' SessionNotOnOrAfter="${SESSION_NOT_ON_OR_AFTER}"'
-#            ' SessionIndex="${SESSION_INDEX}"'
             '>'
             '<saml:AuthnContext>'
                 '<saml:AuthnContextClassRef>urn:oasis:names:tc:SAML:2.0:ac:classes:Password</saml:AuthnContextClassRef>'
@@ -109,7 +99,7 @@ ASSERTION_SALESFORCE = (
 )
 
 
-# Minimal response for Google Apps (at this point).
+# Minimal response:
 RESPONSE = (
     '<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" '
                     'Destination="${ACS_URL}" '

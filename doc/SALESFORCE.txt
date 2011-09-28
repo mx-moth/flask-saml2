@@ -1,0 +1,135 @@
+INTEGRATION WITH A SALESFORCE TEST ACCOUNT
+===========================================
+
+Setup a SalesForce Test Account
+--------------------------------
+
+1. Get a SalesForce Test Account here:
+
+http://developer.salesforce.com
+
+2. Accept the terms and ensure that you can login to your test account.
+
+Setup a Test Domain
+-------------------
+1. Login to your Salesforce test account.
+
+2. Click YOUR NAME > Settings.
+
+3. On the left, under "Administration Setup" > "Company Profile", click "My Domain".
+
+4. Follow the instructions there to create a test domain.
+
+Once you have done this, wait 24 hours (maybe) for your domain to become active.
+
+NOTE: You do not need to "deploy" this domain to your users.
+
+When your domain becomes active, SalesForce will show it to you on this page.
+It will look something like this:
+
+    WHATEVER-developer-edition.my.salesforce.com
+
+For the remainder of this document, we'll just say YOURDOMAIN.
+
+
+Configure SAML 2.0 Single Sign-On
+---------------------------------
+1. Login to your Salesforce test account.
+
+2. Click YOUR NAME > Settings.
+
+3. On the left, under "Administrative Controls", "Security Controls", click
+    "Single Sign-On Settings".
+
+4. Enter these settings for an unmodified saml2idp running on your localhost:
+    SAML Enabled: (checked)
+    User Provisioning Enabled: (not checked)
+    SAML Version: 2.0
+    Issuer: http://127.0.0.1:8000
+    Identity Provider Certificate*: (select your public certificate file)
+
+        *For a NON-PRODUCTION server, you can use "idptest/sample/sample-certificate.pem".
+        For a PRODUCTION server, DO NOT USE THE SAMPLE CERTIFICATE! Instead, use the
+        "idptest/keys/mk_keys.sh" script to create your own certificate and private key.
+
+    Identity Provider Login URL: http://127.0.0.1:8000/idp/login/
+    Identity Provider Logout URL: http://127.0.0.1:8000/idp/logout/
+    Custom Error URL: (blank)
+    SAML User ID Type: "Assertion contains User's salesforce.com username"
+    SAML User ID Location: "User ID is in the NameIdentifier element of the Subject statement"
+    EntityID**: "https://saml.salesforce.com"
+
+        **NOTE: This is the AssertionConsumerServiceURL for your site. It may vary.
+
+5. Save changes.
+
+Start your test IdP
+-------------------
+6. Create the Django database and super user account.
+
+$ ./manage.py syncdb
+
+NOTE: Go ahead and setup a super user account when prompted.
+    Enter the email address that Google is expecting. It should be
+    what you entered when you setup your test account in step 1.
+
+7. Ensure that you have enabled the Google Apps processor. In settings.py:
+
+    SAML2IDP_PROCESSOR_CLASSES = [
+        ...
+        'saml2idp.salesforce.Processor',
+        ...
+    ]
+
+8. Add YOURDOMAIN as a valid AssertionConsumerServiceURL. In settings.py:
+
+    SAML2IDP_VALID_ACS = [
+        ...
+        'https://login.salesforce.com', # or whatever it should be
+        ...
+    ]
+
+9. Run the Django test server.
+
+    $ ./manage.py runserver
+
+Login and logout using SAML 2.0
+-------------------------------
+At this point, I highly recommend starting the SAML Tracer plugin for Firefox:
+https://addons.mozilla.org/en-US/firefox/addon/saml-tracer/
+
+10. Open your Salesforce Domain URL:
+
+https://YOURDOMAIN
+
+Google will redirect to your test IdP's login page.
+
+11. Login using your local IdP.
+
+After logging in (using your superuser account), your IdP will redirect back
+to SalesForce.
+
+12. Logout as normal.
+
+SalesForce will redirect to your local IdP's logout page.
+
+TROUBLESHOOTING
+===============
+Troubleshooting with SalesForce is extremely easy, thanks to their tool, the
+"SAML Assertion Validator". Anytime you have trouble with SalesForce SAML 2.0,
+follow this simple debugging procedure:
+
+1. Capture the SAML 2.0 Assertion, using SAML Tracer. Just copy the
+    base-64-encoded value from the SAMLResponse parameter.
+
+2. Login to your SalesForce test account and navigate to the SAML 2.0 settings.
+    See ``Configure SAML 2.0 Single Sign-On'' for specifics.
+
+3. Click the "SAML Assertion Validator" button.
+
+4. Paste the SAMLResponse value into the textbox and click "Validate".
+
+SalesForce will then display a variety of validations, with very useful help.
+
+Additionally, it is important to verify that your Django account is passing the
+same email address that SalesForce is expecting.
