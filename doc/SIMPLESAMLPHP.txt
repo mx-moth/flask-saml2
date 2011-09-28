@@ -6,14 +6,3 @@ No Official Support
 This project is not officially targeted at integration with simpleSAMLphp
 Service Points. However, you may be able to use either the Google Apps or the
 SalesForce Processors.
-
-Certificates
-------------
-The sample certificate and private key files have been borrowed from the
-simpleSAMLphp project. This allows easier testing, using simpleSAMLphp itself
-as a reference implementation.
-
-You can find these files at:
-
-/idptest/keys/sample/sample-certificate.pem
-/idptest/keys/sample/sample-private-key.pem
