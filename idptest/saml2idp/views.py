@@ -36,6 +36,7 @@ def login_process(request):
     Presents a SAML 2.0 Assertion for POSTing back to the Service Point.
     """
     reg = registry.ProcessorRegistry()
+    logging.debug("Request: %s" % request)
     proc = reg.find_processor(request)
 
     # Just in case downstream code wants to filter by some user criteria:

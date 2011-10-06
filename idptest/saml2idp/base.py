@@ -220,9 +220,7 @@ class Processor(object):
             self._logger.debug(msg)
             raise exceptions.CannotHandleAssertion(msg)
 
-        # Validations:
         self._validate_request()
-        self._validate_user()
         return True
 
     def generate_response(self):
@@ -230,6 +228,7 @@ class Processor(object):
         Processes request and returns template variables suitable for a response.
         """
         # Build the assertion and response.
+        self._validate_user()
         self._build_assertion()
         self._format_assertion()
         self._build_response()

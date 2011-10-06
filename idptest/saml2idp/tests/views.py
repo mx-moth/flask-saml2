@@ -66,11 +66,14 @@ class TestLoginProcessView(TestCase):
         """
         Bogus request should have triggered exception.
         """
-        # Arrange: setup session variables and login new user.
-        self.client.session['RelayState'] = RELAY_STATE
-        self.client.session['SAMLRequest'] = SAML_REQUEST
+
+        # Arrange: login new user and setup session variables.
         fred = User.objects.create_user('fred', email='fred@example.com', password='secret')
         self.client.login(username='fred', password='secret')
+        session = self.client.session
+        session['RelayState'] = RELAY_STATE
+        session['SAMLRequest'] = SAML_REQUEST
+        session.save()
 
         # Act and assert:
         func = lambda : self.client.get('/idp/login/process/')
