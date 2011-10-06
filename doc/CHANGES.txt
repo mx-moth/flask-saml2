@@ -1,0 +1,7 @@
+0.1 - Tagged 0.1.
+
+0.11 - 2011-10-05
+ - Include templates in egg.
+
+0.12 - 2011-10-06
+ - Include tests package in egg.

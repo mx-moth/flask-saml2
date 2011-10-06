@@ -14,7 +14,7 @@ Setup a Test Domain
 -------------------
 1. Login to your Salesforce test account.
 
-2. Click YOUR NAME > Settings.
+2. Click YOUR NAME > Setup.
 
 3. On the left, under "Administration Setup" > "Company Profile", click "My Domain".
 
