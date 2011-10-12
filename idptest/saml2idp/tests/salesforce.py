@@ -68,12 +68,13 @@ SAML_REQUEST = base64.b64encode(
     '</ds:KeyInfo></ds:Signature></samlp:AuthnRequest>'
     )
 RELAY_STATE = '/home/home.jsp'
+REQUEST_DATA = {
+    'SAMLRequest': SAML_REQUEST,
+    'RelayState': RELAY_STATE,
+}
 SALESFORCE_ACS = 'https://login.salesforce.com'
 
 
 class TestSalesForceProcessor(base.TestBaseProcessor):
     ACS = SALESFORCE_ACS
-    REQUEST_DATA = {
-        'SAMLRequest': SAML_REQUEST,
-        'RelayState': RELAY_STATE,
-    }
+    REQUEST_DATA = REQUEST_DATA

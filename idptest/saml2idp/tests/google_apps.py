@@ -26,11 +26,12 @@ RELAY_STATE = (
     '&followup=https%3A%2F%2Fdocs.google.com%2Fa%2Fexample.com%2F'
     '&ltmpl=homepage'
     )
+REQUEST_DATA = {
+    'SAMLRequest': SAML_REQUEST,
+    'RelayState': RELAY_STATE,
+}
 GOOGLE_APPS_ACS = 'https://www.google.com/a/example.com/acs'
 
 class TestGoogleAppsProcessor(base.TestBaseProcessor):
     ACS = GOOGLE_APPS_ACS
-    REQUEST_DATA = {
-        'SAMLRequest': SAML_REQUEST,
-        'RelayState': RELAY_STATE,
-    }
+    REQUEST_DATA = REQUEST_DATA
