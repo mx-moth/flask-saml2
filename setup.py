@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name = 'saml2idp',
-    version = '0.13',
+    version = '0.14',
     author = 'John Samuel Anderson',
     author_email = 'john@andersoninnovative.com',
     description = 'SAML 2.0 IdP for Django',
