@@ -1,3 +1,7 @@
+0.14 - 2011-10-12
+ - Simplified test cases for Processors.
+ - Made BaseProcessor respect SAML2IDP_SIGNING setting.
+
 0.13 - 2011-10-11
  - Add i18n support for strings in templates.
 
