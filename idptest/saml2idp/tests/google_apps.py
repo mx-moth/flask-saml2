@@ -1,15 +1,9 @@
 """
 Tests for the Google Apps processor.
 """
-import base64
-from BeautifulSoup import BeautifulSoup
-from django.http import HttpResponseRedirect
-from django.conf import settings
-from django.contrib.auth.models import User
-from django.test import TestCase
+# local imports:
 from .. import codex
-from .. import exceptions
-from .. import saml2idp_settings
+import base
 
 SAML_REQUEST = codex.deflate_and_base64_encode(
     '<?xml version="1.0" encoding="UTF-8"?>'
@@ -32,42 +26,11 @@ RELAY_STATE = (
     '&followup=https%3A%2F%2Fdocs.google.com%2Fa%2Fexample.com%2F'
     '&ltmpl=homepage'
     )
-REQUEST_DATA = {
-    'SAMLRequest': SAML_REQUEST,
-    'RelayState': RELAY_STATE,
-}
 GOOGLE_APPS_ACS = 'https://www.google.com/a/example.com/acs'
 
-FRED_EMAIL = 'fred@example.com'
-
-class TestGoogleAppsProcessor(TestCase):
-
-    def setUp(self):
-        fred = User.objects.create_user('fred', email=FRED_EMAIL, password='secret')
-        self._old_acs = saml2idp_settings.SAML2IDP_VALID_ACS # save
-        saml2idp_settings.SAML2IDP_VALID_ACS = [ GOOGLE_APPS_ACS ]
-
-    def tearDown(self):
-        saml2idp_settings.SAML2IDP_VALID_ACS = self._old_acs # restore
-
-    def test_authnrequest_handled(self):
-        # Arrange/Act:
-        response = self.client.get('/idp/login/', data=REQUEST_DATA, follow=False)
-
-        # Assert:
-        self.assertEqual(response.status_code, 302)
-
-    def test_user_logged_in(self):
-        # Arrange: login new user.
-        self.client.login(username='fred', password='secret')
-
-        # Act:
-        response = self.client.get('/idp/login/', data=REQUEST_DATA, follow=True)
-        soup = BeautifulSoup(response.content)
-        inputtag = soup.findAll('input', {'name':'SAMLResponse'})[0]
-        encoded_response = inputtag['value']
-        samlresponse = codex.base64.b64decode(encoded_response)
-
-        # Assert:
-        self.assertContains(response, '<input type="hidden" name="SAMLResponse"')
-        self.assertTrue(FRED_EMAIL in samlresponse)
+class TestGoogleAppsProcessor(base.TestBaseProcessor):
+    ACS = GOOGLE_APPS_ACS
+    REQUEST_DATA = {
+        'SAMLRequest': SAML_REQUEST,
+        'RelayState': RELAY_STATE,
+    }

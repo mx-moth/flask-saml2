@@ -139,7 +139,7 @@ class Processor(object):
         """
         Formats _response_params as _response_xml.
         """
-        self._response_xml = xml_render.get_response_xml(self._response_params, signed=True)
+        self._response_xml = xml_render.get_response_xml(self._response_params, signed=saml2idp_settings.SAML2IDP_SIGNING)
 
     def _get_django_response_params(self):
         """
