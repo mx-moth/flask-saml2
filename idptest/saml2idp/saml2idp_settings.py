@@ -37,13 +37,18 @@ except:
     # For SalesForce, this generic login will work for developer accounts;
     # you will likely need to update it with your production ACS URL.
     SAML2IDP_VALID_ACS = [
-        'https://login.salesforce.com',
+        # To test against the companion project, use this ACS URL:
+        'http://127.0.0.1:9000/sp/acs/',
+        # To test against SalesForce, uncomment the following line:
+        #'https://login.salesforce.com',
     ]
 
 try:
     SAML2IDP_PROCESSOR_CLASSES = settings.SAML2IDP_PROCESSOR_CLASSES
 except:
     SAML2IDP_PROCESSOR_CLASSES = [
-        'saml2idp.salesforce.Processor',
-        'saml2idp.google_apps.Processor',
+#        'saml2idp.salesforce.Processor',
+#        'saml2idp.google_apps.Processor',
+        # To test against django-saml2-sp, uncomment the following line:
+        'saml2idp.demo.Processor',
     ]

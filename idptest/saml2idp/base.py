@@ -30,7 +30,7 @@ class Processor(object):
 
     This class can be used directly by including this in settings.py:
         SAML2IDP_PROCESSOR_CLASSES = [
-            'saml2idp.processors.generic'.
+            'saml2idp.base.Processor'.
         ]
     """
     # Design note: I've tried to make this easy to sub-class and override
@@ -157,6 +157,11 @@ class Processor(object):
         """
         Parses various parameters from _request_xml into _request_params.
         """
+        #Minimal test to verify that it's not binarily encoded still:
+        if not self._request_xml.strip().startswith('<'):
+            badXML = self._request_xml
+            raise Exception('RequestXML is not valid XML; '
+                            'it may need to be decoded or decompressed.')
         soup = BeautifulStoneSoup(self._request_xml)
         request = soup.findAll()[0]
         params = {}
@@ -211,11 +216,13 @@ class Processor(object):
         """
         self._reset(request)
         # Read the request.
-        try:
+        if True: #try:
             self._extract_saml_request()
             self._decode_request()
             self._parse_request()
-        except Exception, e:
+        if False:
+      #  except Exception, e:
+      #      import pdb; pdb.set_trace()
             msg = 'Exception while reading request: %s' % e
             self._logger.debug(msg)
             raise exceptions.CannotHandleAssertion(msg)
