@@ -12,6 +12,14 @@ import saml2idp_settings
 from codex import nice64
 from xml_templates import SIGNED_INFO, SIGNATURE
 
+def load_cert_data(certificate_file):
+    """
+    Returns the certificate data out of the certificate_file.
+    """
+    certificate = M2Crypto.X509.load_cert(certificate_file)
+    cert_data = ''.join(certificate.as_pem().split('\n')[1:-2])
+    return cert_data
+
 def get_signature_xml(subject, reference_uri):
     """
     Returns XML Signature for subject.
@@ -50,8 +58,7 @@ def get_signature_xml(subject, reference_uri):
     logging.debug('RSA Signature: ' + rsa_signature)
 
     # Load the certificate.
-    certificate = M2Crypto.X509.load_cert(certificate_file)
-    cert_data = ''.join(certificate.as_pem().split('\n')[1:-2])
+    cert_data = load_cert_data(certificate_file)
 
     # Put the signed_info and rsa_signature into the XML signature.
     signed_info_short = signed_info.replace(' xmlns:ds="http://www.w3.org/2000/09/xmldsig#"', '')
