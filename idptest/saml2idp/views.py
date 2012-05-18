@@ -56,3 +56,21 @@ def logout(request):
     auth.logout(request)
     tv = {}
     return render_to_response('saml2idp/logged_out.html', tv)
+
+
+def descriptor(request):
+    """
+    Replies with the XML Metadata IDSSODescriptor.
+    """
+    entity_id = None
+    slo_url = None
+    sso_url = None
+    pubkey = None
+    tv = {
+        'entity_id': entity_id,
+        'cert_public_key': pubkey,
+        'slo_url': slo_url,
+        'sso_url': sso_url,
+
+    }
+    return xml_response(request, 'saml2idp/idpssodescriptor.xml', tv)
