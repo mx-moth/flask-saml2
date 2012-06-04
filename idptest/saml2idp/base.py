@@ -216,13 +216,11 @@ class Processor(object):
         """
         self._reset(request)
         # Read the request.
-        if True: #try:
+        try:
             self._extract_saml_request()
             self._decode_request()
             self._parse_request()
-        if False:
-      #  except Exception, e:
-      #      import pdb; pdb.set_trace()
+        except Exception, e:
             msg = 'Exception while reading request: %s' % e
             self._logger.debug(msg)
             raise exceptions.CannotHandleAssertion(msg)
