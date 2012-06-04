@@ -8,6 +8,7 @@ from django.contrib import auth
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response, redirect
+from django.template import RequestContext
 from django.views.decorators.csrf import csrf_view_exempt, csrf_response_exempt
 # saml2idp app imports:
 import saml2idp_settings
@@ -50,7 +51,8 @@ def login_process(request):
     except exceptions.UserNotAuthorized:
         return render_to_response('saml2idp/invalid_user.html')
 
-    return render_to_response('saml2idp/login.html', tv)
+    return render_to_response('saml2idp/login.html', tv,
+                                context_instance=RequestContext(request))
 
 @csrf_view_exempt
 def logout(request):
@@ -60,7 +62,8 @@ def logout(request):
     """
     auth.logout(request)
     tv = {}
-    return render_to_response('saml2idp/logged_out.html', tv)
+    return render_to_response('saml2idp/logged_out.html', tv,
+                                context_instance=RequestContext(request))
 
 
 def descriptor(request):
@@ -78,4 +81,5 @@ def descriptor(request):
         'sso_url': sso_url,
 
     }
-    return xml_response(request, 'saml2idp/idpssodescriptor.xml', tv)
+    return xml_response(request, 'saml2idp/idpssodescriptor.xml', tv,
+                                context_instance=RequestContext(request))
