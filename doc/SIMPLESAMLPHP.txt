@@ -4,5 +4,5 @@ INTEGRATING WITH simpleSAMLphp
 No Official Support
 -------------------
 This project is not officially targeted at integration with simpleSAMLphp
-Service Points. However, you may be able to use either the Google Apps or the
+Service Providers. However, you may be able to use either the Google Apps or the
 SalesForce Processors.

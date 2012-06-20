@@ -1,6 +1,6 @@
 INTEGRATION WITH django-saml2-sp
 ================================
-A reference Service Point has been implementated in the django-saml2-sp project
+A reference Service Provider has been implementated in the django-saml2-sp project
 at http://code.google.com/p/django-saml2-sp/.
 
 BIG FAT WARNING
@@ -27,6 +27,6 @@ $ python manage.py syncdb
     NOTE: Create a different user account, so it doesn't conflict with the other.
 $ python manage.py runserver 9000
 
-You can browse to the Service Point @ http://127.0.0.1:9000/ to get the flow
+You can browse to the Service Provider @ http://127.0.0.1:9000/ to get the flow
 started. Make sure to watch the URL and output in each window, to see the order
 of message flow.

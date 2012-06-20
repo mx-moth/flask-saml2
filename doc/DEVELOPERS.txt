@@ -4,7 +4,7 @@ NOTES FOR DEVELOPERS
 Philosophy
 ----------
 In order to keep things as simple as possible:
-1. The Identity Provider code is separate from the Service Point code.
+1. The Identity Provider code is separate from the Service Provider code.
     (How often will you want a site to be both?)
 2. The views don't do any SAML or XML processing themselves.
 3. Processing takes place in "Processor" classes.

@@ -22,7 +22,7 @@ def xml_response(request, template, tv):
 @csrf_view_exempt
 def login_begin(request, *args, **kwargs):
     """
-    Receives a SAML 2.0 AuthnRequest from a Service Point and
+    Receives a SAML 2.0 AuthnRequest from a Service Provider and
     stores it in the session prior to enforcing login.
     """
     if request.method == 'POST':
@@ -39,7 +39,7 @@ def login_begin(request, *args, **kwargs):
 def login_process(request):
     """
     Processor-based login continuation.
-    Presents a SAML 2.0 Assertion for POSTing back to the Service Point.
+    Presents a SAML 2.0 Assertion for POSTing back to the Service Provider.
     """
     reg = registry.ProcessorRegistry()
     logging.debug("Request: %s" % request)
@@ -57,7 +57,7 @@ def login_process(request):
 @csrf_view_exempt
 def logout(request):
     """
-    Receives a SAML 2.0 LogoutRequest from a Service Point,
+    Receives a SAML 2.0 LogoutRequest from a Service Provider,
     logs out the user and returns a standard logged-out page.
     """
     auth.logout(request)

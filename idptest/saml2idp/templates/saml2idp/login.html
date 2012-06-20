@@ -3,7 +3,7 @@
 {% block content %}
 <div id="logged_in_message">
 {% blocktrans %}You are now signed in at the Identity Provider.<br />
-Click Continue to return to the Service Point.{% endblocktrans %}
+Click Continue to return to the Service Provider.{% endblocktrans %}
 </div>
 <form method="post" action="{{ acs_url }}">
     <input type="hidden" name="RelayState" value="{{ relay_state }}" />

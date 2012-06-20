@@ -26,7 +26,7 @@ def get_time_string(delta=0):
 class Processor(object):
     """
     Base SAML 2.0 AuthnRequest to Response Processor.
-    Sub-classes should provide Service Point-specific functionality.
+    Sub-classes should provide Service Provider-specific functionality.
 
     This class can be used directly by including this in settings.py:
         SAML2IDP_PROCESSOR_CLASSES = [
