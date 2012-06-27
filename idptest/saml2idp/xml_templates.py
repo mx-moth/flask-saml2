@@ -10,6 +10,11 @@ NOTE #1: OK, encoding XML into python is not optimal.
 
 NOTE #2: I'm using string.Template, rather than Django Templates, to avoid
     the overhead of loading Django's template code. (KISS, baby.)
+
+NOTE #3: I'm now leaning towards using lxml's E factory to do some of this.
+    It's a dependency of BeautifulSoup, so it should be installed as a pre-req.
+    Look at the docs here: http://lxml.de/tutorial.html#the-e-factory
+    Compare how the other python/saml libraries are using lxml.
 """
 SIGNED_INFO = (
     '<ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">'
@@ -37,6 +42,34 @@ SIGNATURE = (
 '</ds:Signature>'
 )
 
+# Attributes and AttributeStatement
+ATTRIBUTE = (
+    '<saml:Attribute Name="${ATTRIBUTE_NAME}">'
+        '<saml:AttributeValue>${ATTRIBUTE_VALUE}</saml:AttributeValue>'
+    '</saml:Attribute>'
+)
+
+ATTRIBUTE_STATEMENT = (
+    '<saml:AttributeStatement>'
+    '${SUBJECT}'
+    '${ATTRIBUTES}'
+    '</saml:AttributeStatement>'
+)
+
+# Subject
+SUBJECT = (
+    '<saml:Subject>'
+        '<saml:NameID Format="${SUBJECT_FORMAT}" SPNameQualifier="${SP_NAME_QUALIFIER}">'
+        '${SUBJECT}'
+        '</saml:NameID>'
+        '<saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">'
+            '<saml:SubjectConfirmationData '
+            '${IN_RESPONSE_TO}'
+            'NotOnOrAfter="${NOT_ON_OR_AFTER}" Recipient="${ACS_URL}"></saml:SubjectConfirmationData>'
+        '</saml:SubjectConfirmation>'
+    '</saml:Subject>'
+)
+
 # Minimal assertion for Google Apps:
 ASSERTION_GOOGLE_APPS = (
     '<saml:Assertion xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" '
@@ -45,16 +78,7 @@ ASSERTION_GOOGLE_APPS = (
             'Version="2.0">'
         '<saml:Issuer>${ISSUER}</saml:Issuer>'
         '${ASSERTION_SIGNATURE}'
-        '<saml:Subject>'
-            '<saml:NameID Format="${SUBJECT_FORMAT}" SPNameQualifier="${SP_NAME_QUALIFIER}">'
-            '${SUBJECT}'
-            '</saml:NameID>'
-            '<saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">'
-                '<saml:SubjectConfirmationData '
-                'InResponseTo="${REQUEST_ID}" '
-                'NotOnOrAfter="${NOT_ON_OR_AFTER}" Recipient="${ACS_URL}"></saml:SubjectConfirmationData>'
-            '</saml:SubjectConfirmation>'
-        '</saml:Subject>'
+        '${SUBJECT_STATEMENT}'
         '<saml:Conditions NotBefore="${NOT_BEFORE}" NotOnOrAfter="${NOT_ON_OR_AFTER}">'
         '</saml:Conditions>'
         '<saml:AuthnStatement AuthnInstant="${AUTH_INSTANT}"'
@@ -63,6 +87,7 @@ ASSERTION_GOOGLE_APPS = (
                 '<saml:AuthnContextClassRef>urn:oasis:names:tc:SAML:2.0:ac:classes:Password</saml:AuthnContextClassRef>'
             '</saml:AuthnContext>'
         '</saml:AuthnStatement>'
+        '${ATTRIBUTE_STATEMENT}'
     '</saml:Assertion>'
 )
 
@@ -74,16 +99,7 @@ ASSERTION_SALESFORCE = (
             'Version="2.0">'
         '<saml:Issuer>${ISSUER}</saml:Issuer>'
         '${ASSERTION_SIGNATURE}'
-        '<saml:Subject>'
-            '<saml:NameID Format="${SUBJECT_FORMAT}" SPNameQualifier="${SP_NAME_QUALIFIER}">'
-            '${SUBJECT}'
-            '</saml:NameID>'
-            '<saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">'
-                '<saml:SubjectConfirmationData '
-                'InResponseTo="${REQUEST_ID}" '
-                'NotOnOrAfter="${NOT_ON_OR_AFTER}" Recipient="${ACS_URL}"></saml:SubjectConfirmationData>'
-            '</saml:SubjectConfirmation>'
-        '</saml:Subject>'
+        '${SUBJECT_STATEMENT}'
         '<saml:Conditions NotBefore="${NOT_BEFORE}" NotOnOrAfter="${NOT_ON_OR_AFTER}">'
             '<saml:AudienceRestriction>'
                 '<saml:Audience>${AUDIENCE}</saml:Audience>'
@@ -95,6 +111,7 @@ ASSERTION_SALESFORCE = (
                 '<saml:AuthnContextClassRef>urn:oasis:names:tc:SAML:2.0:ac:classes:Password</saml:AuthnContextClassRef>'
             '</saml:AuthnContext>'
         '</saml:AuthnStatement>'
+        '${ATTRIBUTE_STATEMENT}'
     '</saml:Assertion>'
 )
 
@@ -104,7 +121,7 @@ RESPONSE = (
     '<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" '
                     'Destination="${ACS_URL}" '
                     'ID="${RESPONSE_ID}" '
-                    'InResponseTo="${REQUEST_ID}" '
+                    '${IN_RESPONSE_TO}'
                     'IssueInstant="${ISSUE_INSTANT}" '
                     'Version="2.0">'
         '<saml:Issuer xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion">${ISSUER}</saml:Issuer>'

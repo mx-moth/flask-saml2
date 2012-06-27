@@ -1,0 +1,117 @@
+Settings And Metadata
+=====================
+This document provides the background and description of how to configure this
+Django app.
+
+SAML Metadata
+-------------
+All the SAML standards documents rely heavily on the concept of Metadata.
+This document will not go into the details (but feel free to read the standard).
+
+Metadata is richly descriptive of the features of an Identity Provider and its
+Service Provider counterparts. It is usually expressed using XML. Consequently,
+metadata is a pain to work with--and to program around.
+
+Django Settings
+---------------
+Django prefers to use simple, pythonic settings. "Flat is better than nested"
+does apply often.
+
+Several of the other popular implementations of SAML have chosen to represent
+metadata as deeply-nested dictionaries. This may be the best pragmatic approach
+for a complete Metadata representation. HOWEVER, this app does not claim to be
+anywhere near a complete SAML 2.0 implementation.
+
+Consequently, we can get away with a more lightweight treatment of metadata.
+This lets us keep the Django settings KISSable.
+
+Settings for the Local Identity Provider
+----------------------------------------
+There is only one IdP, so its configuration resides in one dictionary:
+
+SAML2IDP_CONFIG = {
+    # Default metadata to configure this local IdP.
+    'autosubmit': True,
+    'certificate_file': 'keys/certificate.pem', # If using relative paths, be careful!
+    'certificate_key_file': 'keys/private-key.pem', # If using relative paths, be careful!
+    'issuer': 'http://127.0.0.1:8000',
+    'signing': True,
+}
+
+Sidebar: Endpoints
+------------------
+The SAML standard talks about "endpoints"--eg. SingleSignOn, SingleLogout.
+Some implementations provide a way to customize endpoints via metadata.
+
+In this Django app, we simply treat endpoints as URLs and their views.
+If you wish to change an "endpoint", you will need to override either a URL
+or a view--or both.
+
+Settings for a single remote Service Provider
+---------------------------------------------
+Metadata for a remote Service Provider is a fairly simple dictionary:
+
+sampleSpConfig = {
+    #REQUIRED:
+    'acs_url': 'https://www.example.com/acs/',
+    'processor': 'saml2idp.some.Processor',
+
+    # OPTIONAL:
+    'links': {
+        # For IdP-initiated deep-linking.
+        # named-resource: expanded URL string including one "%s" for substitution
+        'starwars': 'https://www.example.com/starwars/%s.php',
+    }
+}
+
+Sidebar: IdP-Initiated Deep Links
+-----------------------------------
+Some Service Points require an IdP-initiated conversation. To achieve this,
+the IdP must have some way to link deeply to an SP resource.
+
+Using the above example, this IdP link to the "vader" target:
+
+https://idp.example.org/init/starwars/vader/
+
+Will map to this URL on the SP:
+
+https://www.example.com/starwars/vader.php
+
+NOTE: Both the named resource and the target must be alphanumeric only.
+WARNING: Do not use the same named resource for multiple SPs!
+
+All Remote SP Settings
+----------------------
+Individual SP settings are combined into:
+
+SAML2IDP_REMOTES = {
+    # friendlyname: SP config
+    'sample': sampleSpConfig,
+}
+
+NOTE: You *could* just define SAML2IDP_REMOTES with the SP settings embedded.
+But bear in mind that "flatter is better than nested". It's your choice.
+
+SAMPLE SETTINGS
+===============
+
+Sample SP Config for Google Apps
+--------------------------------
+googleappsSpConfig = {
+    'acs_url': 'https://your_domain.googleapps.com/acs/',
+    'processor': 'saml2idp.google_apps.Processor',
+}
+
+Sample SP Config for SalesForce
+-------------------------------
+salesforceSpConfig = {
+    'acs_url': 'https://login.salesforce.com',
+    'processor': 'saml2idp.salesforce.Processor',
+}
+
+Of course, don't forget to reference those SP configs in:
+
+SAML2IDP_REMOTES = {
+    'salesforce': salesforceSpConfig,
+    'googleapps': googleappsSpConfig,
+}

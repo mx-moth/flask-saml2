@@ -9,12 +9,12 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from .. import codex
 from .. import exceptions
-from .. import saml2idp_settings
+from .. import saml2idp_metadata
 
 class TestBaseProcessor(TestCase):
     """
     Sub-classes must provide these class properties:
-    ACS = Valid AssertionConsumerServiceURL
+    SP_CONFIG = ServicePoint metadata settings to use.
     REQUEST_DATA = dictionary containing 'SAMLRequest' and 'RelayState' keys.
     """
     USERNAME = 'fred'
@@ -23,11 +23,10 @@ class TestBaseProcessor(TestCase):
 
     def setUp(self):
         fred = User.objects.create_user(self.USERNAME, email=self.EMAIL, password=self.PASSWORD)
-        self._old_acs = saml2idp_settings.SAML2IDP_VALID_ACS # save
-        saml2idp_settings.SAML2IDP_VALID_ACS = [ self.ACS ]
+        saml2idp_metadata.SAML2IDP_REMOTES['foobar'] = self.SP_CONFIG
 
     def tearDown(self):
-        saml2idp_settings.SAML2IDP_VALID_ACS = self._old_acs # restore
+        del saml2idp_metadata.SAML2IDP_REMOTES['foobar']
 
     def test_authnrequest_handled(self):
         # Arrange/Act:

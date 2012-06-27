@@ -76,5 +76,8 @@ SALESFORCE_ACS = 'https://login.salesforce.com'
 
 
 class TestSalesForceProcessor(base.TestBaseProcessor):
-    ACS = SALESFORCE_ACS
+    SP_CONFIG = {
+        'acs_url': SALESFORCE_ACS,
+        'processor': 'saml2idp.salesforce.Processor',
+    }
     REQUEST_DATA = REQUEST_DATA

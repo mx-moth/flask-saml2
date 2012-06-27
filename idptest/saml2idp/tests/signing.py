@@ -33,8 +33,12 @@ SIGNED_ASSERTION_SALESFORCE_XML = '<saml:Assertion xmlns:saml="urn:oasis:names:t
 RESPONSE_PARAMS = {
     'ASSERTION': '',
     'ISSUE_INSTANT': '2011-08-11T23:38:34Z',
+    'NOT_ON_OR_AFTER': '2011-08-11T23:43:34Z',
     'RESPONSE_ID': '_2972e82c07bb5453956cc11fb19cad97ed26ff8bb4',
     'RESPONSE_SIGNATURE': '',
+    'SP_NAME_QUALIFIER': 'example.net',
+    'SUBJECT': 'randomuser@example.com',
+    'SUBJECT_FORMAT': 'urn:oasis:names:tc:SAML:2.0:nameid-format:email',
 }
 
 RESPONSE_XML = '<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" Destination="https://www.example.net/a/example.com/acs" ID="_2972e82c07bb5453956cc11fb19cad97ed26ff8bb4" InResponseTo="mpjibjdppiodcpciaefmdahiipjpcghdcfjodkbi" IssueInstant="2011-08-11T23:38:34Z" Version="2.0"><saml:Issuer xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion">http://127.0.0.1:8000</saml:Issuer><samlp:Status><samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"></samlp:StatusCode></samlp:Status><saml:Assertion xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" ID="_7ccdda8bc6b328570c03b218d7521772998da45374" IssueInstant="2011-08-11T23:38:34Z" Version="2.0"><saml:Issuer>http://127.0.0.1:8000</saml:Issuer><saml:Subject><saml:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:email" SPNameQualifier="example.net">randomuser@example.com</saml:NameID><saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer"><saml:SubjectConfirmationData InResponseTo="mpjibjdppiodcpciaefmdahiipjpcghdcfjodkbi" NotOnOrAfter="2011-08-11T23:43:34Z" Recipient="https://www.example.net/a/example.com/acs"></saml:SubjectConfirmationData></saml:SubjectConfirmation></saml:Subject><saml:Conditions NotBefore="2011-08-11T23:38:04Z" NotOnOrAfter="2011-08-11T23:43:34Z"><saml:AudienceRestriction><saml:Audience>example.net</saml:Audience></saml:AudienceRestriction></saml:Conditions><saml:AuthnStatement AuthnInstant="2011-08-11T23:38:34Z"><saml:AuthnContext><saml:AuthnContextClassRef>urn:oasis:names:tc:SAML:2.0:ac:classes:Password</saml:AuthnContextClassRef></saml:AuthnContext></saml:AuthnStatement></saml:Assertion></samlp:Response>'
@@ -49,6 +53,9 @@ class XmlTest(unittest.TestCase):
         self.assertEqual(exp, got, msg)
 
     def _test_template(self, template_source, parameters, exp):
+        xml_render._get_in_response_to(parameters)
+        xml_render._get_subject(parameters)
+        xml_render._get_attribute_statement(parameters)
         got = string.Template(template_source).substitute(parameters)
         self._test(got, exp)
 

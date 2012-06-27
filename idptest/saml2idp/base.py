@@ -3,12 +3,13 @@ import base64
 import logging
 import time
 import uuid
-# other library imports:
+# Django and other library imports:
 from BeautifulSoup import BeautifulStoneSoup
+from django.core.exceptions import ImproperlyConfigured
 # local app imports:
 import codex
 import exceptions
-import saml2idp_settings
+import saml2idp_metadata
 import xml_render
 
 MINUTES = 60
@@ -27,11 +28,6 @@ class Processor(object):
     """
     Base SAML 2.0 AuthnRequest to Response Processor.
     Sub-classes should provide Service Provider-specific functionality.
-
-    This class can be used directly by including this in settings.py:
-        SAML2IDP_PROCESSOR_CLASSES = [
-            'saml2idp.base.Processor'.
-        ]
     """
     # Design note: I've tried to make this easy to sub-class and override
     # just the bits you need to override. I've made use of object properties,
@@ -139,7 +135,8 @@ class Processor(object):
         """
         Formats _response_params as _response_xml.
         """
-        self._response_xml = xml_render.get_response_xml(self._response_params, signed=saml2idp_settings.SAML2IDP_SIGNING)
+        sign_it=saml2idp_metadata.SAML2IDP_CONFIG['signing']
+        self._response_xml = xml_render.get_response_xml(self._response_params, signed=sign_it)
 
     def _get_django_response_params(self):
         """
@@ -149,7 +146,7 @@ class Processor(object):
             'acs_url': self._request_params['ACS_URL'],
             'saml_response': self._saml_response,
             'relay_state': self._relay_state,
-            'autosubmit': saml2idp_settings.SAML2IDP_AUTOSUBMIT,
+            'autosubmit': saml2idp_metadata.SAML2IDP_CONFIG['autosubmit'],
         }
         return tv
 
@@ -171,10 +168,12 @@ class Processor(object):
         params['PROVIDER_NAME'] = request.get('providername', '')
         self._request_params = params
 
-    def _reset(self, django_request):
+    def _reset(self, django_request, sp_config=None):
         """
         Initialize (and reset) object properties, so we don't risk carrying
         over anything from the last authentication.
+        If provided, use sp_config throughout; otherwise, it will be set in
+        _validate_request().
         """
         self._assertion_params = None
         self._assertion_xml = None
@@ -190,8 +189,9 @@ class Processor(object):
         self._subject = None
         self._subject_format = 'urn:oasis:names:tc:SAML:2.0:nameid-format:email'
         self._system_params = {
-            'ISSUER': saml2idp_settings.SAML2IDP_ISSUER,
+            'ISSUER': saml2idp_metadata.SAML2IDP_CONFIG['issuer'],
         }
+        self._sp_config = sp_config
 
     def _validate_request(self):
         """
@@ -200,8 +200,12 @@ class Processor(object):
         throw a CannotHandleAssertion Exception if the validation does not succeed.
         """
         acs_url = self._request_params['ACS_URL']
-        msg = "ACS url '%s' not specified in SAML2IDP_VALID_ACS setting." % acs_url
-        assert acs_url in saml2idp_settings.SAML2IDP_VALID_ACS, msg
+        for name, sp_config in saml2idp_metadata.SAML2IDP_REMOTES.items():
+            if acs_url == sp_config['acs_url']:
+                self._sp_config = sp_config
+                return
+        msg = "Could not find ACS url '%s' in SAML2IDP_REMOTES setting." % acs_url
+        raise ImproperlyConfigured(msg)
 
     def _validate_user(self):
         """
@@ -242,3 +246,23 @@ class Processor(object):
 
         # Return proper template params.
         return self._get_django_response_params()
+
+    def init_deep_link(self, request, sp_config, url):
+        """
+        Initialize this Processor to make an IdP-initiated call to the SP's
+        deep-linked URL.
+        """
+        self._reset(request, sp_config)
+        acs_url = self._sp_config['acs_url']
+        # NOTE: The following request params are made up. Some are blank,
+        # because they comes over in the AuthnRequest, but we don't have an
+        # AuthnRequest in this case:
+        # - Destination: Should be this IdP's SSO endpoint URL. Not used in the response?
+        # - ProviderName: According to the spec, this is optional.
+        provider_name = ''
+        self._request_params = {
+            'ACS_URL': acs_url,
+            'DESTINATION': '',
+            'PROVIDER_NAME': '',
+        }
+        self._relay_state = url

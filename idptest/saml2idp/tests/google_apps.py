@@ -33,5 +33,8 @@ REQUEST_DATA = {
 GOOGLE_APPS_ACS = 'https://www.google.com/a/example.com/acs'
 
 class TestGoogleAppsProcessor(base.TestBaseProcessor):
-    ACS = GOOGLE_APPS_ACS
+    SP_CONFIG = {
+        'acs_url': GOOGLE_APPS_ACS,
+        'processor': 'saml2idp.google_apps.Processor',
+    }
     REQUEST_DATA = REQUEST_DATA
