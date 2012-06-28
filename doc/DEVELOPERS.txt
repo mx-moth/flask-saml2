@@ -11,7 +11,7 @@ In order to keep things as simple as possible:
 4. Each Processor class is essentially vendor-specific implementation code.
     (Maybe in the future, we'll have a generic, all-purpose processor.
      Want to implement it?)
-5. We don't handle or produce metadata (yet).
+5. We don't handle importing metadata XML from Service Providers (yet).
 
 
 Processors
@@ -32,6 +32,10 @@ override the _validate_user() method.
 If you want tighter control over which AuthnRequests to allow, override the
 _validate_request() method.
 
+If you want to add SAML Attributes, then override the _format_assertion()
+method and pass in the attributes to self._assertion_params['ATTRIBUTES'].
+See saml2idp.demo.AttributeProcessor for an example.
+
 
 URLs
 ----
@@ -46,3 +50,5 @@ view's URL. Make sure that you use named URLs, esp. for "login_process":
 
         ...
     )
+
+WARNING: NEVER WRAP the "login_begin" view with a view decorator!

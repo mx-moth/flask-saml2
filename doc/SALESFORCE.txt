@@ -70,24 +70,20 @@ Start your test IdP
 $ ./manage.py syncdb
 
 NOTE: Go ahead and setup a super user account when prompted.
-    Enter the email address that Google is expecting. It should be
+    Enter the email address that SalesForce is expecting. It should be
     what you entered when you setup your test account in step 1.
 
-7. Ensure that you have enabled the Google Apps processor. In settings.py:
+7. Ensure that you have enabled the SalesForce processor. In settings.py:
 
-    SAML2IDP_PROCESSOR_CLASSES = [
+    SAML2IDP_REMOTES = {
         ...
-        'saml2idp.salesforce.Processor',
+        'salesforce': {
+            'acs_url': 'https://login.salesforce.com', # or whatever it should be
+            'processor': 'saml2idp.salesforce.Processor',
+        },
         ...
-    ]
+    }
 
-8. Add YOURDOMAIN as a valid AssertionConsumerServiceURL. In settings.py:
-
-    SAML2IDP_VALID_ACS = [
-        ...
-        'https://login.salesforce.com', # or whatever it should be
-        ...
-    ]
 
 9. Run the Django test server.
 
@@ -102,7 +98,7 @@ https://addons.mozilla.org/en-US/firefox/addon/saml-tracer/
 
 https://YOURDOMAIN
 
-Google will redirect to your test IdP's login page.
+SalesForce will redirect to your test IdP's login page.
 
 11. Login using your local IdP.
 

@@ -1,3 +1,8 @@
+0.15 - 2012-06-28
+ - Backwards-incompatible changes to settings. See SETTINGS_AND_METADATA.txt.
+ - Added support for IdP-initiated deep-links.
+ - Small bug-fixes.
+
 0.14 - 2011-10-12
  - Simplified test cases for Processors.
  - Made BaseProcessor respect SAML2IDP_SIGNING setting.
