@@ -21,8 +21,8 @@ class TestDeepLink(base.SamlTestCase):
         # Arrange/Act:
         self._hit_saml_view(self.DEEPLINK)
         # Assert:
-        #TODO: Use BeautifulSoup.
-        self.assertTrue(self.EXPECTED_RELAY_STATE in self._html)
+        relaystate = self._soup.findAll('input', {'name':'RelayState'})[0]
+        self.assertEqual(self.EXPECTED_RELAY_STATE, relaystate['value'])
 
 class TestDeepLinkWithAttributes(object): #DISABLED: base.SamlTestCase):
     SP_CONFIG = {
