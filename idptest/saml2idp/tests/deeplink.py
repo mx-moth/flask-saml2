@@ -21,10 +21,10 @@ class TestDeepLink(base.SamlTestCase):
         # Arrange/Act:
         self._hit_saml_view(self.DEEPLINK)
         # Assert:
-        relaystate = self._soup.findAll('input', {'name':'RelayState'})[0]
+        relaystate = self._html_soup.findAll('input', {'name':'RelayState'})[0]
         self.assertEqual(self.EXPECTED_RELAY_STATE, relaystate['value'])
 
-class TestDeepLinkWithAttributes(object): #DISABLED: base.SamlTestCase):
+class TestDeepLinkWithAttributes(TestDeepLink):
     SP_CONFIG = {
         'acs_url': 'http://127.0.0.1:9000/sp/acs/',
         'processor': 'saml2idp.demo.AttributeProcessor',
@@ -35,17 +35,12 @@ class TestDeepLinkWithAttributes(object): #DISABLED: base.SamlTestCase):
     DEEPLINK = 'http://127.0.0.1:8000/idp/init/attr/test/'
     EXPECTED_RELAY_STATE = 'http://127.0.0.1:9000/sp/test/'
 
+    def test_deeplink(self):
+        super(TestDeepLinkWithAttributes, self).test_deeplink()
+        attributes = self._saml_soup.findAll('saml:attribute')
 
-#    def test_deeplink(self):
-#        # Arrange: login new user.
-#        self.client.login(username=self.USERNAME, password=self.PASSWORD)
-
-#        # Act:
-#        response = self.client.get(self.DEEPLINK, follow=True)
-#        soup = BeautifulSoup(response.content)
-#        inputtag = soup.findAll('input', {'name':'SAMLResponse'})[0]
-#        encoded_response = inputtag['value']
-#        samlresponse = codex.base64.b64decode(encoded_response)
-
-#        # Assert:
-#        self.assertTrue(self.EXPECTED_RELAY_STATE in samlresponse)
+        # Assert.
+        self.assertEqual(len(attributes), 1)
+        self.assertEqual(attributes[0]['name'], 'foo')
+        value = attributes[0].findAll('saml:attributevalue')[0]
+        self.assertEqual(value.text, 'bar')
