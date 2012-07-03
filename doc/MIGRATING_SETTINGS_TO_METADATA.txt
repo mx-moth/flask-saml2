@@ -60,3 +60,42 @@ These two Django Settings configured the SPs.
 
 Metadata Settings Example
 -------------------------
+All of the above are now configured using the SAML2IDP_REMOTES Django setting.
+The main conceptual change is that each Service Point has its own set of
+configuration options. In this example, we're configuring the 'salesforce' and
+'google_apps' Service Points.
+
+    SAML2IDP_REMOTES = {
+        'google_apps': {
+            'acs_url': 'https://www.google.com/a/YOURDOMAIN.com/acs',
+            'processor': 'identityprovider.views.saml2.GoogleAppsProcessor',
+        }
+        'salesforce': {
+            'acs_url': 'https://login.salesforce.com',
+            'processor': 'identityprovider.views.saml2.SalesForceProcessor',
+        },
+    }
+
+Additional Remote Settings for Deep Links
+=========================================
+A new feature that was released with tag 0.15 is "IdP-initiated deep links."
+For more information, see the "Sidebar: IdP-Initiated Deep Links" in
+SETTINGS_AND_METADATA.txt.
+
+Early Settings Example
+----------------------
+(There is no Early Settings example, because this was implemented in tag 0.15.)
+
+Metadata Settings Example
+-------------------------
+This new feature can be configured in the SAML2IDP_REMOTES Django Setting, by
+adding a 'links' option to an individual Service Point's configuration.
+
+    SAML2IDP_REMOTES = {
+        'salesforce': {
+            ...
+            'links': {
+                'salesforce': 'https://YOUR_SALESFORCE_SUBSITE.salesforce.com/%%s',
+            },
+        },
+    }
