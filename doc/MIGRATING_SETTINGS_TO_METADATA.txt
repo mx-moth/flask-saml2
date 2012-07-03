@@ -1,0 +1,62 @@
+Migrating Settings to Metadata
+==============================
+Prior to tag 0.15, this project used fairly simplistic settings.
+Beginning with tag 0.15, this project uses SAML-metadata-like settings.
+This document describes how to convert earlier settings into metadata.
+
+If you have time, please read SETTINGS_AND_METADATA.txt. However, if you're in
+a hurry, then you might be able to get away with reading this by itself.
+
+Terms
+-----
+"Early Settings" = simple settings used prior to tag 0.15
+"Metadata Settings" = SAML-metadata-like settings used beginning with tag 0.15
+"Django Settings" = Django Configuration stored in settings.py
+
+Identity Provider Configuration
+===============================
+Several configuration options are important for configuring the IdP. Migrating
+them is fairly trivial.
+
+Early Settings Example
+----------------------
+These five Django Settings configure the IdP.
+
+    SAML2IDP_AUTOSUBMIT = True
+    SAML2IDP_ISSUER = https://YOURHOSTNAME.com
+    SAML2IDP_CERTIFICATE_FILE = /PATH/TO/certificate.pem
+    SAML2IDP_PRIVATE_KEY_FILE = /PATH/TO/private-key.pem
+    SAML2IDP_SIGNING = True
+
+Metadata Settings Example
+-------------------------
+All of the above are now configured using one SAML2IDP_CONFIG Django Setting.
+
+    SAML2IDP_CONFIG = {
+        'autosubmit': True,
+        'issuer': 'https://YOURHOSTNAME.com',
+        'certificate_file': '/PATH/TO/certificate.pem',
+        'private_key_file': '/PATH/TO/private-key.pem',
+        'signing': True,
+    }
+
+Remote Service Provider Configuration
+=====================================
+One or many Service Providers can be configured. Migrating them requires a bit
+of coordination, but it is not complicated.
+
+Early Settings Example
+----------------------
+These two Django Settings configured the SPs.
+
+    SAML2IDP_VALID_ACS = [
+        'https://login.salesforce.com',
+        'https://www.google.com/a/YOURDOMAIN.com/acs',
+    ]
+    SAML2IDP_PROCESSOR_CLASSES = [
+        'identityprovider.views.saml2.GoogleAppsProcessor',
+        'identityprovider.views.saml2.SalesForceProcessor',
+    ]
+
+Metadata Settings Example
+-------------------------
