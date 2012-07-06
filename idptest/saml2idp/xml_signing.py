@@ -45,12 +45,6 @@ def get_signature_xml(subject, reference_uri):
         })
     logging.debug('SignedInfo XML: ' + signed_info)
 
-#    # "Digest" the signed_info.
-#    info_hash = hashlib.sha1()
-#    info_hash.update(signed_info)
-#    info_digest = info_hash.digest()
-#    logging.debug('Info digest: ' + nice64(info_digest))
-
     # RSA-sign the signed_info.
     private_key = M2Crypto.EVP.load_key(private_key_file)
     private_key.sign_init()

@@ -18,7 +18,6 @@ import metadata
 import registry
 import xml_signing
 
-
 def _generate_response(request, processor):
     """
     Generate a SAML response using processor and return it in the proper Django
@@ -82,13 +81,33 @@ def login_process(request):
 @csrf_view_exempt
 def logout(request):
     """
-    Receives a SAML 2.0 LogoutRequest from a Service Provider,
-    logs out the user and returns a standard logged-out page.
+    Allows a non-SAML 2.0 URL to log out the user and 
+    returns a standard logged-out page. (SalesForce and others use this method,
+    though it's technically not SAML 2.0).
     """
     auth.logout(request)
     tv = {}
     return render_to_response('saml2idp/logged_out.html', tv,
                                 context_instance=RequestContext(request))
+
+@login_required
+@csrf_view_exempt
+def slo_logout(request):
+    """
+    Receives a SAML 2.0 LogoutRequest from a Service Provider,
+    logs out the user and returns a standard logged-out page.
+    """
+    request.session['SAMLRequest'] = request.POST['SAMLRequest']
+    #TODO: Parse SAML LogoutRequest from POST data, similar to login_process().
+    #TODO: Add a URL dispatch for this view.
+    #TODO: Modify the base processor to handle logouts?
+    #TODO: Combine this with login_process(), since they are so very similar?
+    #TODO: Format a LogoutResponse and return it to the browser.
+    #XXX: For now, simply log out without validating the request.
+    auth.logout(request)
+    tv = {}
+    return render_to_response('saml2idp/logged_out.html', tv,
+                               context_instance=RequestContext(request))
 
 
 def descriptor(request):
