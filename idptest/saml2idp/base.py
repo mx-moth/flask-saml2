@@ -205,7 +205,7 @@ class Processor(object):
                 self._sp_config = sp_config
                 return
         msg = "Could not find ACS url '%s' in SAML2IDP_REMOTES setting." % acs_url
-        raise ImproperlyConfigured(msg)
+        raise exceptions.CannotHandleAssertion(msg)
 
     def _validate_user(self):
         """
