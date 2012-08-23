@@ -2,7 +2,11 @@ from django.conf.urls.defaults import *
 from views import descriptor, login_begin, login_init, login_process, logout
 from metadata import get_deeplink_resources
 
-def deeplink_url_patterns(url_base_pattern=r'^init/%s/$'):
+def deeplink_url_patterns(
+    prefix='',
+    url_base_pattern=r'^init/%s/$',
+    login_init_func=login_init,
+    ):
     """
     Returns new deeplink URLs based on 'links' from settings.SAML2IDP_REMOTES.
     Parameters:
@@ -12,9 +16,9 @@ def deeplink_url_patterns(url_base_pattern=r'^init/%s/$'):
     resources = get_deeplink_resources()
     new_patterns = []
     for resource in resources:
-        new_patterns += patterns('',
+        new_patterns += patterns(prefix,
             url( url_base_pattern % resource,
-                 login_init,
+                 login_init_func,
                  {
                     'resource': resource,
                  },
