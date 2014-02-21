@@ -48,7 +48,7 @@ def login_begin(request, *args, **kwargs):
     # Store these values now, because Django's login cycle won't preserve them.
     request.session['SAMLRequest'] = source['SAMLRequest']
     request.session['RelayState'] = source['RelayState']
-    return redirect('login_process')
+    return redirect('saml_login_process')
 
 @login_required
 def login_init(request, resource, **kwargs):
@@ -120,10 +120,10 @@ def descriptor(request):
     Replies with the XML Metadata IDSSODescriptor.
     """
     idp_config = saml2idp_metadata.SAML2IDP_CONFIG
-    entity_id = config['issuer']
-    slo_url = request.build_absolute_uri(reverse('logout'))
-    sso_url = request.build_absolute_uri(reverse('login_begin'))
-    pubkey = xml_signing.load_cert_data(config['certificate_file'])
+    entity_id = idp_config['issuer']
+    slo_url = request.build_absolute_uri(reverse('saml_logout'))
+    sso_url = request.build_absolute_uri(reverse('saml_login_begin'))
+    pubkey = xml_signing.load_cert_data(idp_config['certificate_file'])
     tv = {
         'entity_id': entity_id,
         'cert_public_key': pubkey,
@@ -131,5 +131,5 @@ def descriptor(request):
         'sso_url': sso_url,
 
     }
-    return xml_response(request, 'saml2idp/idpssodescriptor.xml', tv,
-                                context_instance=RequestContext(request))
+    return xml_response(request, 'saml2idp/idpssodescriptor.xml', tv)
+                                #context_instance=RequestContext(request))

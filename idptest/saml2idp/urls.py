@@ -27,9 +27,9 @@ def deeplink_url_patterns(
     return new_patterns
 
 urlpatterns = patterns('',
-    url( r'^login/$', login_begin, name="login_begin"),
-    url( r'^login/process/$', login_process, name='login_process'),
-    url( r'^logout/$', logout, name="logout"),
+    url( r'^login/$', login_begin, name="saml_login_begin"),
+    url( r'^login/process/$', login_process, name='saml_login_process'),
+    url( r'^logout/$', logout, name="saml_logout"),
     (r'^metadata/xml/$', descriptor),
     # For "simple" deeplinks:
     url( r'^init/(?P<resource>\w+)/(?P<target>\w+)/$', login_init, name="login_init"),
