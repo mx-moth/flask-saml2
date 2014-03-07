@@ -47,7 +47,7 @@ def login_begin(request, *args, **kwargs):
         source = request.GET
     # Store these values now, because Django's login cycle won't preserve them.
     request.session['SAMLRequest'] = source['SAMLRequest']
-    request.session['RelayState'] = source['RelayState']
+    request.session['RelayState'] = source.get('RelayState', '')
     return redirect('saml_login_process')
 
 @login_required

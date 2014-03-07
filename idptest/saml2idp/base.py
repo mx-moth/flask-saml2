@@ -34,7 +34,8 @@ class Processor(object):
     # so that your sub-classes have access to all information: use wisely.
     # Formatting note: These methods are alphabetized.
 
-    def __init__(self):
+    def __init__(self, config):
+        self._config = config
         self._logger = logging.getLogger(self.__class__.__name__)
 
     def _build_assertion(self):

@@ -51,7 +51,6 @@ ATTRIBUTE = (
 
 ATTRIBUTE_STATEMENT = (
     '<saml:AttributeStatement>'
-    '${SUBJECT}'
     '${ATTRIBUTES}'
     '</saml:AttributeStatement>'
 )
