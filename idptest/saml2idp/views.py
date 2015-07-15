@@ -33,7 +33,7 @@ def _generate_response(request, processor):
                                 context_instance=RequestContext(request))
 
 def xml_response(request, template, tv):
-    return render_to_response(template, tv, mimetype="application/xml")
+    return render_to_response(template, tv, content_type="application/xml")
 
 @csrf_exempt
 def login_begin(request, *args, **kwargs):
