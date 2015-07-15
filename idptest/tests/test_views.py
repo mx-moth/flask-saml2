@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Tests for basic view functionality only.
 
@@ -5,11 +6,14 @@ NOTE: These classes do not test anything SAML-related.
 Testing actual SAML functionality requires implementation-specific details,
 which should be put in another test module.
 """
+from __future__ import absolute_import
+import pytest
+
 from django.http import HttpResponseRedirect
 from django.contrib.auth.models import User
 from django.test import TestCase
-from django.test.client import Client
-from .. import exceptions
+
+from saml2idp import exceptions
 
 
 SAML_REQUEST = 'this is not a real SAML Request'
@@ -66,18 +70,20 @@ class TestLoginProcessView(TestCase):
         """
         Bogus request should have triggered exception.
         """
+        User.objects.create_user(username='fred',
+                                 email='fred@example.com',
+                                 password='secret')
 
-        # Arrange: login new user and setup session variables.
-        fred = User.objects.create_user('fred', email='fred@example.com', password='secret')
         self.client.login(username='fred', password='secret')
+
         session = self.client.session
         session['RelayState'] = RELAY_STATE
         session['SAMLRequest'] = SAML_REQUEST
         session.save()
 
-        # Act and assert:
-        func = lambda : self.client.get('/idp/login/process/')
-        self.assertRaises(exceptions.CannotHandleAssertion, func)
+        with pytest.raises(exceptions.CannotHandleAssertion):
+            self.client.get('/idp/login/process/')
+
 
 class TestLogoutView(TestCase):
     def test_logout(self):

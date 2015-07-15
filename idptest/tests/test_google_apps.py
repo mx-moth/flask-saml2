@@ -1,9 +1,8 @@
 """
 Tests for the Google Apps processor.
 """
-# local imports:
-from .. import codex
-import base
+from . import base
+from saml2idp import codex
 
 SAML_REQUEST = codex.deflate_and_base64_encode(
     '<?xml version="1.0" encoding="UTF-8"?>'
@@ -31,6 +30,7 @@ REQUEST_DATA = {
     'RelayState': RELAY_STATE,
 }
 GOOGLE_APPS_ACS = 'https://www.google.com/a/example.com/acs'
+
 
 class TestGoogleAppsProcessor(base.TestBaseProcessor):
     SP_CONFIG = {

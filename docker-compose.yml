@@ -1,0 +1,5 @@
+test:
+    build: .
+    volumes:
+        - .:/app
+    command: tox

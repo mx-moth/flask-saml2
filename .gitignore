@@ -1,0 +1,12 @@
+*.sw[a-z]
+*.py[oc]
+*.log
+
+*.egg-info/
+*.tox/
+
+.env
+
+# Python release artifacts
+build/
+dist/

@@ -1,27 +1,29 @@
-# core python imports:
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
 import base64
 import logging
 import time
 import uuid
-# Django and other library imports:
+
 from BeautifulSoup import BeautifulStoneSoup
-from django.core.exceptions import ImproperlyConfigured
-# local app imports:
-import codex
-import exceptions
-import saml2idp_metadata
-import xml_render
+
+from . import codex
+from . import exceptions
+from . import saml2idp_metadata
+from . import xml_render
 
 MINUTES = 60
 HOURS = 60 * MINUTES
 
+
 def get_random_id():
-    #NOTE: It is very important that these random IDs NOT start with a number.
+    # It is very important that these random IDs NOT start with a number.
     random_id = '_' + uuid.uuid4().hex
     return random_id
 
+
 def get_time_string(delta=0):
-    return time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime(time.time() + delta))
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() + delta))
 
 
 class Processor(object):
@@ -260,7 +262,6 @@ class Processor(object):
         # AuthnRequest in this case:
         # - Destination: Should be this IdP's SSO endpoint URL. Not used in the response?
         # - ProviderName: According to the spec, this is optional.
-        provider_name = ''
         self._request_params = {
             'ACS_URL': acs_url,
             'DESTINATION': '',
