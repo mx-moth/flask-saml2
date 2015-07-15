@@ -14,7 +14,7 @@ setup(
     license = 'MIT',
     packages = ['saml2idp', 'saml2idp.tests'],
     package_dir = {'saml2idp': 'idptest/saml2idp'},
-    package_data = {'saml2idp': ['templates/saml2idp/*.html']},
+    package_data = {'saml2idp': ['templates/saml2idp/*.html', 'templates/saml2idp/*.xml']},
     url = 'http://code.google.com/p/django-saml2-idp/',
     zip_safe = True,
 )
