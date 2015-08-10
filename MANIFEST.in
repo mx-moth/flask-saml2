@@ -1,3 +1,2 @@
 include README.md LICENSE
-recursive-include templates/saml2idp *.html
-recursive-include templates/saml2idp *.xml
+recursive-include saml2idp/templates *.html *.xml
