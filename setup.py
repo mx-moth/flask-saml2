@@ -21,4 +21,5 @@ setup(
     packages=['saml2idp'],
     url='http://github.com/mobify/dj-saml-idp',
     zip_safe=False,
+    include_package_data=True,
 )
