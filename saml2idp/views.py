@@ -1,9 +1,7 @@
-# Python imports:
-import base64
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
 import logging
-import time
-import uuid
-# Django/other library imports:
+
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ImproperlyConfigured
@@ -11,12 +9,13 @@ from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.views.decorators.csrf import csrf_exempt
-# saml2idp app imports:
-import saml2idp_metadata
-import exceptions
-import metadata
-import registry
-import xml_signing
+
+from . import saml2idp_metadata
+from . import exceptions
+from . import metadata
+from . import registry
+from . import xml_signing
+
 
 def _generate_response(request, processor):
     """
@@ -30,10 +29,12 @@ def _generate_response(request, processor):
                                   context_instance=RequestContext(request))
 
     return render_to_response('saml2idp/login.html', tv,
-                                context_instance=RequestContext(request))
+                              context_instance=RequestContext(request))
+
 
 def xml_response(request, template, tv):
     return render_to_response(template, tv, content_type="application/xml")
+
 
 @csrf_exempt
 def login_begin(request, *args, **kwargs):
@@ -49,6 +50,7 @@ def login_begin(request, *args, **kwargs):
     request.session['SAMLRequest'] = source['SAMLRequest']
     request.session['RelayState'] = source.get('RelayState', '')
     return redirect('saml_login_process')
+
 
 @login_required
 def login_init(request, resource, **kwargs):
@@ -72,16 +74,17 @@ def login_init(request, resource, **kwargs):
     proc.init_deep_link(request, sp_config, url)
     return _generate_response(request, proc)
 
+
 @login_required
 def login_process(request):
     """
     Processor-based login continuation.
     Presents a SAML 2.0 Assertion for POSTing back to the Service Provider.
     """
-    #reg = registry.ProcessorRegistry()
     logging.debug("Request: %s" % request)
     proc = registry.find_processor(request)
     return _generate_response(request, proc)
+
 
 @csrf_exempt
 def logout(request):
@@ -93,7 +96,8 @@ def logout(request):
     auth.logout(request)
     tv = {}
     return render_to_response('saml2idp/logged_out.html', tv,
-                                context_instance=RequestContext(request))
+                              context_instance=RequestContext(request))
+
 
 @login_required
 @csrf_exempt
@@ -112,7 +116,7 @@ def slo_logout(request):
     auth.logout(request)
     tv = {}
     return render_to_response('saml2idp/logged_out.html', tv,
-                               context_instance=RequestContext(request))
+                              context_instance=RequestContext(request))
 
 
 def descriptor(request):
@@ -128,8 +132,6 @@ def descriptor(request):
         'entity_id': entity_id,
         'cert_public_key': pubkey,
         'slo_url': slo_url,
-        'sso_url': sso_url,
-
+        'sso_url': sso_url
     }
     return xml_response(request, 'saml2idp/idpssodescriptor.xml', tv)
-                                #context_instance=RequestContext(request))

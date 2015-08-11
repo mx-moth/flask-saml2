@@ -2,7 +2,7 @@
 """
 Signing code goes here.
 """
-from __future__ import unicode_literals, absolute_import
+from __future__ import absolute_import
 import hashlib
 import logging
 import string
