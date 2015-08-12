@@ -6,6 +6,7 @@ import time
 import uuid
 
 from BeautifulSoup import BeautifulStoneSoup
+from django.core.exceptions import ImproperlyConfigured
 
 from . import codex
 from . import exceptions
@@ -26,19 +27,35 @@ def get_time_string(delta=0):
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() + delta))
 
 
+# Design note: I've tried to make this easy to sub-class and override
+# just the bits you need to override. I've made use of object properties,
+# so that your sub-classes have access to all information: use wisely.
+# Formatting note: These methods are alphabetized.
 class Processor(object):
     """
     Base SAML 2.0 AuthnRequest to Response Processor.
     Sub-classes should provide Service Provider-specific functionality.
     """
-    # Design note: I've tried to make this easy to sub-class and override
-    # just the bits you need to override. I've made use of object properties,
-    # so that your sub-classes have access to all information: use wisely.
-    # Formatting note: These methods are alphabetized.
+
+    @property
+    def dotted_path(self):
+        return '{module}.{class_name}'.format(
+            module=self.__module__,
+            class_name=self.__class__.__name__)
 
     def __init__(self, config):
-        self._config = config
+        self._config = config.copy()
         self._logger = logging.getLogger(self.__class__.__name__)
+
+        processor_path = self._config.get('processor', 'invalid')
+        if processor_path != self.dotted_path:
+            raise ImproperlyConfigured(
+                "config is invalid for this processor: {}".format(self._config))
+
+        if 'acs_url' not in self._config:
+            raise ImproperlyConfigured(
+                "no ACS URL specified in SP configuration: {}".format(
+                    self._config))
 
     def _build_assertion(self):
         """
@@ -159,7 +176,6 @@ class Processor(object):
         """
         #Minimal test to verify that it's not binarily encoded still:
         if not self._request_xml.strip().startswith('<'):
-            badXML = self._request_xml
             raise Exception('RequestXML is not valid XML; '
                             'it may need to be decoded or decompressed.')
         soup = BeautifulStoneSoup(self._request_xml)
@@ -194,21 +210,22 @@ class Processor(object):
         self._system_params = {
             'ISSUER': saml2idp_metadata.SAML2IDP_CONFIG['issuer'],
         }
-        self._sp_config = sp_config
 
     def _validate_request(self):
         """
-        Validates the _saml_request. By default, simply verifies that the ACS_URL
-        is valid, according to settings. Sub-classes should override this and
-        throw a CannotHandleAssertion Exception if the validation does not succeed.
+        Validates the SAML request against the SP configuration of this
+        processor. Sub-classes should override this and raise a
+        `CannotHandleAssertion` exception if the validation fails.
+
+        Raises:
+            CannotHandleAssertion: if the ACS URL specified in the SAML request
+                doesn't match the one specified in the processor config.
         """
-        acs_url = self._request_params['ACS_URL']
-        for name, sp_config in saml2idp_metadata.SAML2IDP_REMOTES.items():
-            if acs_url == sp_config['acs_url']:
-                self._sp_config = sp_config
-                return
-        msg = "Could not find ACS url '%s' in SAML2IDP_REMOTES setting." % acs_url
-        raise exceptions.CannotHandleAssertion(msg)
+        request_acs_url = self._request_params['ACS_URL']
+        if self._config['acs_url'] != request_acs_url:
+            raise exceptions.CannotHandleAssertion(
+                "couldn't find ACS url '{}' in SAML2IDP_REMOTES "
+                "setting.".format(request_acs_url))
 
     def _validate_user(self):
         """
@@ -225,10 +242,22 @@ class Processor(object):
         # Read the request.
         try:
             self._extract_saml_request()
+        except Exception, e:
+            msg = "can't find SAML request in user session: %s" % e
+            self._logger.debug(msg)
+            raise exceptions.CannotHandleAssertion(msg)
+
+        try:
             self._decode_request()
+        except Exception, e:
+            msg = "can't decode SAML request: %s" % e
+            self._logger.debug(msg)
+            raise exceptions.CannotHandleAssertion(msg)
+
+        try:
             self._parse_request()
         except Exception, e:
-            msg = 'Exception while reading request: %s' % e
+            msg = "can't parse SAML request: %s" % e
             self._logger.debug(msg)
             raise exceptions.CannotHandleAssertion(msg)
 
@@ -256,7 +285,7 @@ class Processor(object):
         deep-linked URL.
         """
         self._reset(request, sp_config)
-        acs_url = self._sp_config['acs_url']
+        acs_url = self._config['acs_url']
         # NOTE: The following request params are made up. Some are blank,
         # because they comes over in the AuthnRequest, but we don't have an
         # AuthnRequest in this case:
