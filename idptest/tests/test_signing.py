@@ -1,6 +1,11 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+import os
 import string
 import unittest
+
 from saml2idp import xml_render
+from saml2idp import xml_signing
 from saml2idp.xml_signing import get_signature_xml
 from saml2idp.xml_templates import ASSERTION_SALESFORCE, RESPONSE
 
@@ -132,3 +137,24 @@ class TestResponse(XmlTest):
         params['ASSERTION'] = SIGNED_ASSERTION_SALESFORCE_XML
         got = xml_render.get_response_xml(params, signed=True)
         self._test(got, SIGNED_RESPONSE_WITH_SIGNED_ASSERTION_SALESFORCE_XML)
+
+
+def test_loading_private_key():
+    filename = os.path.join(os.getcwd(),
+                            'keys/sample/sample-private-key.pem')
+
+    assert type(filename) is str
+    xml_signing.load_private_key(filename)
+
+    filename = unicode(filename)
+    xml_signing.load_private_key(filename)
+
+
+def test_loading_certificate_file():
+    filename = os.path.join(os.getcwd(),
+                            'keys/sample/sample-certificate.pem')
+    assert type(filename) is str
+    xml_signing.load_cert_data(filename)
+
+    filename = unicode(filename)
+    xml_signing.load_cert_data(filename)

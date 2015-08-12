@@ -22,6 +22,13 @@ def load_cert_data(certificate_file):
     return cert_data
 
 
+def load_private_key(filename):
+    # The filename need to be encoded because it is using a C extension under
+    # the hood which means it expects a 'const char*' type and will fail with
+    # unencoded unicode string.
+    return M2Crypto.EVP.load_key(filename.encode('utf-8'))
+
+
 def get_signature_xml(subject, reference_uri):
     """
     Returns XML Signature for subject.
@@ -47,8 +54,7 @@ def get_signature_xml(subject, reference_uri):
         })
     logging.debug('SignedInfo XML: ' + signed_info)
 
-    # RSA-sign the signed_info.
-    private_key = M2Crypto.EVP.load_key(private_key_file)
+    private_key = load_private_key(private_key_file)
     private_key.sign_init()
     private_key.sign_update(signed_info)
     rsa_signature = nice64(private_key.sign_final())
