@@ -8,37 +8,53 @@ import logging
 import string
 import M2Crypto
 
-from . import saml2idp_metadata
+from . import saml2idp_metadata as smd
 from .codex import nice64
 from .xml_templates import SIGNED_INFO, SIGNATURE
 
 
-def load_cert_data(certificate_file):
-    """
-    Returns the certificate data out of the certificate_file.
-    """
-    certificate = M2Crypto.X509.load_cert(certificate_file)
-    cert_data = ''.join(certificate.as_pem().split('\n')[1:-2])
-    return cert_data
+def load_certificate(config):
+    if smd.CERTIFICATE_DATA in config:
+        return config.get(smd.CERTIFICATE_DATA, '')
+
+    certificate_filename = config.get(smd.CERTIFICATE_FILENAME)
+    logging.debug('Using certificate file: ' + certificate_filename)
+
+    certificate = M2Crypto.X509.load_cert(certificate_filename)
+    return ''.join(certificate.as_pem().split('\n')[1:-2])
 
 
-def load_private_key(filename):
+def load_private_key(config):
+    private_key_data = config.get(smd.PRIVATE_KEY_DATA)
+
+    if private_key_data:
+        return M2Crypto.EVP.load_key_string(private_key_data)
+
+    private_key_file = config.get(smd.PRIVATE_KEY_FILENAME)
+    logging.debug('Using private key file: {}'.format(private_key_file))
+
     # The filename need to be encoded because it is using a C extension under
     # the hood which means it expects a 'const char*' type and will fail with
     # unencoded unicode string.
-    return M2Crypto.EVP.load_key(filename.encode('utf-8'))
+    return M2Crypto.EVP.load_key(private_key_file.encode('utf-8'))
+
+
+def sign_with_rsa(private_key, data):
+    private_key.sign_init()
+    private_key.sign_update(data)
+    return nice64(private_key.sign_final())
 
 
 def get_signature_xml(subject, reference_uri):
     """
     Returns XML Signature for subject.
     """
-    config = saml2idp_metadata.SAML2IDP_CONFIG
-    private_key_file = config['private_key_file']
-    certificate_file = config['certificate_file']
     logging.debug('get_signature_xml - Begin.')
-    logging.debug('Using private key file: ' + private_key_file)
-    logging.debug('Using certificate file: ' + certificate_file)
+    config = smd.SAML2IDP_CONFIG
+
+    private_key = load_private_key(config)
+    certificate = load_certificate(config)
+
     logging.debug('Subject: ' + subject)
 
     # Hash the subject.
@@ -54,21 +70,15 @@ def get_signature_xml(subject, reference_uri):
         })
     logging.debug('SignedInfo XML: ' + signed_info)
 
-    private_key = load_private_key(private_key_file)
-    private_key.sign_init()
-    private_key.sign_update(signed_info)
-    rsa_signature = nice64(private_key.sign_final())
+    rsa_signature = sign_with_rsa(private_key, signed_info)
     logging.debug('RSA Signature: ' + rsa_signature)
-
-    # Load the certificate.
-    cert_data = load_cert_data(certificate_file)
 
     # Put the signed_info and rsa_signature into the XML signature.
     signed_info_short = signed_info.replace(' xmlns:ds="http://www.w3.org/2000/09/xmldsig#"', '')
     signature_xml = string.Template(SIGNATURE).substitute({
         'RSA_SIGNATURE': rsa_signature,
         'SIGNED_INFO': signed_info_short,
-        'CERTIFICATE': cert_data,
+        'CERTIFICATE': certificate,
         })
     logging.debug('Signature XML: ' + signature_xml)
     return signature_xml

@@ -6,6 +6,7 @@ import unittest
 
 from saml2idp import xml_render
 from saml2idp import xml_signing
+from saml2idp import saml2idp_metadata as smd
 from saml2idp.xml_signing import get_signature_xml
 from saml2idp.xml_templates import ASSERTION_SALESFORCE, RESPONSE
 
@@ -140,21 +141,46 @@ class TestResponse(XmlTest):
 
 
 def test_loading_private_key():
-    filename = os.path.join(os.getcwd(),
-                            'keys/sample/sample-private-key.pem')
+    filename = os.path.join(os.getcwd(), 'keys/sample/sample-private-key.pem')
+    config = {smd.PRIVATE_KEY_FILENAME: filename}
 
     assert type(filename) is str
-    xml_signing.load_private_key(filename)
+    xml_signing.load_private_key(config)
 
     filename = unicode(filename)
-    xml_signing.load_private_key(filename)
+    config = {smd.PRIVATE_KEY_FILENAME: filename}
+    xml_signing.load_private_key(config)
 
 
-def test_loading_certificate_file():
-    filename = os.path.join(os.getcwd(),
-                            'keys/sample/sample-certificate.pem')
+def test_signing_data_with_private_key():
+    filename = os.path.join(os.getcwd(), 'keys/sample/sample-private-key.pem')
+    config = {smd.PRIVATE_KEY_FILENAME: filename}
+    private_key = xml_signing.load_private_key(config)
+
+    data = """Some multiline
+    test data
+    or something."""
+
+    xml_signing.sign_with_rsa(private_key, data)
+
+
+def test_loading_certificate_from_file():
+    filename = os.path.join(os.getcwd(), 'keys/sample/sample-certificate.pem')
+    config = {smd.CERTIFICATE_FILENAME: filename}
+
     assert type(filename) is str
-    xml_signing.load_cert_data(filename)
+    xml_signing.load_certificate(config)
 
     filename = unicode(filename)
-    xml_signing.load_cert_data(filename)
+    config = {smd.CERTIFICATE_FILENAME: filename}
+
+    certificate = xml_signing.load_certificate(config)
+    assert certificate == "MIICKzCCAdWgAwIBAgIJAM8DxRNtPj90MA0GCSqGSIb3DQEBBQUAMEUxCzAJBgNVBAYTAkFVMRMwEQYDVQQIEwpTb21lLVN0YXRlMSEwHwYDVQQKExhJbnRlcm5ldCBXaWRnaXRzIFB0eSBMdGQwHhcNMTEwODEyMjA1MTIzWhcNMTIwODExMjA1MTIzWjBFMQswCQYDVQQGEwJBVTETMBEGA1UECBMKU29tZS1TdGF0ZTEhMB8GA1UEChMYSW50ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANcNmgm4YlSUAr2xdWei5aRU/DbWtsQ47gjkv28Ekje3ob+6q0M+D5phwYDcv9ygYmuJ5wOi1cPprsWdFWmvSusCAwEAAaOBpzCBpDAdBgNVHQ4EFgQUzyBR9+vE8bygqvD6CZ/w6aQPikMwdQYDVR0jBG4wbIAUzyBR9+vE8bygqvD6CZ/w6aQPikOhSaRHMEUxCzAJBgNVBAYTAkFVMRMwEQYDVQQIEwpTb21lLVN0YXRlMSEwHwYDVQQKExhJbnRlcm5ldCBXaWRnaXRzIFB0eSBMdGSCCQDPA8UTbT4/dDAMBgNVHRMEBTADAQH/MA0GCSqGSIb3DQEBBQUAA0EAIQuPLA/mlMJAMF680kL7reX5WgyRwAtRzJK6FgNjE7kRaLZQ79UKYVYa0VAyrRdoNEyVhG4tJFEiQJzaLWsl/A=="  # noqa
+
+
+def test_loading_certificate_from_string(settings):
+    certificate_data = "MIICKzCCAdWgAwIBAgIJAM8DxRNtPj90MA0GCSqGSIb3DQEBBQUAMEUxCzAJBgNVBAYTAkFVMRMwEQYDVQQIEwpTb21lLVN0YXRlMSEwHwYDVQQKExhJbnRlcm5ldCBXaWRnaXRzIFB0eSBMdGQwHhcNMTEwODEyMjA1MTIzWhcNMTIwODExMjA1MTIzWjBFMQswCQYDVQQGEwJBVTETMBEGA1UECBMKU29tZS1TdGF0ZTEhMB8GA1UEChMYSW50ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANcNmgm4YlSUAr2xdWei5aRU/DbWtsQ47gjkv28Ekje3ob+6q0M+D5phwYDcv9ygYmuJ5wOi1cPprsWdFWmvSusCAwEAAaOBpzCBpDAdBgNVHQ4EFgQUzyBR9+vE8bygqvD6CZ/w6aQPikMwdQYDVR0jBG4wbIAUzyBR9+vE8bygqvD6CZ/w6aQPikOhSaRHMEUxCzAJBgNVBAYTAkFVMRMwEQYDVQQIEwpTb21lLVN0YXRlMSEwHwYDVQQKExhJbnRlcm5ldCBXaWRnaXRzIFB0eSBMdGSCCQDPA8UTbT4/dDAMBgNVHRMEBTADAQH/MA0GCSqGSIb3DQEBBQUAA0EAIQuPLA/mlMJAMF680kL7reX5WgyRwAtRzJK6FgNjE7kRaLZQ79UKYVYa0VAyrRdoNEyVhG4tJFEiQJzaLWsl/A=="  # noqa
+    config = {smd.CERTIFICATE_DATA: certificate_data}
+
+    certificate = xml_signing.load_certificate(config)
+    assert certificate == certificate_data
