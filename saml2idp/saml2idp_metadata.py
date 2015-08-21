@@ -13,11 +13,11 @@ PRIVATE_KEY_FILENAME = 'private_key_file'
 
 
 def check_configuration_contains(config, keys):
-    available_keys = set(keys).intersection(set(config.keys()))
+    available_keys = frozenset(keys).intersection(frozenset(config.keys()))
 
     if not available_keys:
         raise ImproperlyConfigured(
-            'one of the followin keys is required but none was '
+            'one of the following keys is required but none was '
             'specified: {}'.format(keys))
 
     if len(available_keys) > 1:
@@ -28,10 +28,10 @@ def check_configuration_contains(config, keys):
 
 def validate_configuration(config):
     check_configuration_contains(config=config,
-                                 keys=[PRIVATE_KEY_DATA, PRIVATE_KEY_FILENAME])
+                                 keys=(PRIVATE_KEY_DATA, PRIVATE_KEY_FILENAME))
 
     check_configuration_contains(config=config,
-                                 keys=[CERTIFICATE_DATA, CERTIFICATE_FILENAME])
+                                 keys=(CERTIFICATE_DATA, CERTIFICATE_FILENAME))
 
 
 try:
