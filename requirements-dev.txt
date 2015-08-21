@@ -1,6 +1,7 @@
 pytest
 pytest-django
 pdbpp
+tox
 
 # Release tools
 setuptools
