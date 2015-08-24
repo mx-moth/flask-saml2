@@ -4,6 +4,7 @@ pdbpp
 tox
 
 # Release tools
+bumpversion==0.5.3
 setuptools
 twine
 wheel
