@@ -30,6 +30,17 @@ docker-compose (requires `docker` and `docker-compose` to be installed)::
 Release
 -------
 
+First of all, create a new version of the package. We use `bumpversion`_ to
+handle updating all version strings, committing the changes and creating a
+new git tag automatically. To bump the packag version use the follwoing
+command with whichever part of the semantic version you'd like to update::
+
+    $ bumpversion (major|minor|patch)
+
+for instance for a *minor* update, use (which should be the most common case)::
+
+    $ bumpersion minor
+
 You need the PyPI credentials for the `mobify` account to be able to release
 a new version and the build script is expecting it defined as an environment
 variable::
@@ -57,3 +68,4 @@ Distributed under the `MIT License`_.
 .. _`novapost/django-saml2-idp`: https://github.com/novapost/django-saml2-idp
 .. _`MIT License`: https://github.com/mobify/dj-saml-idp/blob/master/LICENSE
 .. _`wheel`: http://wheel.readthedocs.org/en/latest/
+.. _`bumpversion`: https://github.com/peritus/bumpversion
