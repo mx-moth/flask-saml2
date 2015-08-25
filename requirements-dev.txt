@@ -1,5 +1,6 @@
 pytest
 pytest-django
+pytest-cover
 pdbpp
 tox
 

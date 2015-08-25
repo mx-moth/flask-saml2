@@ -7,6 +7,7 @@ Testing actual SAML functionality requires implementation-specific details,
 which should be put in another test module.
 """
 from __future__ import absolute_import
+import mock
 import pytest
 
 from django.http import HttpResponseRedirect
@@ -14,6 +15,7 @@ from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 
+from saml2idp import views
 from saml2idp import exceptions
 from saml2idp.xml_signing import load_certificate
 from saml2idp import saml2idp_metadata as smd
@@ -132,3 +134,23 @@ class TestLogoutView(TestCase):
 def test_rendering_metadata_view(client):
     page = client.get(reverse('metadata_xml'))
     assert load_certificate(smd.SAML2IDP_CONFIG) in page.content
+
+
+def test_creating_template_names_without_processor():
+    filename = 'special_file.html'
+    template_names = views._get_template_names(filename)
+    assert  template_names == ['{}/{}'.format(views.BASE_TEMPLATE_DIR, filename)]
+
+
+def test_creating_template_names_with_processor():
+    filename = 'special_file.html'
+    processor = mock.Mock()
+    processor.name = 'messaging'
+
+    template_names = views._get_template_names(filename, processor)
+
+    expected_template_names = [
+        '{}/{}/{}'.format(views.BASE_TEMPLATE_DIR, processor.name, filename),
+        '{}/{}'.format(views.BASE_TEMPLATE_DIR, filename)]
+
+    assert  template_names == expected_template_names
