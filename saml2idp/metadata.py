@@ -24,7 +24,7 @@ def get_config_for_resource(resource_name):
         links = get_links(config)
         for name, pattern in links:
             if name == resource_name:
-                return config
+                return friendlyname, config
     msg = 'SAML2IDP_REMOTES is not configured to handle a link resource "%s"'
     raise ImproperlyConfigured(msg % resource_name)
 

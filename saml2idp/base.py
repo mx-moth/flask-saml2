@@ -43,7 +43,8 @@ class Processor(object):
             module=self.__module__,
             class_name=self.__class__.__name__)
 
-    def __init__(self, config):
+    def __init__(self, config, name=None):
+        self.name = name
         self._config = config.copy()
         self._logger = get_saml_logger()
 

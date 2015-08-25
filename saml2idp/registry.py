@@ -1,8 +1,10 @@
-# -*- coding: utf-8 -*-
+ -*- coding: utf-8 -*-
 from __future__ import absolute_import
 """
 Registers and loads Processor classes from settings.
 """
+import warnings
+
 from importlib import import_module
 
 from django.core.exceptions import ImproperlyConfigured
@@ -14,10 +16,9 @@ from .logging import get_saml_logger
 logger = get_saml_logger()
 
 
-def get_processor(config):
+def get_processor(name, config):
     """
     Get an instance of the processor with config.
-
     """
     dottedpath = config['processor']
 
@@ -38,7 +39,15 @@ def get_processor(config):
             'processors module "{0}" does not define a "{1}" class'.format(
                 sp_module, sp_classname))
 
-    instance = sp_class(config)
+    try:
+        instance = sp_class(name=name, config=config)
+    except TypeError:
+        warnings.warn(
+            "the new version of the Processor class expects a 'name' argument "
+            "to be passed in. The use of old processors is deprecated and will "
+            "be removed in the future.", DeprecationWarning)
+        instance = sp_class(config=config)
+        instance.name = name
     return instance
 
 
@@ -47,7 +56,7 @@ def find_processor(request):
     Returns the Processor instance that is willing to handle this request.
     """
     for name, sp_config in saml2idp_metadata.SAML2IDP_REMOTES.items():
-        proc = get_processor(sp_config)
+        proc = get_processor(name, sp_config)
         try:
             if proc.can_handle(request):
                 return proc

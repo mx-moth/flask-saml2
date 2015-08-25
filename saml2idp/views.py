@@ -73,8 +73,8 @@ def login_init(request, resource, **kwargs):
     """
     Initiates an IdP-initiated link to a simple SP resource/target URL.
     """
-    sp_config = metadata.get_config_for_resource(resource)
-    proc = registry.get_processor(sp_config)
+    name, sp_config = metadata.get_config_for_resource(resource)
+    proc = registry.get_processor(name, sp_config)
 
     try:
         linkdict = dict(metadata.get_links(sp_config))
