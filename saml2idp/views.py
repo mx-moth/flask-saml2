@@ -127,7 +127,7 @@ def descriptor(request):
     entity_id = idp_config['issuer']
     slo_url = request.build_absolute_uri(reverse('saml_logout'))
     sso_url = request.build_absolute_uri(reverse('saml_login_begin'))
-    pubkey = xml_signing.load_cert_data(idp_config['certificate_file'])
+    pubkey = xml_signing.load_certificate(idp_config)
     tv = {
         'entity_id': entity_id,
         'cert_public_key': pubkey,

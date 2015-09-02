@@ -11,10 +11,12 @@ import pytest
 
 from django.http import HttpResponseRedirect
 from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
 from django.test import TestCase
 
 from saml2idp import exceptions
-
+from saml2idp.xml_signing import load_certificate
+from saml2idp import saml2idp_metadata as smd
 
 SAML_REQUEST = 'this is not a real SAML Request'
 RELAY_STATE = 'abcdefghi0123456789'
@@ -102,3 +104,8 @@ class TestLogoutView(TestCase):
         self.assertTrue('_auth_user_id' in self.client.session, 'Did not login test user; test is broken.')
         response = self.client.get('/idp/logout/')
         self.assertTrue('_auth_user_id' not in self.client.session, 'Did not logout test user.')
+
+
+def test_rendering_metadata_view(client):
+    page = client.get(reverse('metadata_xml'))
+    assert load_certificate(smd.SAML2IDP_CONFIG) in page.content
