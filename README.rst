@@ -10,6 +10,8 @@ This is a fork `novapost/django-saml2-idp`_ that is distributed indipendantly as
 `dj-saml-idp` implements the Identity Provider side of the SAML 2.0 protocol
 and makes user authentication available to external applications.
 
+**Note:** Only supports Django 1.5+.
+
 
 Testing 
 -------
