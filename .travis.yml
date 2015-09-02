@@ -7,7 +7,6 @@ addons:
       - swig
 env:
     matrix:
-        - TOXENV=py27-dj14
         - TOXENV=py27-dj15
         - TOXENV=py27-dj16
         - TOXENV=py27-dj17
