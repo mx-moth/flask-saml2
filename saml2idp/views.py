@@ -6,7 +6,9 @@ from django.contrib import auth
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
+from django.utils.datastructures import MultiValueDictKeyError
 from django.shortcuts import render_to_response, redirect
+from django.http import HttpResponseBadRequest
 from django.template import RequestContext
 from django.views.decorators.csrf import csrf_exempt
 
@@ -47,7 +49,12 @@ def login_begin(request, *args, **kwargs):
     else:
         source = request.GET
     # Store these values now, because Django's login cycle won't preserve them.
-    request.session['SAMLRequest'] = source['SAMLRequest']
+
+    try:
+        request.session['SAMLRequest'] = source['SAMLRequest']
+    except (KeyError, MultiValueDictKeyError):
+        return HttpResponseBadRequest('the SAML request payload is missing')
+
     request.session['RelayState'] = source.get('RelayState', '')
     return redirect('saml_login_process')
 

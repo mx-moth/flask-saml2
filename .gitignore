@@ -7,6 +7,9 @@
 
 .env
 
+.cache
+.coverage
+
 # Python release artifacts
 build/
 dist/

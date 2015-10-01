@@ -31,17 +31,17 @@ class TestLoginView(TestCase):
         """
         GET request without SAMLResponse data should have failed.
         """
-        self.assertRaises(KeyError, lambda : self.client.get('/idp/login/'))
+        self.assertEquals(self.client.get('/idp/login/').status_code, 400)
 
     def test_empty_post(self):
         """
         POST request without SAMLResponse data should have failed.
         """
-        self.assertRaises(KeyError, lambda : self.client.post('/idp/login/'))
+        self.assertEquals(self.client.post('/idp/login/').status_code, 400)
 
     def _test_pre_redirect(self):
-        self.assertFalse(self.client.session.has_key('SAMLRequest'))
-        self.assertFalse(self.client.session.has_key('RelayState'))
+        self.assertFalse('SAMLRequest' in self.client.session)
+        self.assertFalse('RelayState' in self.client.session)
 
     def _test_redirect(self, response):
         self.assertEquals(response.status_code, HttpResponseRedirect.status_code)
