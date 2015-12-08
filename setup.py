@@ -15,7 +15,9 @@ setup(
     long_description=description,
     install_requires=[
         'Django>=1.4',
-        'M2Crypto>=0.20.1',
+        # We have to pin M2Crypto to version 0.22.3 because more recent
+        # versions are failing due to issues with finding openssl libs.
+        'M2Crypto==0.22.3',
         'BeautifulSoup>=3.2.0'],
     license='MIT',
     packages=['saml2idp'],
