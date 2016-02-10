@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
-import logging
-
 from django.contrib import auth
 from django.core.validators import URLValidator
 from django.contrib.auth.decorators import login_required
@@ -18,6 +16,9 @@ from . import exceptions
 from . import metadata
 from . import registry
 from . import xml_signing
+from .logging import get_saml_logger
+
+logger = get_saml_logger()
 
 # The 'schemes' argument for the URLValidator was introduced in Django 1.6. This
 # ensure that URL validation works in 1.5 as well.
@@ -96,7 +97,7 @@ def login_process(request):
     Processor-based login continuation.
     Presents a SAML 2.0 Assertion for POSTing back to the Service Provider.
     """
-    logging.debug("Request: %s" % request)
+    logger.debug("Request: %s" % request)
     proc = registry.find_processor(request)
     return _generate_response(request, proc)
 

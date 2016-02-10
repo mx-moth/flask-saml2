@@ -3,17 +3,15 @@ from __future__ import absolute_import
 """
 Registers and loads Processor classes from settings.
 """
-import logging
-
 from importlib import import_module
 
 from django.core.exceptions import ImproperlyConfigured
 
 from . import exceptions
 from . import saml2idp_metadata
+from .logging import get_saml_logger
 
-
-logger = logging.getLogger(__name__)
+logger = get_saml_logger()
 
 
 def get_processor(config):
@@ -30,9 +28,9 @@ def get_processor(config):
     sp_module, sp_classname = dottedpath[:dot], dottedpath[dot+1:]
     try:
         mod = import_module(sp_module)
-    except ImportError, e:
+    except ImportError as exc:
         raise ImproperlyConfigured(
-            'Error importing processors {0}: "{1}"'.format(sp_module, e))
+            'Error importing processors {0}: "{1}"'.format(sp_module, exc))
     try:
         sp_class = getattr(mod, sp_classname)
     except AttributeError:

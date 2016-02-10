@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 import base64
-import logging
 import time
 import uuid
 
@@ -12,6 +11,7 @@ from . import codex
 from . import exceptions
 from . import saml2idp_metadata
 from . import xml_render
+from .logging import get_saml_logger
 
 MINUTES = 60
 HOURS = 60 * MINUTES
@@ -45,9 +45,14 @@ class Processor(object):
 
     def __init__(self, config):
         self._config = config.copy()
-        self._logger = logging.getLogger(self.__class__.__name__)
+        self._logger = get_saml_logger()
 
         processor_path = self._config.get('processor', 'invalid')
+
+        self._logger.info('initializing processor',
+                          configured_processor=processor_path,
+                          processor=self.dotted_path)
+
         if processor_path != self.dotted_path:
             raise ImproperlyConfigured(
                 "config is invalid for this processor: {}".format(self._config))
@@ -56,6 +61,8 @@ class Processor(object):
             raise ImproperlyConfigured(
                 "no ACS URL specified in SP configuration: {}".format(
                     self._config))
+
+        self._logger.info('processor configured', config=self._config)
 
     def _build_assertion(self):
         """
@@ -103,6 +110,8 @@ class Processor(object):
         """
         self._request_xml = base64.b64decode(self._saml_request)
 
+        self._logger.info('SAML request decoded', decoded_request=self._request_xml)
+
     def _determine_assertion_id(self):
         """
         Determines the _assertion_id.
@@ -114,8 +123,11 @@ class Processor(object):
         Determines the _audience.
         """
         self._audience = self._request_params.get('DESTINATION', None)
+
         if not self._audience:
             self._audience = self._request_params.get('PROVIDER_NAME', None)
+
+        self._logger.info('determined audience', audience=self._audience)
 
     def _determine_response_id(self):
         """
@@ -222,10 +234,12 @@ class Processor(object):
                 doesn't match the one specified in the processor config.
         """
         request_acs_url = self._request_params['ACS_URL']
+
         if self._config['acs_url'] != request_acs_url:
-            raise exceptions.CannotHandleAssertion(
-                "couldn't find ACS url '{}' in SAML2IDP_REMOTES "
-                "setting.".format(request_acs_url))
+            msg = ("couldn't find ACS url '{}' in SAML2IDP_REMOTES "
+                   "setting.".format(request_acs_url))
+            self._logger.info(msg)
+            raise exceptions.CannotHandleAssertion(msg)
 
     def _validate_user(self):
         """
@@ -242,23 +256,23 @@ class Processor(object):
         # Read the request.
         try:
             self._extract_saml_request()
-        except Exception, e:
-            msg = "can't find SAML request in user session: %s" % e
-            self._logger.debug(msg)
+        except Exception as exc:
+            msg = "can't find SAML request in user session: %s" % exc
+            self._logger.info(msg)
             raise exceptions.CannotHandleAssertion(msg)
 
         try:
             self._decode_request()
-        except Exception, e:
-            msg = "can't decode SAML request: %s" % e
-            self._logger.debug(msg)
+        except Exception as exc:
+            msg = "can't decode SAML request: %s" % exc
+            self._logger.info(msg)
             raise exceptions.CannotHandleAssertion(msg)
 
         try:
             self._parse_request()
-        except Exception, e:
-            msg = "can't parse SAML request: %s" % e
-            self._logger.debug(msg)
+        except Exception as exc:
+            msg = "can't parse SAML request: %s" % exc
+            self._logger.info(msg)
             raise exceptions.CannotHandleAssertion(msg)
 
         self._validate_request()

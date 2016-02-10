@@ -1,11 +1,22 @@
+# -*- coding: utf-8 -*-
 """
 Functions for creating XML output.
 """
-import logging
+from __future__ import absolute_import
 import string
-from xml_signing import get_signature_xml
-from xml_templates import ATTRIBUTE, ATTRIBUTE_STATEMENT, \
-    ASSERTION_GOOGLE_APPS, ASSERTION_SALESFORCE, RESPONSE, SUBJECT
+
+from .xml_signing import get_signature_xml
+from .xml_templates import (ATTRIBUTE,
+                            ATTRIBUTE_STATEMENT,
+                            ASSERTION_GOOGLE_APPS,
+                            ASSERTION_SALESFORCE,
+                            RESPONSE,
+                            SUBJECT)
+
+from .logging import get_saml_logger
+
+logger = get_saml_logger()
+
 
 def _get_attribute_statement(params):
     """
@@ -66,8 +77,8 @@ def _get_assertion_xml(template, parameters, signed=False):
     _get_attribute_statement(params)
 
     unsigned = template.substitute(params)
-    logging.debug('Unsigned:')
-    logging.debug(unsigned)
+    logger.debug('Unsigned:')
+    logger.debug(unsigned)
     if not signed:
         return unsigned
 
@@ -76,8 +87,8 @@ def _get_assertion_xml(template, parameters, signed=False):
     params['ASSERTION_SIGNATURE'] = signature_xml
     signed = template.substitute(params)
 
-    logging.debug('Signed:')
-    logging.debug(signed)
+    logger.debug('Signed:')
+    logger.debug(signed)
     return signed
 
 def get_assertion_googleapps_xml(parameters, signed=False):
@@ -99,8 +110,8 @@ def get_response_xml(parameters, signed=False):
     template = string.Template(RESPONSE)
     unsigned = template.substitute(params)
 
-    logging.debug('Unsigned:')
-    logging.debug(unsigned)
+    logger.debug('Unsigned:')
+    logger.debug(unsigned)
     if not signed:
         return unsigned
 
@@ -109,6 +120,6 @@ def get_response_xml(parameters, signed=False):
     params['RESPONSE_SIGNATURE'] = signature_xml
     signed = template.substitute(params)
 
-    logging.debug('Signed:')
-    logging.debug(signed)
+    logger.debug('Signed:')
+    logger.debug(signed)
     return signed
