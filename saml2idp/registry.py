@@ -3,17 +3,18 @@ from __future__ import absolute_import
 """
 Registers and loads Processor classes from settings.
 """
-# Python imports
 import logging
-# Django imports
-from django.utils.importlib import import_module
+
+from importlib import import_module
+
 from django.core.exceptions import ImproperlyConfigured
-# Local imports
+
 from . import exceptions
 from . import saml2idp_metadata
 
-# Setup logging
+
 logger = logging.getLogger(__name__)
+
 
 def get_processor(config):
     """
