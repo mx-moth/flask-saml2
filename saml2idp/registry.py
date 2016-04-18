@@ -31,14 +31,18 @@ def get_processor(config):
     try:
         mod = import_module(sp_module)
     except ImportError, e:
-        raise ImproperlyConfigured('Error importing processors %s: "%s"' % (sp_module, e))
+        raise ImproperlyConfigured(
+            'Error importing processors {0}: "{1}"'.format(sp_module, e))
     try:
         sp_class = getattr(mod, sp_classname)
     except AttributeError:
-        raise ImproperlyConfigured('processors module "%s" does not define a "%s" class' % (sp_module, sp_classname))
+        raise ImproperlyConfigured(
+            'processors module "{0}" does not define a "{1}" class'.format(
+                sp_module, sp_classname))
 
     instance = sp_class(config)
     return instance
+
 
 def find_processor(request):
     """
@@ -53,4 +57,5 @@ def find_processor(request):
             # Log these, but keep looking.
             logger.debug('%s %s' % (proc, exc))
 
-    raise exceptions.CannotHandleAssertion('None of the processors in SAML2IDP_REMOTES could handle this request.')
+    raise exceptions.CannotHandleAssertion(
+        'None of the processors in SAML2IDP_REMOTES could handle this request.')
