@@ -6,13 +6,18 @@ import saml2idp
 with open('README.rst') as readme:
     description = readme.read()
 
+
+with open('HISTORY.rst') as history:
+    changelog = history.read()
+
+
 setup(
     name='dj-saml-idp',
     version=saml2idp.__version__,
     author='Sebastian Vetter',
     author_email='sebastian@mobify.com',
     description='SAML 2.0 IdP for Django',
-    long_description=description,
+    long_description='\n\n'.join([description, changelog]),
     install_requires=[
         'Django>=1.4',
         # We have to pin M2Crypto to version 0.22.3 because more recent
