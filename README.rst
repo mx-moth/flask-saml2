@@ -26,7 +26,7 @@ directly (preferably in a virtualenv)::
 Or inside a Docker container using using the provided `Dockerfile` and with 
 docker-compose (requires `docker` and `docker-compose` to be installed)::
 
-    $ docker-compose run test
+    $ docker-compose run test-27
 
 
 Release
