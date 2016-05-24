@@ -5,6 +5,13 @@ Release History
 ---------------
 
 
+0.21.3
+++++++
+
+* Allow a `redirect_to` parameter to be passed to the logout view to redirect
+  the user to after succesful logout instead of showing the logout page.
+
+
 0.21.2 (2016-04-18)
 +++++++++++++++++++
 
