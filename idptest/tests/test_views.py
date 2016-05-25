@@ -102,7 +102,7 @@ class TestLogoutView(TestCase):
                                    {'redirect_to': redirect_url})
 
         assert response.status_code == 302
-        assert response.url == redirect_url
+        assert response['Location'] == redirect_url
 
     def test_logout_redirect_with_invalid_url_fails(self):
         redirect_url = '://saml.serviceprovid.er/somewhere/'
