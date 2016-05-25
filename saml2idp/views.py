@@ -19,6 +19,13 @@ from . import metadata
 from . import registry
 from . import xml_signing
 
+# The 'schemes' argument for the URLValidator was introduced in Django 1.6. This
+# ensure that URL validation works in 1.5 as well.
+try:
+    URL_VALIDATOR = URLValidator(schemes=('http', 'https'))
+except TypeError:
+    URL_VALIDATOR = URLValidator()
+
 
 def _generate_response(request, processor):
     """
@@ -105,10 +112,9 @@ def logout(request):
 
     redirect_url = request.GET.get('redirect_to', '')
     if redirect_url:
-        validator = URLValidator(schemes=('http', 'https'))
 
         try:
-            validator(redirect_url)
+            validator = URL_VALIDATOR(redirect_url)
         except ValidationError:
             pass
         else:
