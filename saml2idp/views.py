@@ -140,7 +140,7 @@ def logout(request):
     else:
         return HttpResponseRedirect(redirect_url)
 
-    return render_to_response(_get_template_names('saml2idp/logged_out.html'),
+    return render_to_response(_get_template_names('logged_out.html'),
                               {},
                               context_instance=RequestContext(request))
 

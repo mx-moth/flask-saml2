@@ -7,6 +7,7 @@ Testing actual SAML functionality requires implementation-specific details,
 which should be put in another test module.
 """
 from __future__ import absolute_import
+import os
 import mock
 import pytest
 
@@ -139,7 +140,7 @@ def test_rendering_metadata_view(client):
 def test_creating_template_names_without_processor():
     filename = 'special_file.html'
     template_names = views._get_template_names(filename)
-    assert  template_names == ['{}/{}'.format(views.BASE_TEMPLATE_DIR, filename)]
+    assert template_names == [os.path.join(views.BASE_TEMPLATE_DIR, filename)]
 
 
 def test_creating_template_names_with_processor():
@@ -150,7 +151,7 @@ def test_creating_template_names_with_processor():
     template_names = views._get_template_names(filename, processor)
 
     expected_template_names = [
-        '{}/{}/{}'.format(views.BASE_TEMPLATE_DIR, processor.name, filename),
-        '{}/{}'.format(views.BASE_TEMPLATE_DIR, filename)]
+        os.path.join(views.BASE_TEMPLATE_DIR, processor.name, filename),
+        os.path.join(views.BASE_TEMPLATE_DIR, filename)]
 
-    assert  template_names == expected_template_names
+    assert template_names == expected_template_names
