@@ -111,14 +111,13 @@ def logout(request):
     auth.logout(request)
 
     redirect_url = request.GET.get('redirect_to', '')
-    if redirect_url:
 
-        try:
-            validator = URL_VALIDATOR(redirect_url)
-        except ValidationError:
-            pass
-        else:
-            return HttpResponseRedirect(redirect_url)
+    try:
+        URL_VALIDATOR(redirect_url)
+    except ValidationError:
+        pass
+    else:
+        return HttpResponseRedirect(redirect_url)
 
     return render_to_response('saml2idp/logged_out.html', {},
                               context_instance=RequestContext(request))
