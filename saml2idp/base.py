@@ -99,7 +99,7 @@ class Processor(object):
             'ASSERTION': self._assertion_xml,
             'ISSUE_INSTANT': get_time_string(),
             'RESPONSE_ID': self._response_id,
-            'RESPONSE_SIGNATURE': '', # initially unsigned
+            'RESPONSE_SIGNATURE': '',  # initially unsigned
         }
         self._response_params.update(self._system_params)
         self._response_params.update(self._request_params)
@@ -110,7 +110,8 @@ class Processor(object):
         """
         self._request_xml = base64.b64decode(self._saml_request)
 
-        self._logger.info('SAML request decoded', decoded_request=self._request_xml)
+        self._logger.debug('SAML request decoded',
+                           decoded_request=self._request_xml)
 
     def _determine_assertion_id(self):
         """
