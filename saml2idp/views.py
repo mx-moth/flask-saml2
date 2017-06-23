@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
+import logging
 import os
 
 from django.contrib import auth
@@ -18,9 +19,8 @@ from . import exceptions
 from . import metadata
 from . import registry
 from . import xml_signing
-from .logging import get_saml_logger
 
-logger = get_saml_logger()
+logger = logging.getLogger(__name__)
 
 # The 'schemes' argument for the URLValidator was introduced in Django 1.6. This
 # ensure that URL validation works in 1.5 as well.

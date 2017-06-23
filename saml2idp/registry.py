@@ -3,6 +3,7 @@ from __future__ import absolute_import
 """
 Registers and loads Processor classes from settings.
 """
+import logging
 import warnings
 
 from importlib import import_module
@@ -11,9 +12,8 @@ from django.core.exceptions import ImproperlyConfigured
 
 from . import exceptions
 from . import saml2idp_metadata
-from .logging import get_saml_logger
 
-logger = get_saml_logger()
+logger = logging.getLogger(__name__)
 
 
 def get_processor(name, config):

@@ -40,7 +40,7 @@ TIME_ZONE = 'America/Chicago'
 # http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = 'en-us'
 
-SITE_ID = 1
+SITE_ID = 4
 
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
@@ -146,7 +146,25 @@ SAML2IDP_REMOTES = {
     'demo': demoSpConfig,
 }
 
-# Setup logging.
-import logging
-logging.basicConfig(filename=PROJECT_ROOT + '/saml2idp.log', format='%(asctime)s: %(message)s', level=logging.DEBUG)
-logging.info('Logging setup.')
+LOGGING = {
+    'root': {'level': 'DEBUG'},
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        },
+    },
+    'loggers': {
+        'saml2idp': {
+            'handlers': ['console'],
+        },
+    }
+}

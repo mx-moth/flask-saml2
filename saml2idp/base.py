@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 import base64
+import logging
 import time
 import uuid
 
@@ -11,7 +12,6 @@ from . import codex
 from . import exceptions
 from . import saml2idp_metadata
 from . import xml_render
-from .logging import get_saml_logger
 
 MINUTES = 60
 HOURS = 60 * MINUTES
@@ -46,7 +46,7 @@ class Processor(object):
     def __init__(self, config, name=None):
         self.name = name
         self._config = config.copy()
-        self._logger = get_saml_logger()
+        self._logger = logging.getLogger(__name__)
 
         processor_path = self._config.get('processor', 'invalid')
 

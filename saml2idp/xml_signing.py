@@ -4,15 +4,15 @@ Signing code goes here.
 """
 from __future__ import absolute_import
 import hashlib
+import logging
 import string
 import M2Crypto
 
 from . import saml2idp_metadata as smd
 from .codex import nice64
 from .xml_templates import SIGNED_INFO, SIGNATURE
-from .logging import get_saml_logger
 
-logger = get_saml_logger()
+logger = logging.getLogger(__name__)
 
 
 def load_certificate(config):
