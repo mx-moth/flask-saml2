@@ -50,9 +50,7 @@ class Processor(object):
 
         processor_path = self._config.get('processor', 'invalid')
 
-        self._logger.info('initializing processor',
-                          configured_processor=processor_path,
-                          processor=self.dotted_path)
+        self._logger.info('initializing processor {} {}'.format(processor_path, self.dotted_path))
 
         if processor_path != self.dotted_path:
             raise ImproperlyConfigured(
@@ -63,7 +61,7 @@ class Processor(object):
                 "no ACS URL specified in SP configuration: {}".format(
                     self._config))
 
-        self._logger.info('processor configured', config=self._config)
+        self._logger.info('processor configured: {}'.format(str(self._config)))
 
     def _build_assertion(self):
         """
@@ -111,8 +109,7 @@ class Processor(object):
         """
         self._request_xml = base64.b64decode(self._saml_request)
 
-        self._logger.debug('SAML request decoded',
-                           decoded_request=self._request_xml)
+        self._logger.debug('SAML request decoded: '.format(self._request_xml))
 
     def _determine_assertion_id(self):
         """
@@ -129,7 +126,7 @@ class Processor(object):
         if not self._audience:
             self._audience = self._request_params.get('PROVIDER_NAME', None)
 
-        self._logger.info('determined audience', audience=self._audience)
+        self._logger.info('determined audience: {}'.format(self._audience))
 
     def _determine_response_id(self):
         """
