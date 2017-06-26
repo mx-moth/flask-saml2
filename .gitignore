@@ -5,6 +5,7 @@
 *.egg-info/
 *.tox/
 
+.idea
 .env
 
 .cache
