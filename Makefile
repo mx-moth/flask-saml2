@@ -8,7 +8,7 @@ version:
 release:
 	${MAKE} clean
 	${MAKE} build
-	twine upload --username mobify --password ${PYPI_PASSWORD} dist/*
+	twine upload dist/*
 
 build:
 	python setup.py bdist_wheel
