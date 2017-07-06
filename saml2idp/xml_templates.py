@@ -44,7 +44,7 @@ SIGNATURE = (
 
 # Attributes and AttributeStatement
 ATTRIBUTE = (
-    '<saml:Attribute Name="${ATTRIBUTE_NAME}">'
+    '<saml:Attribute Name="${ATTRIBUTE_NAME}" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic">'
         '<saml:AttributeValue>${ATTRIBUTE_VALUE}</saml:AttributeValue>'
     '</saml:Attribute>'
 )
