@@ -11,7 +11,7 @@ class Processor(base.Processor):
         throw an Exception if the validation does not succeed.
         """
         super(Processor, self)._validate_request()
-        if not '.salesforce.com' in self._request_params['ACS_URL']:
+        if '.salesforce.com' not in self._request_params['ACS_URL']:
             raise exceptions.CannotHandleAssertion('AssertionConsumerService is not a SalesForce URL.')
 
     def _determine_audience(self):

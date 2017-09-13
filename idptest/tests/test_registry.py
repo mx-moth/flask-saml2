@@ -17,7 +17,6 @@ class NewStyleProcessor(Processor):
     pass
 
 
-
 def test_getting_old_style_processor():
     sp_name = 'old_style'
     sp_config = {'processor': 'tests.test_registry.OldStyleProcessor',

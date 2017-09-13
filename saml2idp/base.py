@@ -74,11 +74,11 @@ class Processor(object):
 
         self._assertion_params = {
             'ASSERTION_ID': self._assertion_id,
-            'ASSERTION_SIGNATURE': '', # it's unsigned
+            'ASSERTION_SIGNATURE': '',  # it's unsigned
             'AUDIENCE': self._audience,
             'AUTH_INSTANT': get_time_string(),
             'ISSUE_INSTANT': get_time_string(),
-            'NOT_BEFORE': get_time_string(-1 * HOURS), #TODO: Make these settings.
+            'NOT_BEFORE': get_time_string(-1 * HOURS),  # TODO: Make these settings.
             'NOT_ON_OR_AFTER': get_time_string(15 * MINUTES),
             'SESSION_INDEX': self._session_index,
             'SESSION_NOT_ON_OR_AFTER': get_time_string(8 * HOURS),
@@ -166,7 +166,7 @@ class Processor(object):
         """
         Formats _response_params as _response_xml.
         """
-        sign_it=saml2idp_metadata.SAML2IDP_CONFIG['signing']
+        sign_it = saml2idp_metadata.SAML2IDP_CONFIG['signing']
         self._response_xml = xml_render.get_response_xml(self._response_params, signed=sign_it)
 
     def _get_django_response_params(self):
@@ -185,13 +185,13 @@ class Processor(object):
         """
         Parses various parameters from _request_xml into _request_params.
         """
-        #Minimal test to verify that it's not binarily encoded still:
+        # Minimal test to verify that it's not binarily encoded still:
         if not self._request_xml.strip().startswith(b'<'):
             raise Exception('RequestXML is not valid XML; '
                             'it may need to be decoded or decompressed.')
         soup = BeautifulSoup(self._request_xml, "lxml-xml")
         request = soup.find_all()[0]
-        params = {}
+        params = dict()
         params['ACS_URL'] = request['AssertionConsumerServiceURL']
         params['REQUEST_ID'] = request['ID']
         params['DESTINATION'] = request.get('Destination', '')

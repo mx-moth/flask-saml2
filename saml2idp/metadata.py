@@ -4,7 +4,8 @@ Query metadata from settings.
 # Django imports
 from django.core.exceptions import ImproperlyConfigured
 # Local imports
-from .saml2idp_metadata import SAML2IDP_CONFIG, SAML2IDP_REMOTES
+from .saml2idp_metadata import SAML2IDP_REMOTES
+
 
 def get_config_for_acs(acs_url):
     """
@@ -15,6 +16,7 @@ def get_config_for_acs(acs_url):
             return config
     msg = 'SAML2IDP_REMOTES is not configured to handle the AssertionConsumerService at "%s"'
     raise ImproperlyConfigured(msg % resource_name)
+
 
 def get_config_for_resource(resource_name):
     """
@@ -27,6 +29,7 @@ def get_config_for_resource(resource_name):
                 return friendlyname, config
     msg = 'SAML2IDP_REMOTES is not configured to handle a link resource "%s"'
     raise ImproperlyConfigured(msg % resource_name)
+
 
 def get_deeplink_resources():
     """
@@ -41,6 +44,7 @@ def get_deeplink_resources():
                 continue
             resources.append(resource)
     return resources
+
 
 def get_links(sp_config):
     """

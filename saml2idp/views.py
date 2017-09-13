@@ -147,12 +147,12 @@ def slo_logout(request):
     logs out the user and returns a standard logged-out page.
     """
     request.session['SAMLRequest'] = request.POST['SAMLRequest']
-    #TODO: Parse SAML LogoutRequest from POST data, similar to login_process().
-    #TODO: Add a URL dispatch for this view.
-    #TODO: Modify the base processor to handle logouts?
-    #TODO: Combine this with login_process(), since they are so very similar?
-    #TODO: Format a LogoutResponse and return it to the browser.
-    #XXX: For now, simply log out without validating the request.
+    # TODO: Parse SAML LogoutRequest from POST data, similar to login_process().
+    # TODO: Add a URL dispatch for this view.
+    # TODO: Modify the base processor to handle logouts?
+    # TODO: Combine this with login_process(), since they are so very similar?
+    # TODO: Format a LogoutResponse and return it to the browser.
+    # XXX: For now, simply log out without validating the request.
     auth.logout(request)
     tv = {}
     return render(request, _get_template_names('logged_out.html'), tv)

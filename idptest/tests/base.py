@@ -3,7 +3,7 @@
 Tests for the Base Processor class.
 """
 from __future__ import absolute_import
-from bs4 import BeautifulSoup, BeautifulStoneSoup
+from bs4 import BeautifulSoup
 from django.contrib.auth.models import User
 from django.test import TestCase
 

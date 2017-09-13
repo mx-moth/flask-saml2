@@ -17,7 +17,7 @@ class Processor(base.Processor):
         throw an Exception if the validation does not succeed.
         """
         super(Processor, self)._validate_request()
-        if not '.google.com/a/' in self._request_params['ACS_URL']:
+        if '.google.com/a/' not in self._request_params['ACS_URL']:
             raise exceptions.CannotHandleAssertion('AssertionConsumerService is not a Google Apps URL.')
 
     def _format_assertion(self):
