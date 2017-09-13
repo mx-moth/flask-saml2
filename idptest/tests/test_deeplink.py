@@ -36,10 +36,11 @@ class TestDeepLinkWithAttributes(TestDeepLink):
 
     def test_deeplink(self):
         super(TestDeepLinkWithAttributes, self).test_deeplink()
-        attributes = self._saml_soup.findAll('saml:attribute')
+        # Namespace is removed by beautiful soul
+        attributes = self._saml_soup.find_all('Attribute')
 
         # Assert.
         self.assertEqual(len(attributes), 1)
-        self.assertEqual(attributes[0]['name'], 'foo')
-        value = attributes[0].findAll('saml:attributevalue')[0]
+        self.assertEqual(attributes[0]['Name'], 'foo')
+        value = attributes[0].find_all('AttributeValue')[0]
         self.assertEqual(value.text, 'bar')

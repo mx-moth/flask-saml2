@@ -67,12 +67,15 @@ ADMIN_MEDIA_PREFIX = '/media/'
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'q+0vb%)c7c%&kl&jcca^6n7$3q4ktle9i28t(fd&qh28%l-%58'
 
-# List of callables that know how to import templates from various sources.
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-#     'django.template.loaders.eggs.Loader',
-)
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [
+            '%s/templates' % PROJECT_ROOT,
+        ],
+        'APP_DIRS': True,
+    }
+]
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
@@ -82,13 +85,6 @@ MIDDLEWARE_CLASSES = (
 )
 
 ROOT_URLCONF = 'idptest.urls'
-
-TEMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-    '%s/templates' % PROJECT_ROOT,
-)
 
 INSTALLED_APPS = (
     'django.contrib.admin',
@@ -132,6 +128,7 @@ demoSpConfig = {
             'http://127.0.0.1:9000/%(target)s/%(page)s/?param=%(param)s'),
     ],
 }
+
 attrSpConfig = {
     'acs_url': 'http://127.0.0.1:9000/sp/acs/',
     'processor': 'saml2idp.demo.AttributeProcessor',
@@ -139,6 +136,7 @@ attrSpConfig = {
         'attr': 'http://127.0.0.1:9000/sp/%s/',
     },
 }
+
 SAML2IDP_REMOTES = {
     # Group of SP CONFIGs.
     # friendlyname: SP config

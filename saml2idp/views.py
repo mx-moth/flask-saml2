@@ -9,9 +9,8 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.core.urlresolvers import reverse
 from django.utils.datastructures import MultiValueDictKeyError
-from django.shortcuts import render_to_response, redirect
+from django.shortcuts import render, redirect
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
-from django.template import RequestContext
 from django.views.decorators.csrf import csrf_exempt
 
 from . import saml2idp_metadata
@@ -54,17 +53,14 @@ def _generate_response(request, processor):
         tv = processor.generate_response()
     except exceptions.UserNotAuthorized:
         template_names = _get_template_names('invalid_user.html', processor)
-        return render_to_response(template_names,
-                                  context_instance=RequestContext(request))
+        return render(request, template_names)
 
     template_names = _get_template_names('login.html', processor)
-    return render_to_response(template_names,
-                              tv,
-                              context_instance=RequestContext(request))
+    return render(request, template_names, tv)
 
 
 def xml_response(request, template, tv):
-    return render_to_response(template, tv, content_type="application/xml")
+    return render(request, template, tv, content_type="application/xml")
 
 
 @csrf_exempt
@@ -140,9 +136,7 @@ def logout(request):
     else:
         return HttpResponseRedirect(redirect_url)
 
-    return render_to_response(_get_template_names('logged_out.html'),
-                              {},
-                              context_instance=RequestContext(request))
+    return render(request, _get_template_names('logged_out.html'), {})
 
 
 @login_required
@@ -161,9 +155,7 @@ def slo_logout(request):
     #XXX: For now, simply log out without validating the request.
     auth.logout(request)
     tv = {}
-    return render_to_response(_get_template_names('logged_out.html'),
-                              tv,
-                              context_instance=RequestContext(request))
+    return render(request, _get_template_names('logged_out.html'), tv)
 
 
 def descriptor(request):

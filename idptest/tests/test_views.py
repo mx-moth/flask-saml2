@@ -134,7 +134,7 @@ class TestLogoutView(TestCase):
 
 def test_rendering_metadata_view(client):
     page = client.get(reverse('metadata_xml'))
-    assert load_certificate(smd.SAML2IDP_CONFIG) in page.content
+    assert load_certificate(smd.SAML2IDP_CONFIG) in page.content.decode('utf-8')
 
 
 def test_creating_template_names_without_processor():

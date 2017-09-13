@@ -1,6 +1,5 @@
-import base
-import exceptions
-import xml_render
+from . import base, exceptions, xml_render
+
 
 class Processor(base.Processor):
     """

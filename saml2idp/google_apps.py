@@ -1,7 +1,5 @@
-import base
-import codex
-import exceptions
-import xml_render
+from . import base, codex, exceptions, xml_render
+
 
 class Processor(base.Processor):
     """

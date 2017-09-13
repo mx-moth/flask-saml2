@@ -5,12 +5,14 @@ dj-saml-idp
     :target: https://travis-ci.org/mobify/dj-saml-idp
 
 
-This is a fork `novapost/django-saml2-idp`_ that is distributed indipendantly as `dj-saml-idp`.
+This is a fork of `deforestg/dj-saml-idp`_ which in turn is a fork of
+`novapost/django-saml2-idp`_ and is intended to provide Python 3 support.
+
 
 `dj-saml-idp` implements the Identity Provider side of the SAML 2.0 protocol
 and makes user authentication available to external applications.
 
-**Note:** Only supports Django 1.5+.
+**Note:** Only targets support of Python 3.5 and Django 1.10+.
 
 
 Testing 
@@ -22,11 +24,6 @@ directly (preferably in a virtualenv)::
 
     $ pip install tox
     $ tox
-
-Or inside a Docker container using using the provided `Dockerfile` and with 
-docker-compose (requires `docker` and `docker-compose` to be installed)::
-
-    $ docker-compose run test-27
 
 
 Release
@@ -66,7 +63,7 @@ License
 
 Distributed under the `MIT License`_.
 
-
+.. _`deforestg/dj-saml-idp`: https://github.com/deforestg/dj-saml-idp
 .. _`novapost/django-saml2-idp`: https://github.com/novapost/django-saml2-idp
 .. _`MIT License`: https://github.com/mobify/dj-saml-idp/blob/master/LICENSE
 .. _`wheel`: http://wheel.readthedocs.org/en/latest/

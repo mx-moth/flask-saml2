@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import os
 import string
 import unittest
+from xmlunittest import XmlTestMixin
 
 from saml2idp import xml_render
 from saml2idp import xml_signing
@@ -55,11 +56,11 @@ SIGNED_RESPONSE_WITH_SIGNED_ASSERTION_SALESFORCE_XML = '<samlp:Response xmlns:sa
 X509_CERTIFICATE_DATA = "MIICKzCCAdWgAwIBAgIJAM8DxRNtPj90MA0GCSqGSIb3DQEBBQUAMEUxCzAJBgNVBAYTAkFVMRMwEQYDVQQIEwpTb21lLVN0YXRlMSEwHwYDVQQKExhJbnRlcm5ldCBXaWRnaXRzIFB0eSBMdGQwHhcNMTEwODEyMjA1MTIzWhcNMTIwODExMjA1MTIzWjBFMQswCQYDVQQGEwJBVTETMBEGA1UECBMKU29tZS1TdGF0ZTEhMB8GA1UEChMYSW50ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANcNmgm4YlSUAr2xdWei5aRU/DbWtsQ47gjkv28Ekje3ob+6q0M+D5phwYDcv9ygYmuJ5wOi1cPprsWdFWmvSusCAwEAAaOBpzCBpDAdBgNVHQ4EFgQUzyBR9+vE8bygqvD6CZ/w6aQPikMwdQYDVR0jBG4wbIAUzyBR9+vE8bygqvD6CZ/w6aQPikOhSaRHMEUxCzAJBgNVBAYTAkFVMRMwEQYDVQQIEwpTb21lLVN0YXRlMSEwHwYDVQQKExhJbnRlcm5ldCBXaWRnaXRzIFB0eSBMdGSCCQDPA8UTbT4/dDAMBgNVHRMEBTADAQH/MA0GCSqGSIb3DQEBBQUAA0EAIQuPLA/mlMJAMF680kL7reX5WgyRwAtRzJK6FgNjE7kRaLZQ79UKYVYa0VAyrRdoNEyVhG4tJFEiQJzaLWsl/A=="  # noqa
 
 
-class XmlTest(unittest.TestCase):
+class XmlTest(unittest.TestCase, XmlTestMixin):
     def _test(self, got, exp):
-        #TODO: Maybe provide more meaningful output. YAGNI?
-        msg = 'Did not get expected XML.\nExp: %s\nGot: %s' % (exp, got)
-        self.assertEqual(exp, got, msg)
+
+        self.assertXmlDocument(got)
+        self.assertXmlEquivalentOutputs(got, exp)
 
     def _test_template(self, template_source, parameters, exp):
         xml_render._get_in_response_to(parameters)
@@ -150,7 +151,7 @@ def test_loading_private_key():
     assert type(filename) is str
     xml_signing.load_private_key(config)
 
-    filename = unicode(filename)
+    filename = filename.encode('utf-8')
     config = {smd.PRIVATE_KEY_FILENAME: filename}
     xml_signing.load_private_key(config)
 
@@ -173,7 +174,7 @@ def test_loading_certificate_from_file():
     assert type(filename) is str
     xml_signing.load_certificate(config)
 
-    filename = unicode(filename)
+    filename = filename.encode('utf-8')
     config = {smd.CERTIFICATE_FILENAME: filename}
 
     certificate = xml_signing.load_certificate(config)

@@ -1,5 +1,4 @@
-import base
-import xml_render
+from . import base, xml_render
 import zlib
 import base64
 

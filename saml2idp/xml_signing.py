@@ -20,10 +20,10 @@ def load_certificate(config):
         return config.get(smd.CERTIFICATE_DATA, '')
 
     certificate_filename = config.get(smd.CERTIFICATE_FILENAME)
-    logger.info('Using certificate file: ' + certificate_filename)
+    logger.info('Using certificate file: {}'.format(certificate_filename))
 
     certificate = M2Crypto.X509.load_cert(certificate_filename)
-    return ''.join(certificate.as_pem().split('\n')[1:-2])
+    return ''.join(certificate.as_pem().decode("utf-8").split('\n')[1:-2])
 
 
 def load_private_key(config):
@@ -38,12 +38,14 @@ def load_private_key(config):
     # The filename need to be encoded because it is using a C extension under
     # the hood which means it expects a 'const char*' type and will fail with
     # unencoded unicode string.
-    return M2Crypto.EVP.load_key(private_key_file.encode('utf-8'))
+    if type(private_key_file) is bytes:
+        private_key_file = private_key_file.decode('utf-8')
+    return M2Crypto.EVP.load_key(private_key_file)
 
 
 def sign_with_rsa(private_key, data):
     private_key.sign_init()
-    private_key.sign_update(data)
+    private_key.sign_update(data.encode('utf-8'))
     return nice64(private_key.sign_final())
 
 
@@ -61,9 +63,9 @@ def get_signature_xml(subject, reference_uri):
 
     # Hash the subject.
     subject_hash = hashlib.sha1()
-    subject_hash.update(subject)
-    subject_digest = nice64(subject_hash.digest())
-    logger.debug('Subject digest: ' + subject_digest)
+    subject_hash.update(subject.encode('utf-8'))
+    subject_digest = nice64(subject_hash.digest()).decode('utf-8')
+    logger.debug('Subject digest: {}'.format(subject_digest))
 
     # Create signed_info.
     signed_info = string.Template(SIGNED_INFO).substitute({
@@ -72,8 +74,8 @@ def get_signature_xml(subject, reference_uri):
         })
     logger.debug('SignedInfo XML: ' + signed_info)
 
-    rsa_signature = sign_with_rsa(private_key, signed_info)
-    logger.debug('RSA Signature: ' + rsa_signature)
+    rsa_signature = sign_with_rsa(private_key, signed_info).decode('utf-8')
+    logger.debug('RSA Signature: {}'.format(rsa_signature))
 
     # Put the signed_info and rsa_signature into the XML signature.
     signed_info_short = signed_info.replace(' xmlns:ds="http://www.w3.org/2000/09/xmldsig#"', '')

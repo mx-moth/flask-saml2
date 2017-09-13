@@ -4,7 +4,7 @@ Query metadata from settings.
 # Django imports
 from django.core.exceptions import ImproperlyConfigured
 # Local imports
-from saml2idp_metadata import SAML2IDP_CONFIG, SAML2IDP_REMOTES
+from .saml2idp_metadata import SAML2IDP_CONFIG, SAML2IDP_REMOTES
 
 def get_config_for_acs(acs_url):
     """

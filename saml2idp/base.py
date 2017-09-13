@@ -5,7 +5,7 @@ import logging
 import time
 import uuid
 
-from BeautifulSoup import BeautifulStoneSoup
+from bs4 import BeautifulSoup
 from django.core.exceptions import ImproperlyConfigured
 
 from . import codex
@@ -186,16 +186,16 @@ class Processor(object):
         Parses various parameters from _request_xml into _request_params.
         """
         #Minimal test to verify that it's not binarily encoded still:
-        if not self._request_xml.strip().startswith('<'):
+        if not self._request_xml.strip().startswith(b'<'):
             raise Exception('RequestXML is not valid XML; '
                             'it may need to be decoded or decompressed.')
-        soup = BeautifulStoneSoup(self._request_xml)
-        request = soup.findAll()[0]
+        soup = BeautifulSoup(self._request_xml, "lxml-xml")
+        request = soup.find_all()[0]
         params = {}
-        params['ACS_URL'] = request['assertionconsumerserviceurl']
-        params['REQUEST_ID'] = request['id']
-        params['DESTINATION'] = request.get('destination', '')
-        params['PROVIDER_NAME'] = request.get('providername', '')
+        params['ACS_URL'] = request['AssertionConsumerServiceURL']
+        params['REQUEST_ID'] = request['ID']
+        params['DESTINATION'] = request.get('Destination', '')
+        params['PROVIDER_NAME'] = request.get('ProviderName', '')
         self._request_params = params
 
     def _reset(self, django_request, sp_config=None):

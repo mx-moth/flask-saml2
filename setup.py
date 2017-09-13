@@ -20,8 +20,8 @@ setup(
     long_description='\n\n'.join([description, changelog]),
     install_requires=[
         'Django>=1.8',
-        'M2Crypto==0.26.0',
-        'BeautifulSoup>=3.2.0',
+        'ak-M2Crypto==0.24.0',
+        'beautifulsoup4>=4.6.0',
         'structlog'],
     license='MIT',
     packages=['saml2idp'],
