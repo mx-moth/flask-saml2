@@ -5,12 +5,11 @@ Signing code goes here.
 from __future__ import absolute_import
 import hashlib
 import logging
-import string
 import M2Crypto
 
 from . import saml2idp_metadata as smd
 from .codex import nice64
-from .xml_templates import SIGNED_INFO, SIGNATURE
+from . import xml_templates
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +48,7 @@ def sign_with_rsa(private_key, data):
     return nice64(private_key.sign_final())
 
 
-def get_signature_xml(subject, reference_uri):
+def get_signature_xml(subject: str, reference_uri: str) -> xml_templates.XmlTemplate.xml:
     """
     Returns XML Signature for subject.
     """
@@ -68,21 +67,23 @@ def get_signature_xml(subject, reference_uri):
     logger.debug('Subject digest: {}'.format(subject_digest))
 
     # Create signed_info.
-    signed_info = string.Template(SIGNED_INFO).substitute({
+    signed_info = xml_templates.SignedInfoTemplate({
         'REFERENCE_URI': reference_uri,
         'SUBJECT_DIGEST': subject_digest,
         })
-    logger.debug('SignedInfo XML: ' + signed_info)
+    logger.debug('SignedInfo XML: ' + signed_info.get_xml_string())
 
-    rsa_signature = sign_with_rsa(private_key, signed_info).decode('utf-8')
+    rsa_signature = sign_with_rsa(private_key, signed_info.get_xml_string()).decode('utf-8')
     logger.debug('RSA Signature: {}'.format(rsa_signature))
 
     # Put the signed_info and rsa_signature into the XML signature.
-    signed_info_short = signed_info.replace(' xmlns:ds="http://www.w3.org/2000/09/xmldsig#"', '')
-    signature_xml = string.Template(SIGNATURE).substitute({
+    #signed_info.xml.attrib.pop('xmlns:ds')
+
+    signature_xml = xml_templates.SignatureTemplate({
         'RSA_SIGNATURE': rsa_signature,
-        'SIGNED_INFO': signed_info_short,
+        'SIGNED_INFO': signed_info.xml,
         'CERTIFICATE': certificate,
         })
-    logger.info('Signature XML: ' + signature_xml)
-    return signature_xml
+
+    logger.info('Signature XML: ' + signature_xml.get_xml_string())
+    return signature_xml.xml

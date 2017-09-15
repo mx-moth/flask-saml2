@@ -95,7 +95,6 @@ class Processor(object):
         """
         self._determine_response_id()
         self._response_params = {
-            'ASSERTION': self._assertion_xml,
             'ISSUE_INSTANT': get_time_string(),
             'RESPONSE_ID': self._response_id,
             'RESPONSE_SIGNATURE': '',  # initially unsigned
@@ -167,7 +166,7 @@ class Processor(object):
         Formats _response_params as _response_xml.
         """
         sign_it = saml2idp_metadata.SAML2IDP_CONFIG['signing']
-        self._response_xml = xml_render.get_response_xml(self._response_params, signed=sign_it)
+        self._response_xml = xml_render.get_response_xml(self._response_params, self._assertion_xml, signed=sign_it)
 
     def _get_django_response_params(self):
         """
