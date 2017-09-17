@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
-import base64
 import logging
 import time
 import uuid
 
-from bs4 import BeautifulSoup
 from django.core.exceptions import ImproperlyConfigured
 
 from . import codex
 from . import exceptions
 from . import saml2idp_metadata
 from . import xml_render
+from .request import RequestProcessor
 
 MINUTES = 60
 HOURS = 60 * MINUTES
@@ -102,14 +101,6 @@ class Processor(object):
         self._response_params.update(self._system_params)
         self._response_params.update(self._request_params)
 
-    def _decode_request(self):
-        """
-        Decodes _request_xml from _saml_request.
-        """
-        self._request_xml = base64.b64decode(self._saml_request)
-
-        self._logger.debug('SAML request decoded: '.format(self._request_xml))
-
     def _determine_assertion_id(self):
         """
         Determines the _assertion_id.
@@ -184,17 +175,16 @@ class Processor(object):
         """
         Parses various parameters from _request_xml into _request_params.
         """
-        # Minimal test to verify that it's not binarily encoded still:
-        if not self._request_xml.strip().startswith(b'<'):
-            raise Exception('RequestXML is not valid XML; '
-                            'it may need to be decoded or decompressed.')
-        soup = BeautifulSoup(self._request_xml, "lxml-xml")
-        request = soup.find_all()[0]
+        self._request.parse_request()
+
+        if self._request.signed:
+            self._request.parse_signed()  # TODO: get cert from metadata
+
         params = dict()
-        params['ACS_URL'] = request['AssertionConsumerServiceURL']
-        params['REQUEST_ID'] = request['ID']
-        params['DESTINATION'] = request.get('Destination', '')
-        params['PROVIDER_NAME'] = request.get('ProviderName', '')
+        params['ACS_URL'] = self._request.acs_url
+        params['REQUEST_ID'] = self._request.request_id
+        params['DESTINATION'] = self._request.destination
+        params['PROVIDER_NAME'] = self._request.provider_name
         self._request_params = params
 
     def _reset(self, django_request, sp_config=None):
@@ -246,11 +236,11 @@ class Processor(object):
         """
         pass
 
-    def can_handle(self, request):
+    def can_handle(self, django_request):
         """
         Returns true if this processor can handle this request.
         """
-        self._reset(request)
+        self._reset(django_request)
         # Read the request.
         try:
             self._extract_saml_request()
@@ -259,12 +249,7 @@ class Processor(object):
             self._logger.info(msg)
             raise exceptions.CannotHandleAssertion(msg)
 
-        try:
-            self._decode_request()
-        except Exception as exc:
-            msg = "can't decode SAML request: %s" % exc
-            self._logger.info(msg)
-            raise exceptions.CannotHandleAssertion(msg)
+        self._request = RequestProcessor(self._saml_request)
 
         try:
             self._parse_request()

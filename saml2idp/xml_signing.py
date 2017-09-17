@@ -52,6 +52,7 @@ def get_signature_xml(subject: str, reference_uri: str) -> xml_templates.XmlTemp
     """
     Returns XML Signature for subject.
     """
+    # TODO: Replace with signxml
     logger.debug('get_signature_xml - Begin.')
     config = smd.SAML2IDP_CONFIG
 
@@ -77,7 +78,6 @@ def get_signature_xml(subject: str, reference_uri: str) -> xml_templates.XmlTemp
     logger.debug('RSA Signature: {}'.format(rsa_signature))
 
     # Put the signed_info and rsa_signature into the XML signature.
-    #signed_info.xml.attrib.pop('xmlns:ds')
 
     signature_xml = xml_templates.SignatureTemplate({
         'RSA_SIGNATURE': rsa_signature,
