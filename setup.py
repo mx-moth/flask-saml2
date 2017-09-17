@@ -12,11 +12,11 @@ with open('HISTORY.rst') as history:
 
 
 setup(
-    name='django-saml-idp',
+    name='dj-saml-idp',
     version=saml2idp.__version__,
-    author='Gabriel de Forest, Sebastian Vetter',
-    author_email='sebastian@mobify.com',
-    description='SAML 2.0 IdP for Django',
+    author='Basraah',
+    author_email='basraaheve@gmail.com',
+    description='SAML 2.0 IdP for Django and Python 3',
     long_description='\n\n'.join([description, changelog]),
     install_requires=[
         'Django>=1.11',
@@ -27,7 +27,7 @@ setup(
     ],
     license='MIT',
     packages=['saml2idp'],
-    url='http://github.com/deforestg/dj-saml-idp',
+    url='http://github.com/basraah/dj-saml-idp',
     zip_safe=False,
     include_package_data=True,
 )
