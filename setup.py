@@ -20,7 +20,7 @@ setup(
     long_description='\n\n'.join([description, changelog]),
     install_requires=[
         'Django>=1.11',
-        'ak-M2Crypto>=0.26.0',
+        'M2Crypto>=0.29.0',
         'defusedxml>=0.5.0',
         'signxml>=2.4.0',
         'lxml>=3.8.0',
