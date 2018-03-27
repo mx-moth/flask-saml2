@@ -7,10 +7,10 @@ from django.contrib import auth
 from django.core.validators import URLValidator
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ImproperlyConfigured, ValidationError
-from django.core.urlresolvers import reverse
 from django.utils.datastructures import MultiValueDictKeyError
 from django.shortcuts import render, redirect
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
+from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 
 from . import saml2idp_metadata
