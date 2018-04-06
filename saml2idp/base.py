@@ -5,6 +5,7 @@ import time
 import uuid
 
 from django.core.exceptions import ImproperlyConfigured
+from django.utils.encoding import force_text
 
 from . import codex
 from . import exceptions
@@ -165,7 +166,7 @@ class Processor(object):
         """
         tv = {
             'acs_url': self._request_params['ACS_URL'],
-            'saml_response': self._saml_response,
+            'saml_response': force_text(self._saml_response),
             'relay_state': self._relay_state,
             'autosubmit': saml2idp_metadata.SAML2IDP_CONFIG['autosubmit'],
         }
