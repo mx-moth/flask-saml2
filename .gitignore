@@ -14,3 +14,4 @@
 # Python release artifacts
 build/
 dist/
+.pytest_cache/

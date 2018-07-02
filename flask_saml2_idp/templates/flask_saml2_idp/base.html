@@ -1,0 +1,18 @@
+<!doctype html>
+{#
+    This is a placeholder template. You can override this saml2idp/base.html
+    template to make all the saml2idp templates fit better into your site's
+    look-and-feel. That may be easier than overriding all the saml2idp templates
+    individually.
+#}
+<html>
+<head>
+<meta charset="utf-8">
+<title>{{ adaptor.get_idp_config()['issuer'] }}</title>
+</head>
+<body>
+<h1>{{ adaptor.get_idp_config()['issuer'] }}</h1>
+{% block content %}
+{% endblock %}
+</body>
+</html>

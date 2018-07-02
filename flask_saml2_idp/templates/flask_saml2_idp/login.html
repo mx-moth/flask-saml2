@@ -1,0 +1,34 @@
+{% extends "flask_saml2_idp/base.html" %}
+
+{% block content %}
+    <div id="logged_in_message">
+        You are now signed in at the Identity Provider.
+        <br />
+        <span id="logged_in_message_continue">
+            Click Continue to return to the Service Provider.
+        </span>
+        <span id="logged_in_message_automatic" style="display:none">
+            You will now be automatically redirected to the Service Provider.
+        </span>
+    </div>
+
+    <form id="logged_in_post_form" method="post" action="{{ acs_url }}">
+        <input type="hidden" name="RelayState" value="{{ relay_state }}" />
+        <input type="hidden" name="SAMLResponse" value="{{ saml_response }}" />
+        <input id="logged_in_button_continue" type="submit" value="Continue" />
+    </form>
+
+    {% if autosubmit %}
+        <script language="javascript">
+        /* Hide the submit button and message and automatically submit the form. */
+        var msg = document.getElementById('logged_in_message_continue'),
+            aut = document.getElementById('logged_in_message_automatic'),
+            btn = document.getElementById('logged_in_button_continue'),
+            frm = document.getElementById('logged_in_post_form');
+        msg.style.display = 'none';
+        aut.style.display = 'block';
+        btn.style.display = 'none';
+        frm.submit();
+        </script>
+    {% endif %}
+{% endblock content %}
