@@ -1,4 +1,4 @@
-from flask_saml2_idp import processor, xml_render
+from flask_saml2.idp import processor, xml_render
 
 
 class Processor(processor.Processor):

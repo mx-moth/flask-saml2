@@ -1,10 +1,10 @@
 import base64
 import zlib
 
-from . import base, xml_render
+from flask_saml2.idp import processor, xml_render
 
 
-class Processor(base.Processor):
+class Processor(processor.Processor):
     """
     Shib-specific Processor
     """

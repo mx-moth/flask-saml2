@@ -9,8 +9,9 @@ import flask
 from bs4 import BeautifulSoup
 from flask import Flask, abort, redirect, url_for
 
-from flask_saml2_idp import adaptor, codex, create_blueprint
-from flask_saml2_idp.utils import certificate_from_file, private_key_from_file
+from flask_saml2 import codex
+from flask_saml2.idp import adaptor, create_blueprint
+from flask_saml2.utils import certificate_from_file, private_key_from_file
 
 
 @attr.s
@@ -27,7 +28,7 @@ class SamlView:
     saml_soup = attr.ib()
 
 
-KEY_DIR = Path(__file__).parent / 'keys' / 'sample'
+KEY_DIR = Path(__file__).parent.parent / 'keys' / 'sample'
 CERTIFICATE_FILE = KEY_DIR / 'sample-certificate.pem'
 PRIVATE_KEY_FILE = KEY_DIR / 'sample-private-key.pem'
 
@@ -110,13 +111,13 @@ class SamlTestCase:
 
     SP_CONFIG = [
         ('demoSpConfig', {
-            'PROCESSOR': 'flask_saml2_idp.sp.demo.Processor',
+            'PROCESSOR': 'flask_saml2.idp.sp.demo.Processor',
             'OPTIONS': {
                 'acs_url': 'http://127.0.0.1:9000/sp/acs/',
             },
         }),
         ('attrSpConfig', {
-            'PROCESSOR': 'flask_saml2_idp.sp.demo.AttributeProcessor',
+            'PROCESSOR': 'flask_saml2.idp.sp.demo.AttributeProcessor',
             'OPTIONS': {
                 'acs_url': 'http://127.0.0.1:9000/sp/acs/',
             },

@@ -5,8 +5,8 @@ import base64
 
 from lxml import etree
 
-from flask_saml2_idp.utils import certificate_from_file, private_key_from_file
-from flask_saml2_idp.xml_signing import get_signature_xml
+from flask_saml2.utils import certificate_from_file, private_key_from_file
+from flask_saml2.xml_signing import get_signature_xml
 
 from . import base
 
@@ -56,7 +56,7 @@ class TestSalesForceProcessor(base.BaseProcessorTests):
         }
 
     SP_CONFIG = [('salesforce', {
-        'PROCESSOR': 'flask_saml2_idp.sp.salesforce.SalesforceProcessor',
+        'PROCESSOR': 'flask_saml2.idp.sp.salesforce.SalesforceProcessor',
         'OPTIONS': {
             'acs_url': SALESFORCE_ACS,
             'x509_cert': SALESFORCE_CERTIFICATE,

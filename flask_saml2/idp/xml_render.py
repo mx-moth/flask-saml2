@@ -2,11 +2,11 @@
 Functions for creating XML output.
 """
 import logging
-import typing as T
+from typing import Optional, Type
 
-from . import types as TS
-from .types import X509, PKey
-from .xml_signing import get_signature_xml
+from flask_saml2.types import X509, PKey, XmlNode
+from flask_saml2.xml_signing import get_signature_xml
+
 from .xml_templates import ResponseTemplate, XmlTemplate
 
 logger = logging.getLogger(__name__)
@@ -23,13 +23,13 @@ def _get_in_response_to(params):
 
 
 def get_assertion_xml(
-    template_klass: T.Type[XmlTemplate],
+    template_klass: Type[XmlTemplate],
     parameters: dict,
     *,
     signed: bool = False,
-    certificate: T.Optional[X509] = None,
-    private_key: T.Optional[PKey] = None,
-) -> TS.XmlNode:
+    certificate: Optional[X509] = None,
+    private_key: Optional[PKey] = None,
+) -> XmlNode:
     # Reset signature.
     params = {**parameters}
     _get_in_response_to(params)
@@ -52,11 +52,11 @@ def get_assertion_xml(
 
 def get_response_xml(
     parameters: dict,
-    assertion: TS.XmlNode,
+    assertion: XmlNode,
     *,
     signed: bool = False,
-    certificate: T.Optional[X509] = None,
-    private_key: T.Optional[PKey] = None,
+    certificate: Optional[X509] = None,
+    private_key: Optional[PKey] = None,
 ) -> str:
     """
     Returns XML for response, with signatures, if signed is True.

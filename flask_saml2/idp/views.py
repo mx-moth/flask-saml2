@@ -3,8 +3,9 @@ import logging
 from flask import Response, make_response, redirect, request, session, url_for
 from flask.views import MethodView, View
 
+from flask_saml2.utils import certificate_to_string
+
 from .adaptor import Adaptor
-from .utils import certificate_to_string
 
 logger = logging.getLogger(__name__)
 

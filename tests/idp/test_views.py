@@ -10,8 +10,8 @@ from flask import url_for
 from lxml import etree
 from werkzeug.exceptions import BadRequestKeyError
 
-from flask_saml2_idp.utils import certificate_to_string
-from flask_saml2_idp.xml_templates import NAMESPACE_MAP
+from flask_saml2.utils import certificate_to_string
+from flask_saml2.xml_templates import NAMESPACE_MAP
 
 from .base import CERTIFICATE, SamlTestCase, User
 

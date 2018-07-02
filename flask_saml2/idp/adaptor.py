@@ -1,7 +1,7 @@
 from flask import current_app, render_template
 
-from .exceptions import CannotHandleAssertion
-from .utils import import_string
+from flask_saml2.exceptions import CannotHandleAssertion
+from flask_saml2.utils import import_string
 
 
 class Adaptor(object):

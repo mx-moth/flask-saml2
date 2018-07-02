@@ -3,9 +3,10 @@ import logging
 
 from flask import session
 
-from .exceptions import CannotHandleAssertion
+from flask_saml2.exceptions import CannotHandleAssertion
+from flask_saml2.utils import get_random_id, get_time_string
+
 from .request import RequestProcessor
-from .utils import get_random_id, get_time_string
 from .xml_render import get_response_xml
 
 

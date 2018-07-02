@@ -1,5 +1,5 @@
 class SAML2Exception(Exception):
-    """Base exception for all flask_saml2_idp exceptions."""
+    """Base exception for all flask_saml2 exceptions."""
     pass
 
 

@@ -1,7 +1,7 @@
 from flask import abort, current_app
 from flask_login import current_user, logout_user
 
-from flask_saml2_idp.adaptor import Adaptor
+from flask_saml2.idp.adaptor import Adaptor
 
 
 class FlaskLoginAdaptor(Adaptor):

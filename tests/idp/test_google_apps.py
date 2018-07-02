@@ -1,7 +1,7 @@
 """
 Tests for the Google Apps processor.
 """
-from flask_saml2_idp import codex
+from flask_saml2 import codex
 
 from . import base
 
@@ -31,7 +31,7 @@ GOOGLE_APPS_ACS = 'https://www.google.com/a/example.com/acs'
 
 class TestGoogleAppsProcessor(base.BaseProcessorTests):
     SP_CONFIG = [('google_apps', {
-        'PROCESSOR': 'flask_saml2_idp.sp.google_apps.GoogleAppsProcessor',
+        'PROCESSOR': 'flask_saml2.idp.sp.google_apps.GoogleAppsProcessor',
         'OPTIONS': {
             'acs_url': GOOGLE_APPS_ACS,
         },

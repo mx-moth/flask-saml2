@@ -5,15 +5,11 @@ import defusedxml.lxml
 import lxml.etree
 from signxml import XMLVerifier
 
-from . import codex
+from flask_saml2 import codex
+from flask_saml2.xml_templates import NAMESPACE_MAP
 
 
 class RequestProcessor:
-    NS_MAP = {  # Namespace map
-        'samlp': 'urn:oasis:names:tc:SAML:2.0:protocol',
-        'saml': 'urn:oasis:names:tc:SAML:2.0:assertion',
-        'ds': 'http://www.w3.org/2000/09/xmldsig#',
-    }
     PARSE_MSG = 'parse_request must be called first'
 
     def __init__(self, saml_request: str):
@@ -59,7 +55,7 @@ class RequestProcessor:
             self._logger.exception(message)
             raise ValueError(message)
 
-        sig = self.xml_tree.xpath('/samlp:AuthnRequest/ds:Signature', namespaces=self.NS_MAP)
+        sig = self.xml_tree.xpath('/samlp:AuthnRequest/ds:Signature', namespaces=self.get_namespace_map())
         if sig:
             self._signed = True
             self.parse_signed(x509_cert)
@@ -83,7 +79,7 @@ class RequestProcessor:
 
     def _xpath_xml_tree(self, xpath_statement):
         self._assert_xml_tree()
-        return self.xml_tree.xpath(xpath_statement, namespaces=self.NS_MAP)
+        return self.xml_tree.xpath(xpath_statement, namespaces=self.get_namespace_map())
 
     @property
     def signed_data(self) -> bool:
@@ -140,3 +136,6 @@ class RequestProcessor:
     @property
     def protocol_binding(self) -> str:
         return self._xpath_xml_tree('/samlp:AuthnRequest/@ProtocolBinding')[0]
+
+    def get_namespace_map(self):
+        return NAMESPACE_MAP
