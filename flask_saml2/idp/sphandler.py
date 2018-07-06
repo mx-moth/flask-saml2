@@ -196,10 +196,7 @@ class SPHandler(object):
         """
         Is this URL a valid redirect target back to this service provider?
         """
-        print(f"Checking if {self.name} should redirect to {url}")
         acs_url = urlparse(self.acs_url)
         redirect_url = urlparse(url)
-        print(acs_url)
-        print(redirect_url)
         return acs_url.netloc == redirect_url.netloc and\
             acs_url.scheme == redirect_url.scheme
