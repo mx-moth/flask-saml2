@@ -8,7 +8,7 @@ This Flask plugin provides functionality for creating both SAML Service
 Providers and Identity Providers. Applications can implement one or both of
 these providers.
 
-``flask-saml2`` works with Flask 1.0+ and Python 3+.
+``flask-saml2`` works with Flask 1.0+ and Python 3.6+.
 
 This is a heavily modified fork of `NoodleMarkets/dj-saml-idp`_ which in turn
 is a fork of `deforestg/dj-saml-idp`_ which in turn is a fork of

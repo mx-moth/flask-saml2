@@ -1,10 +1,6 @@
 language: python
 cache: pip
 
-python:
-    - "3.5"
-    - "3.6"
-
 addons:
   apt:
     packages:
@@ -12,8 +8,6 @@ addons:
 
 matrix:
   include:
-    - python: 3.5
-      env: TOXENV=py35-flask1.0
     - python: 3.6
       env: TOXENV=py35-flask1.0
     - python: 3.6

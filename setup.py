@@ -33,6 +33,18 @@ setup_kwargs = dict(
     packages=find_packages(include=['flask_saml2*']),
     include_package_data=True,
     zip_safe=False,
+
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'Environment :: Web Environment',
+        'Framework :: Flask',
+        'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3 :: Only'
+        'Topic :: Security',
+        'Topic :: System :: Systems Administration :: Authentication/Directory',
+    ],
 )
 
 
