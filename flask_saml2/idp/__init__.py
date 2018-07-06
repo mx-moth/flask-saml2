@@ -1,5 +1,5 @@
-from .adaptor import Adaptor
 from .blueprint import create_blueprint
-from .processor import Processor
+from .idp import IdentityProvider
+from .sphandler import SPHandler
 
-__all__ = [Adaptor, Processor, create_blueprint]
+__all__ = [IdentityProvider, SPHandler, create_blueprint]

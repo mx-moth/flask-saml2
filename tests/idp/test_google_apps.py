@@ -1,6 +1,8 @@
 """
-Tests for the Google Apps processor.
+Tests for the Google Apps service provider.
 """
+import lxml.etree
+
 from flask_saml2 import codex
 
 from . import base
@@ -29,15 +31,40 @@ RELAY_STATE = (
 GOOGLE_APPS_ACS = 'https://www.google.com/a/example.com/acs'
 
 
-class TestGoogleAppsProcessor(base.BaseProcessorTests):
+class TestGoogleAppsSPHandler(base.BaseSPHandlerTests):
+    ACS_URL = GOOGLE_APPS_ACS
+
     SP_CONFIG = [('google_apps', {
-        'PROCESSOR': 'flask_saml2.idp.sp.google_apps.GoogleAppsProcessor',
+        'CLASS': 'flask_saml2.idp.sp.google_apps.GoogleAppsSPHandler',
         'OPTIONS': {
             'acs_url': GOOGLE_APPS_ACS,
         },
     })]
 
     REQUEST_DATA = {
-        'SAMLRequest': SAML_REQUEST,
+        'SAMLRequest': SAML_REQUEST.decode('utf-8'),
         'RelayState': RELAY_STATE,
     }
+
+    BAD_ACS_URLS = [
+        'https://example.com/',
+        'https://malicious.com/www.google.com/a/example.com/acs/',
+    ]
+
+    def test_authnrequest_bad_acs_url(self):
+        for new_acs_url in self.BAD_ACS_URLS:
+            self.login(self.user)
+
+            original_request = self.REQUEST_DATA['SAMLRequest']
+            xml = lxml.etree.fromstring(codex.decode_saml_xml(original_request))
+            xml.set('AssertionConsumerServiceURL', new_acs_url)
+            new_request = codex.deflate_and_base64_encode(base.c14n(xml)).decode('utf-8')
+
+            with self.client.session_transaction() as sess:
+                sess.update({
+                    **self.REQUEST_DATA,
+                    'SAMLRequest': new_request,
+                })
+
+            response = self.client.get(self.login_process_url)
+            assert response.status_code == 400

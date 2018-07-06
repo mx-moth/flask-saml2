@@ -1,23 +1,31 @@
-from flask_saml2.idp import processor, xml_render
+from flask_saml2.idp import sphandler
+from flask_saml2.xml_templates import XmlTemplate
+
+from .salesforce import get_assertion_xml
 
 
-class Processor(processor.Processor):
+class SPHandler(sphandler.SPHandler):
     """
-    Demo Response Handler Processor for testing against django-saml2-sp.
+    Demo Response Handler SPHandler for testing against django-saml2-sp.
     """
-    def format_assertion(self):
+    def format_assertion(self, assertion_params: dict) -> XmlTemplate:
         # NOTE: This uses the SalesForce assertion for the demo.
-        self.assertion_xml = xml_render.get_assertion_salesforce_xml(
-            self.assertion_params, signed=True)
+        return get_assertion_xml(
+            parameters=assertion_params,
+            certificate=self.idp.get_idp_certificate(),
+            signer=self.idp.get_idp_signer(),
+            digester=self.idp.get_idp_digester())
 
 
-class AttributeProcessor(Processor):
+class AttributeSPHandler(SPHandler):
     """
-    Demo Response Handler Processor for testing against django-saml2-sp;
+    Demo Response Handler SPHandler for testing against django-saml2-sp;
     Adds SAML attributes to the assertion.
     """
-    def build_assertion(self):
-        super().build_assertion()
-        self.assertion_params['ATTRIBUTES'] = {
-            'foo': 'bar',
+    def build_assertion(self, request):
+        return {
+            **super().build_assertion(request),
+            'ATTRIBUTES': {
+                'foo': 'bar',
+            },
         }

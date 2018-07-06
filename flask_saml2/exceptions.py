@@ -17,7 +17,7 @@ class MessageException(SAML2Exception):
 
 class CannotHandleAssertion(MessageException):
     """
-    This processor does not handle this assertion.
+    This SP or IdP handler can not handle this assertion.
     """
 
 

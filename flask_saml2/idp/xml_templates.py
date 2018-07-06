@@ -1,8 +1,8 @@
 """
-XML templates for SAML 2.0
+XML templates for SAML 2.0 IdP
 """
 from flask_saml2.types import XmlNode
-from flask_saml2.xml_templates import XmlTemplate
+from flask_saml2.xml_templates import NameIDTemplate, XmlTemplate
 
 
 class AttributeTemplate(XmlTemplate):
@@ -53,10 +53,7 @@ class SubjectTemplate(XmlTemplate):
         ])
 
     def _get_name_id_xml(self):
-        return self.element('NameID', attrs={
-            'Format': self.params['SUBJECT_FORMAT'],
-            'SPNameQualifier': self.params['SP_NAME_QUALIFIER'],
-        }, text=self.params['SUBJECT'])
+        return NameIDTemplate(self.params).xml
 
     def _get_subject_conf_xml(self):
         scd_attributes = {
@@ -110,9 +107,9 @@ class AssertionTemplate(XmlTemplate):
 class ResponseTemplate(XmlTemplate):
     namespace = 'samlp'
 
-    def __init__(self, params, assertion):
+    def __init__(self, params, assertion_xml: XmlNode):
         super().__init__(params)
-        self.assertion = assertion
+        self.assertion_xml = assertion_xml
 
     def generate_xml(self):
         return self.element('Response', attrs={
@@ -124,13 +121,13 @@ class ResponseTemplate(XmlTemplate):
         }, children=[
             self._get_issuer(),
             self._get_status(),
-            self.assertion,
+            self.assertion_xml,
         ])
 
-    def add_signature(self, signature_xml):
+    def add_signature(self, signature_xml: XmlNode) -> XmlNode:
         self.xml.insert(1, signature_xml)
 
-    def _get_issuer(self):
+    def _get_issuer(self) -> XmlNode:
         namespace = self.get_namespace_map()['saml']
         return self.element('Issuer', namespace=namespace, text=self.params['ISSUER'])
 
@@ -150,7 +147,6 @@ class ResponseTemplate(XmlTemplate):
                         IssueInstant="${ISSUE_INSTANT}"
                         Version="2.0">
             <saml:Issuer xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion">${ISSUER}</saml:Issuer>
-            ${RESPONSE_SIGNATURE}
             <samlp:Status>
                 <samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"></samlp:StatusCode>
             </samlp:Status>

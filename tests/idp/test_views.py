@@ -26,8 +26,8 @@ REQUEST_DATA = {
 class TestLoginView(SamlTestCase):
     def setup_method(self, method):
         super().setup_method(method)
-        self.login_begin_url = url_for('flask_saml2_idp.saml_login_begin', _external=True)
-        self.login_process_url = url_for('flask_saml2_idp.saml_login_process', _external=True)
+        self.login_begin_url = url_for('flask_saml2_idp.login_begin', _external=True)
+        self.login_process_url = url_for('flask_saml2_idp.login_process', _external=True)
 
     def test_empty_get(self):
         """GET request without SAMLResponse data should fail."""
@@ -78,7 +78,7 @@ class TestLoginProcessView(SamlTestCase):
             session['RelayState'] = RELAY_STATE
             session['SAMLRequest'] = SAML_REQUEST
 
-        response = self.client.get(url_for('flask_saml2_idp.saml_login_process'))
+        response = self.client.get(url_for('flask_saml2_idp.login_process'))
         assert response.status_code == 400
 
 
@@ -92,7 +92,7 @@ class TestLogoutView(SamlTestCase):
         with self.client.session_transaction() as session:
             assert 'user' in session
 
-        response = self.client.get(url_for('flask_saml2_idp.saml_logout'))
+        response = self.client.get(url_for('flask_saml2_idp.logout'))
 
         assert response.status_code == 200
         assert 'logged out' in response.data.decode('utf-8')
@@ -105,7 +105,7 @@ class TestLogoutView(SamlTestCase):
 
         redirect_url = 'https://saml.serviceprovid.er/somewhere/'
         response = self.client.get(
-            url_for('flask_saml2_idp.saml_logout'),
+            url_for('flask_saml2_idp.logout'),
             query_string={'redirect_to': redirect_url})
 
         assert response.status_code == 302
@@ -116,7 +116,7 @@ class TestLogoutView(SamlTestCase):
 
         redirect_url = '://saml.serviceprovid.er/somewhere/'
         response = self.client.get(
-            url_for('flask_saml2_idp.saml_logout'),
+            url_for('flask_saml2_idp.logout'),
             query_string={'redirect_to': redirect_url})
 
         assert response.status_code == 200
@@ -127,12 +127,12 @@ class TestMetadataView(SamlTestCase):
     def test_rendering_metadata_view(self):
         xpath = lambda el, path: el.xpath(path, namespaces=NAMESPACE_MAP)[0]
 
-        response = self.client.get(url_for('flask_saml2_idp.metadata_xml'))
+        response = self.client.get(url_for('flask_saml2_idp.metadata'))
         response_xml = etree.fromstring(response.data.decode('utf-8'))
 
         certificate = certificate_to_string(CERTIFICATE)
-        login_url = url_for('flask_saml2_idp.saml_login_begin', _external=True)
-        logout_url = url_for('flask_saml2_idp.saml_logout', _external=True)
+        login_url = url_for('flask_saml2_idp.login_begin', _external=True)
+        logout_url = url_for('flask_saml2_idp.logout', _external=True)
 
         idp = xpath(response_xml, '/md:EntityDescriptor/md:IDPSSODescriptor')
         enc_key = xpath(idp, 'md:KeyDescriptor[@use="encryption"]')

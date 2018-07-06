@@ -1,2 +1,2 @@
-include README.md LICENSE
-recursive-include saml2idp/templates *.html *.xml
+include README.rst LICENSE
+recursive-include flask_saml2/*/templates *.html *.xml

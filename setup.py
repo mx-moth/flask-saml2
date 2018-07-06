@@ -2,8 +2,7 @@
 from setuptools import find_packages, setup
 
 with open('README.rst') as readme:
-    description = readme.read()
-
+    readme = readme.read()
 
 with open('flask_saml2/version.py') as version_file:
     version_str = None
@@ -11,23 +10,31 @@ with open('flask_saml2/version.py') as version_file:
     assert version_str is not None
 
 
-setup(
+setup_kwargs = dict(
     name='flask-saml2',
     version=version_str,
+    license='MIT',
+
     author='Tim Heap',
     author_email='tim.heap@tidetech.org',
+
     description='SAML 2.0 IdP and SP for Flask and Python 3',
-    long_description=description,
+    long_description=readme,
+    url='http://github.com/timheap/flask-saml2',
+
     install_requires=[
+        'attrs>=18.1.0',
         'Flask>=1.0.0',
-        'pyopenssl<18',
-        'defusedxml>=0.5.0',
         'signxml>=2.4.0',
         'lxml>=3.8.0',
+        'pyopenssl<18',
+        'defusedxml>=0.5.0',
     ],
-    license='MIT',
     packages=find_packages(include=['flask_saml2*']),
-    url='http://github.com/timheap/flask-saml2-idp',
-    zip_safe=False,
     include_package_data=True,
+    zip_safe=False,
 )
+
+
+if __name__ == '__main__':
+    setup(**setup_kwargs)

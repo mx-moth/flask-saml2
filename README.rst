@@ -1,27 +1,77 @@
-dj-saml-idp
+flask-saml2
 ===========
 
-.. image:: https://travis-ci.org/timheap/flask-saml2-idp.svg?branch=master
-    :target: https://travis-ci.org/timheap/flask-saml2-idp
+.. image:: https://travis-ci.org/timheap/flask-saml2.svg?branch=master
+    :target: https://travis-ci.org/timheap/flask-saml2
 
+This Flask plugin provides functionality for creating both SAML Service
+Providers and Identity Providers. Applications can implement one or both of
+these providers.
 
-This is a fork of `NoodleMarkets/dj-saml-idp`_ which in turn is a fork of
-`deforestg/dj-saml-idp`_ which in turn is a fork of
+``flask-saml2`` works with Flask 1.0+ and Python 3+.
+
+This is a heavily modified fork of `NoodleMarkets/dj-saml-idp`_ which in turn
+is a fork of `deforestg/dj-saml-idp`_ which in turn is a fork of
 `novapost/django-saml2-idp`_.
 
-This fork provides a SAML 2.0 IdP application for Flask and Python 3.
+Terminology
+-----------
 
-`flask-saml2-idp` implements the Identity Provider side of the SAML 2.0 protocol
-and makes user authentication available to external applications.
+For a full description of how SAML works, please seek guides elsewhere on the
+internet. For a quick introduction, and a run through of some of the
+terminology used in this package, read on.
 
-**Note:** Only targets support of Python 3.5+ and Flask 1.0+
+The SAML protocal is a conversation between two parties:
+**Identity Providers (IdP)** and **Service Providers (SP)**.
+When an unauthenticated client (usually a browser) accesses a Service Provider,
+the Service Provider will make an **authentication request (AuthnRequest)**,
+sign it using its private key, and then forward this request via the client to
+the Identity Provider. Once the client logs in at the central Identity
+Provider, the Identity Provider makes a response, signs it, and forwards this
+response via the client to the requesting Service Provider. The client is then
+authenticated on the Service Provider via the central Identity Provider,
+without the Service Provider having to know anything about the authentication
+method, or any passwords involved.
+
+Example implementations
+-----------------------
+
+A minimal but functional example implementation of both a Service Provider and
+an Identity Provider can be found in the ``examples/`` directory of this
+repository. To get the examples running, first clone the repository and install
+the dependencies:
+
+.. code-block:: console
+
+    $ git clone https://github.com/timheap/flask-saml2
+    $ cd flask-saml2
+    $ python3 -m venv venv
+    $ source venv/bin/activate
+    $ pip install -e .
+
+Next, run the IdP and the SP in separate terminal windows:
+
+.. code-block:: console
+
+    $ cd flask-saml2
+    $ source venv/bin/activate
+    $ ./examples/idp.py
+
+.. code-block:: console
+
+    $ cd flask-saml2
+    $ source venv/bin/activate
+    $ ./examples/sp.py
+
+Finally, navigate to http://localhost:9000/ to access the Service Provider
+landing page.
 
 Testing
 -------
 
 The test runner is `pytest` and we are using `tox` to run tests against
 different versions of Flask and Python. The test can be run locally using
-either `tox` directly (preferably in a virtualenv)::
+`tox` directly (preferably in a virtual environment)::
 
     $ pip install tox
     $ tox
@@ -35,5 +85,3 @@ Distributed under the `MIT License`_.
 .. _`deforestg/dj-saml-idp`: https://github.com/deforestg/dj-saml-idp
 .. _`novapost/django-saml2-idp`: https://github.com/novapost/django-saml2-idp
 .. _`MIT License`: https://github.com/mobify/dj-saml-idp/blob/master/LICENSE
-.. _`wheel`: http://wheel.readthedocs.org/en/latest/
-.. _`bumpversion`: https://github.com/peritus/bumpversion

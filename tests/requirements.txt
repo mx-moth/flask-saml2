@@ -1,4 +1,3 @@
-attrs~=18.1.0
 beautifulsoup4~=4.6.0
 html5lib~=1.0.1
 flask-login~=0.4.1

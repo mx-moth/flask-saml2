@@ -1,16 +1,27 @@
-sudo: true
 language: python
+cache: pip
+
 python:
     - "3.5"
+    - "3.6"
+
 addons:
   apt:
     packages:
       - swig
 
-env:
-    matrix:
-      - TOXENV=py35-dj111
+matrix:
+  include:
+    - python: 3.5
+      env: TOXENV=py35-flask1.0
+    - python: 3.6
+      env: TOXENV=py35-flask1.0
+    - python: 3.6
+      env: TOXENV=flake8,isort
 
 install:
     - pip install tox
+
 script: tox
+
+# vim: sw=2 expandtab

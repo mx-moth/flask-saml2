@@ -20,12 +20,8 @@ class XmlTemplate:
     namespace = None
     _xml = None
 
-    def __init__(self, params: dict = None):
-        if params is None:
-            self.params = {}
-        else:
-            self.params = params
-        self._xml = None
+    def __init__(self, params: dict = {}):
+        self.params = params.copy()
 
     def generate_xml(self):
         raise NotImplementedError
@@ -104,6 +100,25 @@ class SignedInfoTemplate(XmlTemplate):
             self._get_reference(),
         ])
 
+    def _get_canon_method(self):
+        return self.element('CanonicalizationMethod', attrs={
+            'Algorithm': 'http://www.w3.org/2001/10/xml-exc-c14n#'})
+
+    def _get_signature_method(self):
+        return self.element('SignatureMethod', attrs={
+            'Algorithm': self.params['SIGNER'].uri})
+
+    def _get_reference(self):
+        return self.element('Reference', attrs={
+            'URI': '#' + self.params['REFERENCE_URI']
+        }, children=[
+            self._get_tranforms(),
+            self.element('DigestMethod', attrs={
+                'Algorithm': self.params['DIGESTER'].uri,
+            }),
+            self.element('DigestValue', text=self.params['SUBJECT_DIGEST'])
+        ])
+
     def _get_tranforms(self):
         return self.element('Transforms', children=[
             self.element('Transform', attrs={
@@ -113,25 +128,6 @@ class SignedInfoTemplate(XmlTemplate):
                 'Algorithm': 'http://www.w3.org/2001/10/xml-exc-c14n#'
             }),
         ])
-
-    def _get_reference(self):
-        return self.element('Reference', attrs={
-            'URI': '#' + self.params['REFERENCE_URI']
-        }, children=[
-            self._get_tranforms(),
-            self.element('DigestMethod', attrs={
-                'Algorithm': 'http://www.w3.org/2000/09/xmldsig#sha1',
-            }),
-            self.element('DigestValue', text=self.params['SUBJECT_DIGEST'])
-        ])
-
-    def _get_signature_method(self):
-        return self.element('SignatureMethod', attrs={
-            'Algorithm': 'http://www.w3.org/2000/09/xmldsig#rsa-sha1'})
-
-    def _get_canon_method(self):
-        return self.element('CanonicalizationMethod', attrs={
-            'Algorithm': 'http://www.w3.org/2001/10/xml-exc-c14n#'})
 
     """
     Not used, just left for reference
@@ -161,7 +157,7 @@ class SignatureTemplate(XmlTemplate):
         ])
 
     def _get_signature_value(self):
-        return self.element('SignatureValue', text=self.params['RSA_SIGNATURE'])
+        return self.element('SignatureValue', text=self.params['SIGNATURE'])
 
     def _get_key_info(self):
         return self.element('KeyInfo', children=[
@@ -180,3 +176,13 @@ class SignatureTemplate(XmlTemplate):
         </ds:KeyInfo>
     </ds:Signature>
     """
+
+
+class NameIDTemplate(XmlTemplate):
+    namespace = 'saml'
+
+    def generate_xml(self):
+        return self.element('NameID', attrs={
+            'Format': self.params['SUBJECT_FORMAT'],
+            'SPNameQualifier': self.params.get('SP_NAME_QUALIFIER'),
+        }, text=self.params['SUBJECT'])

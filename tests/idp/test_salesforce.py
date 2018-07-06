@@ -1,20 +1,14 @@
 """
-Tests for the SalesForce processor.
+Tests for the SalesForce Service Provider handler.
 """
 import base64
 
 from lxml import etree
 
+from flask_saml2.signing import RsaSha1Signer, Sha1Digester, get_signature_xml
 from flask_saml2.utils import certificate_from_file, private_key_from_file
-from flask_saml2.xml_signing import get_signature_xml
 
 from . import base
-
-
-def c14n(xml):
-    """Get the canonical bytes representation of an lxml XML tree."""
-    return etree.tostring(xml, method='c14n', exclusive=True)
-
 
 # Normally, the Salesforce private key would only be known by Salesforce. As we
 # are generating and signing a request as if it was from Salesforce, we need
@@ -26,7 +20,7 @@ RELAY_STATE = '/home/home.jsp'
 SALESFORCE_ACS = 'https://login.salesforce.com'
 
 
-class TestSalesForceProcessor(base.BaseProcessorTests):
+class TestSalesForceSPHandler(base.BaseSPHandlerTests):
 
     @classmethod
     def setup_class(cls):
@@ -46,19 +40,24 @@ class TestSalesForceProcessor(base.BaseProcessorTests):
             '</samlp:AuthnRequest>'
         )
 
+        digester = Sha1Digester()
+        signer = RsaSha1Signer(SALESFORCE_PRIVATE_KEY)
+
         request_xml.insert(1, get_signature_xml(
-            SALESFORCE_CERTIFICATE, SALESFORCE_PRIVATE_KEY,
-            c14n(request_xml).decode('utf-8'), request_id))
+            SALESFORCE_CERTIFICATE, digester, signer,
+            base.c14n(request_xml).decode('utf-8'), request_id))
 
         cls.REQUEST_DATA = {
-            'SAMLRequest': base64.b64encode(c14n(request_xml)).decode('utf-8'),
+            'SAMLRequest': base64.b64encode(base.c14n(request_xml)).decode('utf-8'),
             'RelayState': RELAY_STATE,
         }
 
+    ACS_URL = SALESFORCE_ACS
+
     SP_CONFIG = [('salesforce', {
-        'PROCESSOR': 'flask_saml2.idp.sp.salesforce.SalesforceProcessor',
+        'CLASS': 'flask_saml2.idp.sp.salesforce.SalesforceSPHandler',
         'OPTIONS': {
             'acs_url': SALESFORCE_ACS,
-            'x509_cert': SALESFORCE_CERTIFICATE,
+            'certificate': SALESFORCE_CERTIFICATE,
         },
     })]

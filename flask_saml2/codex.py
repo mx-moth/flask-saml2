@@ -12,6 +12,26 @@ def decode_base64_and_inflate(b64string):
 
 
 def deflate_and_base64_encode(string_val):
-    zlibbed_str = zlib.compress(string_val.encode('utf-8'))
+    if type(string_val) is str:
+        string_val = string_val.encode('utf-8')
+    zlibbed_str = zlib.compress(string_val)
     compressed_string = zlibbed_str[2:-4]
     return base64.b64encode(compressed_string)
+
+
+def decode_saml_xml(data: bytes) -> bytes:
+    """
+    Decodes some base64-encoded and possibly zipped string into an XML string.
+    """
+    decoded = base64.b64decode(data)
+    # Is it XML yet?
+    if decoded.strip().startswith(b'<'):
+        return decoded
+
+    # Try decode and inflate
+    decoded = zlib.decompress(decoded, -15)
+    # Is it XML yet?
+    if decoded.strip().startswith(b'<'):
+        return decoded
+
+    raise ValueError("Does not look like an XML string!")

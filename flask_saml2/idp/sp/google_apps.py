@@ -1,22 +1,15 @@
 import urllib.parse
 from functools import partial
 
-from flask_saml2 import codex, exceptions
-from flask_saml2.idp import processor, xml_render, xml_templates
+from flask_saml2 import exceptions
+from flask_saml2.idp import sphandler, xml_render, xml_templates
+from flask_saml2.xml_templates import XmlTemplate
 
 
-class GoogleAppsProcessor(processor.Processor):
-    """
-    SalesForce.com-specific SAML 2.0 AuthnRequest to Response Handler Processor.
-    """
-    def decode_request(self):
-        """
-        Decodes request using both Base64 and Zipping.
-        """
-        self.request_xml = codex.decode_base64_and_inflate(self.saml_request)
-
-    def validate_request(self):
-        url = urllib.parse.urlparse(self.request_params['ACS_URL'])
+class GoogleAppsSPHandler(sphandler.SPHandler):
+    """Handle incoming SAML requests from a Google Apps Service Provider."""
+    def validate_request(self, request):
+        url = urllib.parse.urlparse(request.acs_url)
         is_valid = url.netloc.endswith('.google.com') \
             and url.path.startswith('/a/') \
             and url.scheme in ('http', 'https')
@@ -24,11 +17,12 @@ class GoogleAppsProcessor(processor.Processor):
         if not is_valid:
             raise exceptions.CannotHandleAssertion('AssertionConsumerService is not a Google Apps URL.')
 
-    def format_assertion(self):
-        self.assertion_xml = get_assertion_xml(
-            parameters=self.assertion_params, signed=True,
-            certificate=self.adaptor.get_idp_certificate(),
-            private_key=self.adaptor.get_idp_private_key())
+    def format_assertion(self, assertion_params: dict) -> XmlTemplate:
+        return get_assertion_xml(
+            parameters=assertion_params,
+            certificate=self.idp.get_idp_certificate(),
+            signer=self.idp.get_idp_signer(),
+            digester=self.idp.get_idp_digester())
 
 
 class GoogleAppsAssertionTemplate(xml_templates.AssertionTemplate):

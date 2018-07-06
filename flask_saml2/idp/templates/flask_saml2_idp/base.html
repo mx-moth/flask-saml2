@@ -8,10 +8,10 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>{{ adaptor.get_idp_config()['issuer'] }}</title>
+<title>{{ idp.get_idp_issuer() }}</title>
 </head>
 <body>
-<h1>{{ adaptor.get_idp_config()['issuer'] }}</h1>
+<h1>{{ idp.get_idp_issuer() }}</h1>
 {% block content %}
 {% endblock %}
 </body>

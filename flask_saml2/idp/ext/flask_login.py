@@ -1,10 +1,10 @@
 from flask import abort, current_app
 from flask_login import current_user, logout_user
 
-from flask_saml2.idp.adaptor import Adaptor
+from flask_saml2.idp import IdentityProvider
 
 
-class FlaskLoginAdaptor(Adaptor):
+class FlaskLoginIdentityProvider(IdentityProvider):
     def login_required(self):
         if not current_user.is_authenticated:
             raise abort(current_app.login_manager.unauthorized())
