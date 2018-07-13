@@ -18,14 +18,19 @@ install:
 
 script: tox
 
-deploy:
-  provider: pypi
-  user: tim_heap
-  password: $PYPI_PASSWORD
-  on:
-    python: 3.6
-    condition: $( ./setup.py --version ) == $TRAVIS_TAG
-    branch: master
-    tags: true
+# Deploy if all the test builds succeed
+jobs:
+  include:
+    - stage: deploy
+      python: 3.6
+      script: skip
+      deploy:
+        provider: pypi
+        user: tim_heap
+        password: $PYPI_PASSWORD
+        on:
+          condition: $( ./setup.py --version ) == $TRAVIS_TAG
+          branch: master
+          tags: true
 
 # vim: sw=2 expandtab
