@@ -18,4 +18,14 @@ install:
 
 script: tox
 
+deploy:
+  provider: pypi
+  user: tim_heap
+  password: $PYPI_PASSWORD
+  on:
+    python: 3.6
+    condition: $( ./setup.py --version ) == $TRAVIS_TAG
+    branch: master
+    tags: true
+
 # vim: sw=2 expandtab
