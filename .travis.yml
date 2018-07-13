@@ -25,6 +25,7 @@ jobs:
         provider: pypi
         user: tim_heap
         password: $PYPI_PASSWORD
+        distribution: "sdist bdist_wheel"
         on:
           condition: $( ./setup.py --version ) == $TRAVIS_TAG
           branch: master
