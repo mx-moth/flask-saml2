@@ -6,21 +6,18 @@ addons:
     packages:
       - swig
 
-matrix:
-  include:
-    - python: 3.6
-      env: TOXENV=py35-flask1.0
-    - python: 3.6
-      env: TOXENV=flake8,isort
-
 install:
-    - pip install tox
+  - pip install tox
 
 script: tox
 
 # Deploy if all the test builds succeed
 jobs:
   include:
+    - python: 3.6
+      env: TOXENV=py35-flask1.0
+    - python: 3.6
+      env: TOXENV=flake8,isort
     - stage: deploy
       python: 3.6
       script: skip
