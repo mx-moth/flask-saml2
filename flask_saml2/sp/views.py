@@ -25,13 +25,12 @@ class Login(SAML2View):
     Log in to this SP using SAML.
     """
     def get(self):
-        handlers = list(self.sp.get_idp_handlers())
-        if len(handlers) == 1 and False:
-            handler = handlers[0]
+        handler = self.sp.get_default_idp_handler()
+        if handler:
             return redirect(url_for('.login_idp', name=handler.name))
         return self.sp.render_template(
             'flask_saml2_sp/choose_idp.html',
-            handlers=handlers, sp=self.sp)
+            handlers=self.sp.get_idp_handlers())
 
 
 class LoginIdP(SAML2View):

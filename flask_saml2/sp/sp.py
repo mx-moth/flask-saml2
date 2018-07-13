@@ -151,6 +151,18 @@ class ServiceProvider:
         for name, config in self.get_identity_providers():
             yield self.make_idp_handler(name, config)
 
+    def get_default_idp_handler(self) -> Optional[IdPHandler]:
+        """
+        Get the default IdP to sign in with. When logging in, if there is
+        a default IdP, the user will be automatically logged in with that IdP.
+        If there is no default, a list of IdPs to sign in with will be
+        presented. Return ``None`` if there is no default IdP.
+        """
+        handlers = list(self.get_idp_handlers())
+        if len(handlers) == 1:
+            return handlers[0]
+        return None
+
     def get_idp_handler_by_name(self, name) -> IdPHandler:
         """
         Find a IdPHandler instance that can handle the current request.
