@@ -63,6 +63,7 @@ class Login(MethodView):
 app = Flask(__name__)
 app.debug = True
 app.secret_key = 'not a secret'
+app.config['SERVER_NAME'] = 'localhost:8000'
 app.config['SAML2_IDP'] = {
     'issuer': 'Test IdP',
     'autosubmit': True,

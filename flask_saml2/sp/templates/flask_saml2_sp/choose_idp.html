@@ -5,7 +5,7 @@
     <ul>
         {% for idp in handlers %}
             <li>
-                <a href="{{ url_for('.login_idp', name=idp.name) }}">{{ idp }}</a>
+                <a href="{{ url_for('.login_idp', name=idp.name, next=login_next) }}">{{ idp }}</a>
             </li>
         {% endfor %}
     </ul>
