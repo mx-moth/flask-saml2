@@ -15,6 +15,7 @@ from .idphandler import AuthData, IdPHandler
 class ServiceProvider:
 
     session_auth_data_key = 'saml_auth_data'
+    blueprint_name = 'flask_saml2_sp'
 
     def login_successful(
         self,
@@ -106,16 +107,16 @@ class ServiceProvider:
         return current_app.config['SAML2_IDENTITY_PROVIDERS'].items()
 
     def get_login_url(self):
-        return url_for('.login')
+        return url_for(self.blueprint_name + '.login')
 
     def get_acs_url(self, idphandler):
-        return url_for('.acs', name=idphandler.name, _external=True)
+        return url_for(self.blueprint_name + '.acs', name=idphandler.name, _external=True)
 
     def get_sls_url(self, idphandler):
-        return url_for('.sls', name=idphandler.name, _external=True)
+        return url_for(self.blueprint_name + '.sls', name=idphandler.name, _external=True)
 
     def get_metadata_url(self, idphandler):
-        return url_for('.metadata', name=idphandler.name, _external=True)
+        return url_for(self.blueprint_name + '.metadata', name=idphandler.name, _external=True)
 
     def get_default_login_return_url(self):
         return None
