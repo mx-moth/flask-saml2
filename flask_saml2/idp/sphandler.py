@@ -20,14 +20,23 @@ class SPHandler(object):
 
     Sub-classes should provide Service Provider-specific functionality.
     """
+    entity_id: str
     acs_url = None
     certificate: Optional[X509] = None
 
     subject_format = 'urn:oasis:names:tc:SAML:2.0:nameid-format:email'
 
-    def __init__(self, name, idp, acs_url=None, certificate: Optional[X509] = None):
+    def __init__(
+        self, name: str, idp,
+        *,
+        entity_id: str,
+        acs_url: str = None,
+        certificate: Optional[X509] = None,
+    ):
         self.name = name
         self.idp = idp
+
+        self.entity_id = entity_id
         self.logger = logging.getLogger(f'{self.__module__}.{type(self).__name__}')
 
         if acs_url is not None:
@@ -39,7 +48,7 @@ class SPHandler(object):
     @property
     def system_params(self):
         return {
-            'ISSUER': self.idp.get_idp_issuer(),
+            'ISSUER': self.idp.get_idp_entity_id(),
         }
 
     def build_assertion(self, request: AuthnRequestParser) -> dict:
@@ -106,7 +115,7 @@ class SPHandler(object):
 
     def get_audience(self, request: AuthnRequestParser) -> str:
         """Gets the audience assertion parameter from the request data."""
-        return request.destination or request.provider_name or ''
+        return request.issuer or ''
 
     def get_response_id(self):
         """Generate an ID for the response."""
@@ -155,8 +164,13 @@ class SPHandler(object):
             CannotHandleAssertion: if the ACS URL specified in the SAML request
                 doesn't match the one specified in the SP handler config.
         """
+        if self.entity_id != request.issuer:
+            raise CannotHandleAssertion(
+                f'EntityID mismatch {self.entity_id} != {request.issuer}')
+
         if self.acs_url != request.acs_url:
-            raise CannotHandleAssertion(f'Can\'t handle URL {request.acs_url}')
+            raise CannotHandleAssertion(
+                f'ACS URL mismatch {self.acs_url} != {request.acs_url}')
 
     def validate_user(self):
         """

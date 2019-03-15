@@ -1,4 +1,4 @@
-from typing import Mapping
+from typing import Mapping, Optional
 
 from flask_saml2.types import XmlNode
 from flask_saml2.xml_parser import XmlParser
@@ -54,3 +54,10 @@ class ResponseParser(XmlParser):
         attributes = self._xpath(self.assertion, 'saml:AttributeStatement/saml:Attribute')
         return {el.get('Name'): self._xpath(el, 'saml:AttributeValue')[0].text
                 for el in attributes}
+
+    @cached_property
+    def conditions(self) -> Optional[XmlNode]:
+        try:
+            return self._xpath(self.assertion, './saml:Conditions')[0]
+        except IndexError:
+            return None

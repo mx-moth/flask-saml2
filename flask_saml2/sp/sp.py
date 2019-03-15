@@ -53,10 +53,6 @@ class ServiceProvider:
     def get_sp_entity_id(self, idphandler) -> str:
         return self.get_metadata_url(idphandler)
 
-    def get_sp_issuer(self) -> str:
-        """Get the issuer for this SP."""
-        return self.get_sp_config().get('issuer', '')
-
     def get_sp_certificate(self) -> Optional[X509]:
         """Get the public certificate for this SP."""
         return self.get_sp_config().get('certificate')

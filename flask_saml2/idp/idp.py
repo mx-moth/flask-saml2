@@ -64,9 +64,6 @@ class IdentityProvider(Generic[U]):
         """Get the private key for this IdP."""
         return self.get_idp_config().get('private_key')
 
-    def get_idp_issuer(self) -> str:
-        return self.get_idp_config().get('issuer', '')
-
     def get_idp_autosubmit(self) -> bool:
         return self.get_idp_config().get('autosubmit', False)
 

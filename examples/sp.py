@@ -28,6 +28,7 @@ app.config['SAML2_IDENTITY_PROVIDERS'] = {
         'CLASS': 'flask_saml2.sp.idphandler.IdPHandler',
         'OPTIONS': {
             'display_name': 'My Identity Provider',
+            'entity_id': 'http://localhost:8000/saml/metadata.xml',
             'sso_url': 'http://localhost:8000/saml/login/',
             'slo_url': 'http://localhost:8000/saml/logout/',
             'certificate': IDP_CERTIFICATE,
