@@ -8,6 +8,25 @@ import OpenSSL.crypto
 from . import types as TS
 
 
+class cached_property:
+    def __init__(self, method):
+        self.method = method
+        self.name = method.__name__
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        value = self.method(instance)
+        instance.__dict__[self.name] = value
+        return value
+
+    def __set__(self, instance, value):
+        raise AttributeError(f"Can not set read-only attribute {type(value).__name__}.{self.name}")
+
+    def __delete__(self, instance):
+        instance.__dict__.pop(self.name, None)
+
+
 def import_string(path: str) -> T.Any:
     """
     Import a dotted Python path to a class or other module attribute.
