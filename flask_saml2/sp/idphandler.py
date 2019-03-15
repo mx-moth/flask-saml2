@@ -7,7 +7,7 @@ from flask_saml2 import codex
 from flask_saml2.exceptions import CannotHandleAssertion
 from flask_saml2.signing import sign_query_parameters
 from flask_saml2.types import X509
-from flask_saml2.utils import get_random_id, get_time_string
+from flask_saml2.utils import get_random_id, utcnow
 from flask_saml2.xml_templates import XmlTemplate
 
 from .parser import ResponseParser
@@ -126,7 +126,7 @@ class IdPHandler:
         """
         return template({
             'REQUEST_ID': get_random_id(),
-            'ISSUE_INSTANT': get_time_string(),
+            'ISSUE_INSTANT': utcnow().isoformat(),
             'DESTINATION': self.get_idp_sso_url(),
             'ISSUER': self.sp.get_sp_entity_id(self),
             'ACS_URL': self.get_sp_acs_url(),
@@ -144,7 +144,7 @@ class IdPHandler:
         """
         return template({
             'REQUEST_ID': get_random_id(),
-            'ISSUE_INSTANT': get_time_string(),
+            'ISSUE_INSTANT': utcnow().isoformat(),
             'DESTINATION': self.get_idp_slo_url(),
             'ISSUER': self.sp.get_sp_entity_id(self),
             'SUBJECT': auth_data.nameid,

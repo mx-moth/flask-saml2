@@ -4,6 +4,7 @@ import uuid
 from importlib import import_module
 
 import OpenSSL.crypto
+import pytz
 
 from . import types as TS
 
@@ -47,14 +48,8 @@ def get_random_id() -> str:
     return random_id
 
 
-def get_time_string(**kwargs) -> str:
-    """
-    Make an ISO 8601 UTC datetime string for a datetime, offset from now
-    according to kwargs. See :class:`datetime.timedelta` for possible kwargs.
-    """
-    delta = datetime.timedelta(**kwargs)
-    datestamp = datetime.datetime.utcnow() - delta
-    return datestamp.isoformat()
+def utcnow() -> datetime.datetime:
+    return datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
 
 
 def certificate_to_string(certificate: TS.X509) -> str:

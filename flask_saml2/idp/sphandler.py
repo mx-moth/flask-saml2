@@ -1,4 +1,5 @@
 import base64
+import datetime
 import logging
 from typing import Any, Optional
 from urllib.parse import urlparse
@@ -6,7 +7,7 @@ from urllib.parse import urlparse
 from flask_saml2 import codex
 from flask_saml2.exceptions import CannotHandleAssertion
 from flask_saml2.types import X509
-from flask_saml2.utils import get_random_id, get_time_string
+from flask_saml2.utils import get_random_id, utcnow
 from flask_saml2.xml_templates import XmlTemplate
 
 from .parser import AuthnRequestParser, LogoutRequestParser
@@ -51,7 +52,11 @@ class SPHandler(object):
             'ISSUER': self.idp.get_idp_entity_id(),
         }
 
-    def build_assertion(self, request: AuthnRequestParser) -> dict:
+    def build_assertion(
+        self,
+        request: AuthnRequestParser,
+        issue_instant: datetime.datetime,
+    ) -> dict:
         """Build parameters for the assertion template."""
         audience = self.get_audience(request)
 
@@ -59,11 +64,11 @@ class SPHandler(object):
             'ASSERTION_ID': self.get_assertion_id(),
             'ASSERTION_SIGNATURE': '',  # it's unsigned
             'AUDIENCE': audience,
-            'AUTH_INSTANT': get_time_string(),
-            'ISSUE_INSTANT': get_time_string(),
-            'NOT_BEFORE': get_time_string(hours=-1),
-            'NOT_ON_OR_AFTER': get_time_string(minutes=15),
-            'SESSION_NOT_ON_OR_AFTER': get_time_string(hours=8),
+            'AUTH_INSTANT': issue_instant.isoformat(),
+            'ISSUE_INSTANT': issue_instant.isoformat(),
+            'NOT_BEFORE': (issue_instant + datetime.timedelta(minutes=-3)).isoformat(),
+            'NOT_ON_OR_AFTER': (issue_instant + datetime.timedelta(minutes=15)).isoformat(),
+            'SESSION_NOT_ON_OR_AFTER': (issue_instant + datetime.timedelta(hours=8)).isoformat(),
             'SP_NAME_QUALIFIER': audience,
             'SUBJECT': self.get_subject(),
             'SUBJECT_FORMAT': self.subject_format,
@@ -71,10 +76,14 @@ class SPHandler(object):
             **self.extract_request_parameters(request),
         }
 
-    def build_response(self, request: AuthnRequestParser) -> dict:
+    def build_response(
+        self,
+        request: AuthnRequestParser,
+        issue_instant: datetime.datetime,
+    ) -> dict:
         """Build parameters for the response template."""
         return {
-            'ISSUE_INSTANT': get_time_string(),
+            'ISSUE_INSTANT': issue_instant.isoformat(),
             'RESPONSE_ID': self.get_response_id(),
             **self.system_params,
             **self.extract_request_parameters(request),
@@ -202,8 +211,9 @@ class SPHandler(object):
         self.validate_request(request)
         self.validate_user()
 
-        assertion = self.format_assertion(self.build_assertion(request))
-        response = self.format_response(self.build_response(request), assertion)
+        issue_instant = utcnow()
+        assertion = self.format_assertion(self.build_assertion(request, issue_instant))
+        response = self.format_response(self.build_response(request, issue_instant), assertion)
         return response
 
     def is_valid_redirect(self, url):
