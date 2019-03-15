@@ -2,6 +2,7 @@ from typing import Mapping, Optional
 from urllib.parse import urlencode
 
 import attr
+import iso8601
 
 from flask_saml2 import codex
 from flask_saml2.exceptions import CannotHandleAssertion
@@ -229,6 +230,18 @@ class IdPHandler:
                 f'Entity ID mismatch {self.entity_id} != {response.issuer}')
 
         if response.conditions is not None:
+            # Validate the NotBefore/NotOnOrAfter tags
+            now = utcnow()
+            not_before = response.conditions.get('NotBefore')
+            not_on_or_after = response.conditions.get('NotOnOrAfter')
+            try:
+                if not_before is not None and now < iso8601.parse_date(not_before):
+                    raise CannotHandleAssertion(f'NotBefore={not_before} check failed')
+                if not_on_or_after is not None and now >= iso8601.parse_date(not_on_or_after):
+                    raise CannotHandleAssertion(f'NotOnOrAfter={not_on_or_after} check failed')
+            except ValueError as err:
+                raise CannotHandleAssertion("Could not parse date") from err
+
             # Validate the AudienceRestriction elements, if they exist
             audiences = response._xpath(response.conditions, './saml:AudienceRestriction/saml:Audience')
             entity_id = self.sp.get_sp_entity_id(self)
