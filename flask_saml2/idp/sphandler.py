@@ -173,6 +173,9 @@ class SPHandler(object):
             CannotHandleAssertion: if the ACS URL specified in the SAML request
                 doesn't match the one specified in the SP handler config.
         """
+        if self.idp.get_sso_url() != request.destination:
+            raise CannotHandleAssertion(f'Invalid Destination')
+
         if self.entity_id != request.issuer:
             raise CannotHandleAssertion(
                 f'EntityID mismatch {self.entity_id} != {request.issuer}')
