@@ -54,11 +54,11 @@ class TestSalesForceSPHandler(base.BaseSPHandlerTests):
 
     ACS_URL = SALESFORCE_ACS
 
-    SP_CONFIG = [('salesforce', {
+    SP_CONFIG = [{
         'CLASS': 'flask_saml2.idp.sp.salesforce.SalesforceSPHandler',
         'OPTIONS': {
             'entity_id': 'https://saml.salesforce.com',
             'acs_url': SALESFORCE_ACS,
             'certificate': SALESFORCE_CERTIFICATE,
         },
-    })]
+    }]

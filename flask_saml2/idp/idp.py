@@ -78,24 +78,23 @@ class IdentityProvider(Generic[U]):
 
     def get_service_providers(self) -> Iterable[Tuple[str, dict]]:
         """
-        Get an iterable of service provider ``(name, config)`` pairs. ``name``
-        is only used interally for logging and debugging. ``config`` should be
-        a dict specifying a SPHandler subclass and optionally any constructor
-        arguments:
+        Get an iterable of service provider ``config`` dicts. ``config`` should
+        be a dict specifying a SPHandler subclass and optionally any
+        constructor arguments:
 
         .. code-block:: python
 
             >>> list(idp.get_service_providers())
-            [('my_sp', {
+            [{
                 'CLASS': 'my_app.service_providers.MySPSPHandler',
                 'OPTIONS': {
                     'acs_url': 'https://service.example.com/auth/acs/',
                 },
-            })]
+            }]
 
-        Defaults to ``current_app.config['SAML2_SERVICE_PROVIDERS'].items()``.
+        Defaults to ``current_app.config['SAML2_SERVICE_PROVIDERS']``.
         """
-        return current_app.config['SAML2_SERVICE_PROVIDERS'].items()
+        return current_app.config['SAML2_SERVICE_PROVIDERS']
 
     def get_sso_url(self):
         return url_for(self.blueprint_name + '.login_begin', _external=True)
@@ -150,10 +149,10 @@ class IdentityProvider(Generic[U]):
         """
         Get the SPHandler for each service provider defined.
         """
-        for name, config in self.get_service_providers():
+        for config in self.get_service_providers():
             cls = import_string(config['CLASS'])
             options = config.get('OPTIONS', {})
-            yield cls(name, self, **options)
+            yield cls(self, **options)
 
     # Misc
 

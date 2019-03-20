@@ -28,7 +28,8 @@ class TestEndToEnd(SamlTestCase):
 
             # We should be redirected to the specific IdP login URL
             sp_login_idp_url = url_for(
-                'flask_saml2_sp.login_idp', name='test_idp',
+                'flask_saml2_sp.login_idp',
+                entity_id='http://idp.example.com/saml/metadata.xml',
                 next=login_next, _external=True)
             assert response.status_code == 302
             assert response.headers['Location'] == sp_login_idp_url
@@ -75,7 +76,7 @@ class TestEndToEnd(SamlTestCase):
 
         with self.sp_app.app_context():
             # And hit the SP as if the form was posted
-            assert target == url_for('flask_saml2_sp.acs', name='test_idp', _external=True)
+            assert target == url_for('flask_saml2_sp.acs', _external=True)
             response = self.sp_client.post(target, data=data)
 
             # This should send us onwards to the protected page
@@ -95,7 +96,7 @@ class TestInvalidConditions(SamlTestCase):
 
     def _make_authn_request(self):
         # Make an AuthnRequest
-        idp_handler = self.sp.get_idp_handler_by_name('test_idp')
+        idp_handler = self.sp.get_idp_handler_by_entity_id('http://idp.example.com/saml/metadata.xml')
         with self.sp_app.app_context():
             authn_request = idp_handler.get_authn_request()
             return idp_handler.encode_saml_string(authn_request.get_xml_string())
@@ -111,7 +112,7 @@ class TestInvalidConditions(SamlTestCase):
                 return sp_handler.encode_response(response_xml)
 
     def _process_authn_response(self, authn_response):
-        idp_handler = self.sp.get_idp_handler_by_name('test_idp')
+        idp_handler = self.sp.get_idp_handler_by_entity_id('http://idp.example.com/saml/metadata.xml')
         with self.sp_app.app_context():
             response_handler = idp_handler.get_response_parser(authn_response)
             return idp_handler.get_auth_data(response_handler)

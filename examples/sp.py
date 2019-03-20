@@ -24,8 +24,8 @@ app.config['SAML2_SP'] = {
     'private_key': PRIVATE_KEY,
 }
 
-app.config['SAML2_IDENTITY_PROVIDERS'] = {
-    'my-test-idp': {
+app.config['SAML2_IDENTITY_PROVIDERS'] = [
+    {
         'CLASS': 'flask_saml2.sp.idphandler.IdPHandler',
         'OPTIONS': {
             'display_name': 'My Identity Provider',
@@ -35,7 +35,7 @@ app.config['SAML2_IDENTITY_PROVIDERS'] = {
             'certificate': IDP_CERTIFICATE,
         },
     },
-}
+]
 
 
 @app.route('/')

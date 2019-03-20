@@ -25,7 +25,7 @@ xpath = lambda el, path: el.xpath(path, namespaces=NAMESPACE_MAP)[0]
 
 class TestLogin(SamlTestCase):
     IDP_CONFIG = [
-        ('foo_idp', {
+        {
             'CLASS': 'flask_saml2.sp.idphandler.IdPHandler',
             'OPTIONS': {
                 'display_name': 'My Identity Provider',
@@ -34,8 +34,8 @@ class TestLogin(SamlTestCase):
                 'slo_url': 'https://foo.idp.example.com/saml/logout/',
                 'certificate': CERTIFICATE,
             },
-        }),
-        ('bar_idp', {
+        },
+        {
             'CLASS': 'flask_saml2.sp.idphandler.IdPHandler',
             'OPTIONS': {
                 'display_name': 'My Identity Provider',
@@ -44,20 +44,28 @@ class TestLogin(SamlTestCase):
                 'slo_url': 'https://bar.idp.example.com/saml/logout/',
                 'certificate': CERTIFICATE,
             },
-        }),
+        },
     ]
 
     def test_login(self):
         response = self.client.get(url_for('flask_saml2_sp.login'))
-        foo_url = url_for('flask_saml2_sp.login_idp', name='foo_idp', _external=False)
-        bar_url = url_for('flask_saml2_sp.login_idp', name='bar_idp', _external=False)
+        foo_url = url_for(
+            'flask_saml2_sp.login_idp',
+            entity_id='https://foo.idp.example.com/saml/metadata.xml',
+            _external=False)
+        bar_url = url_for(
+            'flask_saml2_sp.login_idp',
+            entity_id='https://bar.idp.example.com/saml/metadata.xml',
+            _external=False)
 
         body = response.data.decode('utf-8')
         assert foo_url in body
         assert bar_url in body
 
     def test_login_idp(self):
-        response = self.client.get(url_for('flask_saml2_sp.login_idp', name='foo_idp'))
+        response = self.client.get(url_for(
+            'flask_saml2_sp.login_idp',
+            entity_id='https://foo.idp.example.com/saml/metadata.xml'))
         assert response.status_code == 302
         assert response.headers['Location'].startswith('https://foo.idp.example.com/saml/login/')
 
@@ -65,16 +73,19 @@ class TestLogin(SamlTestCase):
 class TestLoginSingleIdP(SamlTestCase):
     def test_login(self):
         response = self.client.get(url_for('flask_saml2_sp.login'))
+        login_url = url_for(
+            'flask_saml2_sp.login_idp',
+            entity_id='https://idp.example.com/saml/metadata.xml',
+            _external=True)
         assert response.status_code == 302
-        assert response.headers['Location'] \
-            == url_for('flask_saml2_sp.login_idp', name='test_idp')
+        assert response.headers['Location'] == login_url
 
 
 class TestMetadataView(SamlTestCase):
     def test_rendering_metadata_view(self):
         xpath = lambda el, path: el.xpath(path, namespaces=NAMESPACE_MAP)[0]
 
-        response = self.client.get(url_for('flask_saml2_sp.metadata', name='test_idp'))
+        response = self.client.get(url_for('flask_saml2_sp.metadata'))
         response_xml = etree.fromstring(response.data.decode('utf-8'))
 
         certificate = certificate_to_string(CERTIFICATE)
@@ -86,7 +97,7 @@ class TestMetadataView(SamlTestCase):
         assert certificate == xpath(enc_key, './/ds:X509Certificate').text
         assert certificate == xpath(sign_key, './/ds:X509Certificate').text
 
-        acs_url = url_for('flask_saml2_sp.acs', name='test_idp', _external=True)
-        slo_url = url_for('flask_saml2_sp.sls', name='test_idp', _external=True)
+        acs_url = url_for('flask_saml2_sp.acs', _external=True)
+        slo_url = url_for('flask_saml2_sp.sls', _external=True)
         assert acs_url == xpath(sp, './md:AssertionConsumerService').attrib['Location']
         assert slo_url == xpath(sp, './md:SingleLogoutService').attrib['Location']

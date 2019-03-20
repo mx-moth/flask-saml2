@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
+import logging
+
 from flask import Flask, abort, redirect, request, session, url_for
 from flask.views import MethodView
 
 from flask_saml2.idp import create_blueprint, idp
 from tests.idp.base import CERTIFICATE, PRIVATE_KEY, User
 from tests.sp.base import CERTIFICATE as SP_CERTIFICATE
+
+logger = logging.getLogger(__name__)
 
 
 class IdentityProvider(idp.IdentityProvider):
@@ -54,8 +58,8 @@ class Login(MethodView):
         next = request.form['next']
 
         session['user'] = user
-        print("Logged user", user, "in")
-        print("Redirecting to", next)
+        logging.info("Logged user", user, "in")
+        logging.info("Redirecting to", next)
 
         return redirect(next)
 
@@ -65,21 +69,20 @@ app.debug = True
 app.secret_key = 'not a secret'
 app.config['SERVER_NAME'] = 'localhost:8000'
 app.config['SAML2_IDP'] = {
-    'issuer': 'Test IdP',
     'autosubmit': True,
     'certificate': CERTIFICATE,
     'private_key': PRIVATE_KEY,
 }
-app.config['SAML2_SERVICE_PROVIDERS'] = {
-    'my-test-sp': {
+app.config['SAML2_SERVICE_PROVIDERS'] = [
+    {
         'CLASS': 'flask_saml2.idp.sp.demo.AttributeSPHandler',
         'OPTIONS': {
-            'entity_id': 'http://localhost:9000/saml/metadata/my-test-idp.xml',
-            'acs_url': 'http://localhost:9000/saml/acs/my-test-idp/',
+            'entity_id': 'http://localhost:9000/saml/metadata.xml',
+            'acs_url': 'http://localhost:9000/saml/acs/',
             'certificate': SP_CERTIFICATE,
         },
-    },
-}
+    }
+]
 
 app.add_url_rule('/login/', view_func=Login.as_view('login'))
 app.register_blueprint(create_blueprint(idp), url_prefix='/saml/')

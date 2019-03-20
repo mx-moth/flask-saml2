@@ -5,7 +5,6 @@ from urllib.parse import urljoin
 from flask import (
     abort, current_app, redirect, render_template, request, session, url_for)
 
-from flask_saml2.exceptions import CannotHandleAssertion
 from flask_saml2.signing import Digester, RsaSha1Signer, Sha1Digester, Signer
 from flask_saml2.types import X509, PKey
 from flask_saml2.utils import certificate_to_string, import_string
@@ -51,8 +50,8 @@ class ServiceProvider:
         """
         return current_app.config['SAML2_SP']
 
-    def get_sp_entity_id(self, idphandler) -> str:
-        return self.get_metadata_url(idphandler)
+    def get_sp_entity_id(self) -> str:
+        return self.get_metadata_url()
 
     def get_sp_certificate(self) -> Optional[X509]:
         """Get the public certificate for this SP."""
@@ -84,36 +83,35 @@ class ServiceProvider:
 
     def get_identity_providers(self) -> Iterable[Tuple[str, dict]]:
         """
-        Get an iterable of identity provider ``(name, config)`` pairs. ``name``
-        is only used interally for logging and debugging. ``config`` should be
-        a dict specifying a Provider subclass and optionally any constructor
-        arguments:
+        Get an iterable of identity provider ``config`` dicts.``config`` should
+        be a dict specifying an IdPHandler subclass and optionally any
+        constructor arguments:
 
         .. code-block:: python
 
             >>> list(sp.get_identity_providers())
-            [('my_sp', {
+            [{
                 'CLASS': 'my_app.identity_providers.MyIdPIdPHandler',
                 'OPTIONS': {
-                    'metadata_url': 'https://idp.example.com/metadata.xml',
+                    'entity_id': 'https://idp.example.com/metadata.xml',
                 },
-            })]
+            }]
 
-        Defaults to ``current_app.config['SAML2_IDENTITY_PROVIDERS'].items()``.
+        Defaults to ``current_app.config['SAML2_IDENTITY_PROVIDERS']``.
         """
-        return current_app.config['SAML2_IDENTITY_PROVIDERS'].items()
+        return current_app.config['SAML2_IDENTITY_PROVIDERS']
 
     def get_login_url(self):
         return url_for(self.blueprint_name + '.login')
 
-    def get_acs_url(self, idphandler):
-        return url_for(self.blueprint_name + '.acs', name=idphandler.name, _external=True)
+    def get_acs_url(self):
+        return url_for(self.blueprint_name + '.acs', _external=True)
 
-    def get_sls_url(self, idphandler):
-        return url_for(self.blueprint_name + '.sls', name=idphandler.name, _external=True)
+    def get_sls_url(self):
+        return url_for(self.blueprint_name + '.sls', _external=True)
 
-    def get_metadata_url(self, idphandler):
-        return url_for(self.blueprint_name + '.metadata', name=idphandler.name, _external=True)
+    def get_metadata_url(self):
+        return url_for(self.blueprint_name + '.metadata', _external=True)
 
     def get_default_login_return_url(self):
         return None
@@ -152,17 +150,17 @@ class ServiceProvider:
 
     # IdPHandlers
 
-    def make_idp_handler(self, name, config):
+    def make_idp_handler(self, config) -> IdPHandler:
         cls = import_string(config['CLASS'])
         options = config.get('OPTIONS', {})
-        return cls(name, self, **options)
+        return cls(self, **options)
 
     def get_idp_handlers(self) -> Iterable[IdPHandler]:
         """
         Get the IdPHandler for each service provider defined.
         """
-        for name, config in self.get_identity_providers():
-            yield self.make_idp_handler(name, config)
+        for config in self.get_identity_providers():
+            yield self.make_idp_handler(config)
 
     def get_default_idp_handler(self) -> Optional[IdPHandler]:
         """
@@ -176,14 +174,14 @@ class ServiceProvider:
             return handlers[0]
         return None
 
-    def get_idp_handler_by_name(self, name) -> IdPHandler:
+    def get_idp_handler_by_entity_id(self, entity_id) -> IdPHandler:
         """
         Find a IdPHandler instance that can handle the current request.
         """
-        for idp_name, config in self.get_identity_providers():
-            if idp_name == name:
-                return self.make_idp_handler(name, config)
-        raise CannotHandleAssertion('No known IdP handlers could handle this request.')
+        for handler in self.get_idp_handlers():
+            if handler.entity_id == entity_id:
+                return handler
+        raise ValueError(f"No IdP handler with entity ID {entity_id}")
 
     def get_idp_handler_by_current_session(self):
         """
@@ -238,15 +236,15 @@ class ServiceProvider:
             request.scheme, current_app.config['SERVER_NAME'])
         return urljoin(base, url)
 
-    def get_metadata_context(self, handler: IdPHandler) -> dict:
+    def get_metadata_context(self) -> dict:
         """
         Get any extra context for the metadata template. Suggested extra
         context variables include 'org' and 'contacts'.
         """
         return {
-            'sls_url': self.get_sls_url(handler),
-            'acs_url': self.get_acs_url(handler),
-            'entity_id': self.get_sp_entity_id(handler),
+            'sls_url': self.get_sls_url(),
+            'acs_url': self.get_acs_url(),
+            'entity_id': self.get_sp_entity_id(),
             'certificate': certificate_to_string(self.get_sp_certificate()),
             'org': None,
             'contacts': [],

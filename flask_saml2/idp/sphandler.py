@@ -28,13 +28,12 @@ class SPHandler(object):
     subject_format = 'urn:oasis:names:tc:SAML:2.0:nameid-format:email'
 
     def __init__(
-        self, name: str, idp,
+        self, idp,
         *,
         entity_id: str,
         acs_url: str = None,
         certificate: Optional[X509] = None,
     ):
-        self.name = name
         self.idp = idp
 
         self.entity_id = entity_id
@@ -227,3 +226,6 @@ class SPHandler(object):
         redirect_url = urlparse(url)
         return acs_url.netloc == redirect_url.netloc and\
             acs_url.scheme == redirect_url.scheme
+
+    def __str__(self):
+        return self.entity_id
