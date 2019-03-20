@@ -28,8 +28,9 @@ class AuthData:
         Return a dict of all attributes. You can store this dict in a session
         store, and recreate this instance using :meth:`from_dict`.
         """
+        data = attr.asdict(self, filter=lambda a, v: a.name != 'handler')
         return {
-            **attr.asdict(self),
+            'data': data,
             'handler': self.handler.entity_id,
         }
 
@@ -40,9 +41,19 @@ class AuthData:
         :meth:`to_dict` produces.
         """
         return cls(**{
-            **data,
+            **data['data'],
             'handler': sp.get_idp_handler_by_entity_id(data['handler']),
         })
+
+    @classmethod
+    def is_valid(cls, sp, data: dict):
+        if set(data.keys()) != {'data', 'handler'}:
+            return False
+        try:
+            sp.get_idp_handler_by_entity_id(data['handler'])
+        except ValueError:
+            return False
+        return True
 
 
 class IdPHandler:
