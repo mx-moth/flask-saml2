@@ -8,7 +8,7 @@ from .views import (
 
 
 def create_blueprint(idp):
-    idp_bp = Blueprint('flask_saml2_idp', 'flask_saml2.idp', template_folder='templates')
+    idp_bp = Blueprint(idp.blueprint_name, 'flask_saml2.idp', template_folder='templates')
 
     idp_bp.add_url_rule('/login/', view_func=LoginBegin.as_view(
         'login_begin', idp=idp))

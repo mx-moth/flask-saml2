@@ -57,6 +57,7 @@ class TestSalesForceSPHandler(base.BaseSPHandlerTests):
     SP_CONFIG = [('salesforce', {
         'CLASS': 'flask_saml2.idp.sp.salesforce.SalesforceSPHandler',
         'OPTIONS': {
+            'entity_id': 'https://saml.salesforce.com',
             'acs_url': SALESFORCE_ACS,
             'certificate': SALESFORCE_CERTIFICATE,
         },

@@ -2,11 +2,13 @@ from typing import Mapping, Optional
 from urllib.parse import urlencode
 
 import attr
+import iso8601
 
 from flask_saml2 import codex
+from flask_saml2.exceptions import CannotHandleAssertion
 from flask_saml2.signing import sign_query_parameters
 from flask_saml2.types import X509
-from flask_saml2.utils import get_random_id, get_time_string
+from flask_saml2.utils import get_random_id, utcnow
 from flask_saml2.xml_templates import XmlTemplate
 
 from .parser import ResponseParser
@@ -49,6 +51,7 @@ class IdPHandler:
     about. This class should be subclassed for Identity Providers that need
     specific configurations.
     """
+    entity_id: str
     display_name: Optional[str] = None
     certificate: Optional[X509] = None
 
@@ -57,6 +60,7 @@ class IdPHandler:
         name: str,
         sp,
         *,
+        entity_id: str,
         display_name: Optional[str] = None,
         sso_url: Optional[str] = None,
         slo_url: Optional[str] = None,
@@ -87,6 +91,7 @@ class IdPHandler:
 
         self.name = name
         self.sp = sp
+        self.entity_id = entity_id
 
         if display_name is not None:
             self.display_name = display_name
@@ -122,9 +127,9 @@ class IdPHandler:
         """
         return template({
             'REQUEST_ID': get_random_id(),
-            'ISSUE_INSTANT': get_time_string(),
+            'ISSUE_INSTANT': utcnow().isoformat(),
             'DESTINATION': self.get_idp_sso_url(),
-            'ISSUER': self.sp.get_sp_issuer(),
+            'ISSUER': self.sp.get_sp_entity_id(self),
             'ACS_URL': self.get_sp_acs_url(),
             **parameters,
         })
@@ -140,9 +145,9 @@ class IdPHandler:
         """
         return template({
             'REQUEST_ID': get_random_id(),
-            'ISSUE_INSTANT': get_time_string(),
+            'ISSUE_INSTANT': utcnow().isoformat(),
             'DESTINATION': self.get_idp_slo_url(),
-            'ISSUER': self.sp.get_sp_issuer(),
+            'ISSUER': self.sp.get_sp_entity_id(self),
             'SUBJECT': auth_data.nameid,
             'SUBJECT_FORMAT': auth_data.nameid_format,
             **parameters,
@@ -196,19 +201,52 @@ class IdPHandler:
         return codex.deflate_and_base64_encode(saml_string)
 
     def get_response_parser(self, saml_response):
-        """Get a :class:`~.parser.ResponseParser` to handle this request."""
+        """
+        Make a :class:`~.parser.ResponseParser` instance to handle this
+        response.
+        """
         return ResponseParser(
             self.decode_saml_string(saml_response),
             certificate=self.certificate)
 
     def get_auth_data(self, response: ResponseParser) -> AuthData:
-        """Create an :class:`AuthData` instance from a SAML Response."""
+        """
+        Create an :class:`AuthData` instance from a SAML Response. The response
+        is validated first.
+        """
+        self.validate_response(response)
+
         return AuthData(
             handler=self,
             nameid=response.nameid,
             nameid_format=response.nameid_format,
             attributes=response.attributes,
         )
+
+    def validate_response(self, response: ResponseParser):
+        # Check it came from the right place
+        if self.entity_id != response.issuer:
+            raise CannotHandleAssertion(
+                f'Entity ID mismatch {self.entity_id} != {response.issuer}')
+
+        if response.conditions is not None:
+            # Validate the NotBefore/NotOnOrAfter tags
+            now = utcnow()
+            not_before = response.conditions.get('NotBefore')
+            not_on_or_after = response.conditions.get('NotOnOrAfter')
+            try:
+                if not_before is not None and now < iso8601.parse_date(not_before):
+                    raise CannotHandleAssertion(f'NotBefore={not_before} check failed')
+                if not_on_or_after is not None and now >= iso8601.parse_date(not_on_or_after):
+                    raise CannotHandleAssertion(f'NotOnOrAfter={not_on_or_after} check failed')
+            except ValueError as err:
+                raise CannotHandleAssertion("Could not parse date") from err
+
+            # Validate the AudienceRestriction elements, if they exist
+            audiences = response._xpath(response.conditions, './saml:AudienceRestriction/saml:Audience')
+            entity_id = self.sp.get_sp_entity_id(self)
+            if len(audiences) and not any(el.text == entity_id for el in audiences):
+                raise CannotHandleAssertion("No valid AudienceRestriction found")
 
     def __str__(self):
         if self.display_name:

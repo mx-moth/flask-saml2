@@ -37,6 +37,7 @@ class TestGoogleAppsSPHandler(base.BaseSPHandlerTests):
     SP_CONFIG = [('google_apps', {
         'CLASS': 'flask_saml2.idp.sp.google_apps.GoogleAppsSPHandler',
         'OPTIONS': {
+            'entity_id': 'google.com',
             'acs_url': GOOGLE_APPS_ACS,
         },
     })]

@@ -15,11 +15,19 @@ script: tox
 jobs:
   include:
     - python: 3.6
-      env: TOXENV=py35-flask1.0
-    - python: 3.6
+      env: TOXENV=py36-flask1.0
+    - python: 3.7
+      dist: xenial
+      sudo: true
+      env: TOXENV=py37-flask1.0
+    - python: 3.7
+      dist: xenial
+      sudo: true
       env: TOXENV=flake8,isort
     - stage: deploy
-      python: 3.6
+      python: 3.7
+      dist: xenial
+      sudo: true
       script: skip
       deploy:
         provider: pypi

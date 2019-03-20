@@ -29,6 +29,8 @@ setup_kwargs = dict(
         'lxml>=3.8.0',
         'pyopenssl<18',
         'defusedxml>=0.5.0',
+        'pytz>=0',
+        'iso8601~=0.1.12',
     ],
     packages=find_packages(include=['flask_saml2*']),
     include_package_data=True,

@@ -1,3 +1,4 @@
+import urllib.parse
 from typing import Iterable, Optional, Tuple
 from urllib.parse import urljoin
 
@@ -15,6 +16,7 @@ from .idphandler import AuthData, IdPHandler
 class ServiceProvider:
 
     session_auth_data_key = 'saml_auth_data'
+    blueprint_name = 'flask_saml2_sp'
 
     def login_successful(
         self,
@@ -51,10 +53,6 @@ class ServiceProvider:
 
     def get_sp_entity_id(self, idphandler) -> str:
         return self.get_metadata_url(idphandler)
-
-    def get_sp_issuer(self) -> str:
-        """Get the issuer for this SP."""
-        return self.get_sp_config().get('issuer', '')
 
     def get_sp_certificate(self) -> Optional[X509]:
         """Get the public certificate for this SP."""
@@ -106,21 +104,21 @@ class ServiceProvider:
         return current_app.config['SAML2_IDENTITY_PROVIDERS'].items()
 
     def get_login_url(self):
-        return url_for('.login')
+        return url_for(self.blueprint_name + '.login')
 
     def get_acs_url(self, idphandler):
-        return url_for('.acs', name=idphandler.name, _external=True)
+        return url_for(self.blueprint_name + '.acs', name=idphandler.name, _external=True)
 
     def get_sls_url(self, idphandler):
-        return url_for('.sls', name=idphandler.name, _external=True)
+        return url_for(self.blueprint_name + '.sls', name=idphandler.name, _external=True)
 
     def get_metadata_url(self, idphandler):
-        return url_for('.metadata', name=idphandler.name, _external=True)
+        return url_for(self.blueprint_name + '.metadata', name=idphandler.name, _external=True)
 
     def get_default_login_return_url(self):
         return None
 
-    def get_login_return_url(self, idphandler):
+    def get_login_return_url(self):
         urls = [
             request.args.get('next'),
             self.get_default_login_return_url(),
@@ -136,6 +134,21 @@ class ServiceProvider:
 
     def get_logout_return_url(self):
         return None
+
+    def is_valid_redirect_url(self, url):
+        """
+        Is this URL valid and safe to redirect to? Defaults to only allowing
+        URLs on the current server.
+        """
+        bits = urllib.parse.urlsplit(url)
+
+        # Relative URLs are safe
+        if not bits.scheme and not bits.netloc:
+            return True
+
+        # Otherwise the scheme and server name must match
+        return bits.scheme == request.scheme \
+            and bits.netloc == current_app.config['SERVER_NAME']
 
     # IdPHandlers
 
@@ -206,13 +219,13 @@ class ServiceProvider:
         }
         return render_template(template, **context)
 
-    def set_auth_data_in_session(self, auth_data):
+    def set_auth_data_in_session(self, auth_data: AuthData):
         session[self.session_auth_data_key] = auth_data.to_dict()
 
     def clear_auth_data_in_session(self):
         session.pop(self.session_auth_data_key, None)
 
-    def get_auth_data_in_session(self):
+    def get_auth_data_in_session(self) -> AuthData:
         """
         Get an AuthData instance from the data stored for the currently logged
         in user.
@@ -225,7 +238,7 @@ class ServiceProvider:
             request.scheme, current_app.config['SERVER_NAME'])
         return urljoin(base, url)
 
-    def get_metadata_context(self, handler) -> dict:
+    def get_metadata_context(self, handler: IdPHandler) -> dict:
         """
         Get any extra context for the metadata template. Suggested extra
         context variables include 'org' and 'contacts'.

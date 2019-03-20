@@ -18,6 +18,8 @@ class IdentityProvider(Generic[U]):
     interactions are performed through methods on this class.
     """
 
+    blueprint_name = 'flask_saml2_idp'
+
     # Configuration
 
     def get_idp_config(self) -> dict:
@@ -52,7 +54,7 @@ class IdentityProvider(Generic[U]):
             and self.get_idp_private_key() is not None
 
     def get_idp_entity_id(self) -> str:
-        return url_for('.metadata', _external=True)
+        return self.get_metadata_url()
 
     def get_idp_certificate(self) -> Optional[X509]:
         """Get the public certificate for this IdP."""
@@ -61,9 +63,6 @@ class IdentityProvider(Generic[U]):
     def get_idp_private_key(self) -> Optional[PKey]:
         """Get the private key for this IdP."""
         return self.get_idp_config().get('private_key')
-
-    def get_idp_issuer(self) -> str:
-        return self.get_idp_config().get('issuer', '')
 
     def get_idp_autosubmit(self) -> bool:
         return self.get_idp_config().get('autosubmit', False)
@@ -97,6 +96,15 @@ class IdentityProvider(Generic[U]):
         Defaults to ``current_app.config['SAML2_SERVICE_PROVIDERS'].items()``.
         """
         return current_app.config['SAML2_SERVICE_PROVIDERS'].items()
+
+    def get_sso_url(self):
+        return url_for(self.blueprint_name + '.login_begin', _external=True)
+
+    def get_slo_url(self):
+        return url_for(self.blueprint_name + '.logout', _external=True)
+
+    def get_metadata_url(self):
+        return url_for(self.blueprint_name + '.metadata', _external=True)
 
     # Authentication
 
@@ -164,8 +172,8 @@ class IdentityProvider(Generic[U]):
         return {
             'entity_id': self.get_idp_entity_id(),
             'certificate': certificate_to_string(self.get_idp_certificate()),
-            'slo_url': url_for('.logout', _external=True),
-            'sso_url': url_for('.login_begin', _external=True),
+            'slo_url': self.get_slo_url(),
+            'sso_url': self.get_sso_url(),
             'org': None,
             'contacts': [],
         }

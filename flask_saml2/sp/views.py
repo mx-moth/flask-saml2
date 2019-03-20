@@ -26,10 +26,12 @@ class Login(SAML2View):
     """
     def get(self):
         handler = self.sp.get_default_idp_handler()
+        login_next = self.sp.get_login_return_url()
         if handler:
-            return redirect(url_for('.login_idp', name=handler.name))
+            return redirect(url_for('.login_idp', name=handler.name, next=login_next))
         return self.sp.render_template(
             'flask_saml2_sp/choose_idp.html',
+            login_next=login_next,
             handlers=self.sp.get_idp_handlers())
 
 
@@ -39,8 +41,8 @@ class LoginIdP(SAML2View):
     """
     def get(self, name):
         handler = self.sp.get_idp_handler_by_name(name)
-        return_to = self.sp.get_login_return_url(handler)
-        return redirect(handler.make_login_request_url(return_to))
+        login_next = self.sp.get_login_return_url()
+        return redirect(handler.make_login_request_url(login_next))
 
 
 class Logout(SAML2View):
