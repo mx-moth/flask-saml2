@@ -65,21 +65,20 @@ app.debug = True
 app.secret_key = 'not a secret'
 app.config['SERVER_NAME'] = 'localhost:8000'
 app.config['SAML2_IDP'] = {
-    'issuer': 'Test IdP',
     'autosubmit': True,
     'certificate': CERTIFICATE,
     'private_key': PRIVATE_KEY,
 }
-app.config['SAML2_SERVICE_PROVIDERS'] = {
-    'my-test-sp': {
+app.config['SAML2_SERVICE_PROVIDERS'] = [
+    {
         'CLASS': 'flask_saml2.idp.sp.demo.AttributeSPHandler',
         'OPTIONS': {
-            'entity_id': 'http://localhost:9000/saml/metadata/my-test-idp.xml',
-            'acs_url': 'http://localhost:9000/saml/acs/my-test-idp/',
+            'entity_id': 'http://localhost:9000/saml/metadata.xml',
+            'acs_url': 'http://localhost:9000/saml/acs/',
             'certificate': SP_CERTIFICATE,
         },
-    },
-}
+    }
+]
 
 app.add_url_rule('/login/', view_func=Login.as_view('login'))
 app.register_blueprint(create_blueprint(idp), url_prefix='/saml/')

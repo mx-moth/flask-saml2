@@ -3,7 +3,7 @@ import logging
 from flask import Response, make_response, redirect, request, url_for
 from flask.views import MethodView, View
 
-from flask_saml2.exceptions import UserNotAuthorized
+from flask_saml2.exceptions import CannotHandleAssertion, UserNotAuthorized
 
 from .sp import ServiceProvider
 
@@ -28,7 +28,7 @@ class Login(SAML2View):
         handler = self.sp.get_default_idp_handler()
         login_next = self.sp.get_login_return_url()
         if handler:
-            return redirect(url_for('.login_idp', name=handler.name, next=login_next))
+            return redirect(url_for('.login_idp', entity_id=handler.entity_id, next=login_next))
         return self.sp.render_template(
             'flask_saml2_sp/choose_idp.html',
             login_next=login_next,
@@ -39,8 +39,9 @@ class LoginIdP(SAML2View):
     """
     Log in using a specific IdP.
     """
-    def get(self, name):
-        handler = self.sp.get_idp_handler_by_name(name)
+    def get(self):
+        entity_id = request.args['entity_id']
+        handler = self.sp.get_idp_handler_by_entity_id(entity_id)
         login_next = self.sp.get_login_return_url()
         return redirect(handler.make_login_request_url(login_next))
 
@@ -65,9 +66,10 @@ class SingleLogout(SAML2View):
     """
     Logs the user out of this SP and sends them to the next logout destination.
     """
-    def get(self, name):
-        handler = self.sp.get_idp_handler_by_name(name)
-        return self.do_logout(handler)
+    def get(self):
+        # TODO Verify this SLO request is valid, process it correctly, send the
+        # user back to the IdP for further sign outs...
+        return self.do_logout()
 
     def do_logout(self, handler):
         self.sp.logout()
@@ -75,30 +77,29 @@ class SingleLogout(SAML2View):
 
 
 class AssertionConsumer(SAML2View):
-    def post(self, name):
-        handler = self.sp.get_idp_handler_by_name(name)
-
+    def post(self):
         saml_request = request.form['SAMLResponse']
         relay_state = request.form['RelayState']
 
-        try:
-            response = handler.get_response_parser(saml_request)
-            auth_data = handler.get_auth_data(response)
-            return self.sp.login_successful(auth_data, relay_state)
-        except UserNotAuthorized:
-            return self.sp.render_template('flask_saml2_sp/user_not_authorized.html')
+        for handler in self.sp.get_idp_handlers():
+            try:
+                response = handler.get_response_parser(saml_request)
+                auth_data = handler.get_auth_data(response)
+                return self.sp.login_successful(auth_data, relay_state)
+            except CannotHandleAssertion:
+                continue
+            except UserNotAuthorized:
+                return self.sp.render_template('flask_saml2_sp/user_not_authorized.html')
 
 
 class Metadata(SAML2View):
     """
     Replies with the XML metadata for this Service Provider / IdP handler pair.
     """
-    def get(self, name):
-        handler = self.sp.get_idp_handler_by_name(name)
-
+    def get(self):
         metadata = self.sp.render_template(
             'flask_saml2_sp/metadata.xml',
-            **self.sp.get_metadata_context(handler))
+            **self.sp.get_metadata_context())
 
         response = make_response(metadata)
         response.headers['Content-Type'] = 'application/xml'

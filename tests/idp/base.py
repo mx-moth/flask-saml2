@@ -116,20 +116,20 @@ class SamlTestCase:
     EMAIL = 'fred@example.com'
 
     SP_CONFIG = [
-        ('demoSpConfig', {
+        {
             'CLASS': 'flask_saml2.idp.sp.demo.SPHandler',
             'OPTIONS': {
                 'entity_id': 'http://example.com/',
                 'acs_url': 'http://127.0.0.1:9000/sp/acs/',
             },
-        }),
-        ('attrSpConfig', {
+        },
+        {
             'CLASS': 'flask_saml2.idp.sp.demo.AttributeSPHandler',
             'OPTIONS': {
                 'entity_id': 'http://example.com/',
                 'acs_url': 'http://127.0.0.1:9000/sp/acs/',
             },
-        }),
+        },
     ]
 
     def setup_method(self, method):

@@ -62,16 +62,16 @@ class SamlTestCase:
     EMAIL = 'fred@example.com'
 
     IDP_CONFIG = [
-        ('test_idp', {
+        {
             'CLASS': 'flask_saml2.sp.idphandler.IdPHandler',
             'OPTIONS': {
                 'display_name': 'My Identity Provider',
-                'entity_id': 'http://idp.example.com/saml/metadata.xml',
-                'sso_url': 'http://idp.example.com/saml/login/',
-                'slo_url': 'http://idp.example.com/saml/logout/',
+                'entity_id': 'https://idp.example.com/saml/metadata.xml',
+                'sso_url': 'https://idp.example.com/saml/login/',
+                'slo_url': 'https://idp.example.com/saml/logout/',
                 'certificate': CERTIFICATE,
             },
-        }),
+        },
     ]
 
     def setup_method(self, method):

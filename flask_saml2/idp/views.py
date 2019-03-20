@@ -93,7 +93,7 @@ class SLOLogoutBegin(SAML2View):
                 request = handler.parse_logout_request(saml_request)
                 response = handler.make_response(request)
                 context = handler.get_response_context(request, response, relay_state)
-            except (CannotHandleAssertion, ValueError):
+            except CannotHandleAssertion:
                 logger.exception("%s could not handle login request", handler)
                 pass
             else:

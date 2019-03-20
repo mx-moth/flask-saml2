@@ -30,7 +30,7 @@ class AuthData:
         """
         return {
             **attr.asdict(self),
-            'handler': self.handler.name,
+            'handler': self.handler.entity_id,
         }
 
     @classmethod
@@ -41,7 +41,7 @@ class AuthData:
         """
         return cls(**{
             **data,
-            'handler': sp.get_idp_handler_by_name(data['handler']),
+            'handler': sp.get_idp_handler_by_entity_id(data['handler']),
         })
 
 
@@ -57,7 +57,6 @@ class IdPHandler:
 
     def __init__(
         self,
-        name: str,
         sp,
         *,
         entity_id: str,
@@ -70,13 +69,15 @@ class IdPHandler:
         """
         Construct a new IdPHandler.
 
-        ``name`` is the internal name of this Identity Provider. It will be
-        used to construct URLs. ``sp`` is the :class:`~.sp.ServiceProvider`
-        instance that is running this Service Provider.
+        ``sp`` is the :class:`~.sp.ServiceProvider` instance that is running
+        this Service Provider.
+
+        ``entity_id`` is the unique identifier for the IdP, as found in the IdP
+        metadata.
 
         ``display_name`` will be shown to users when they have a choice of
-        IdP's to authenticate against, falling back to the ``name`` if this is
-        not provided.
+        IdP's to authenticate against, falling back to the ``entity_id`` if
+        this is not provided.
 
         ``sso_url`` and ``slo_url`` are the SSO and SLO URLs on the IdP. These
         are optional if you override :meth:`get_idp_sso_url` and
@@ -89,7 +90,6 @@ class IdPHandler:
         """
         super().__init__(**kwargs)
 
-        self.name = name
         self.sp = sp
         self.entity_id = entity_id
 
@@ -115,7 +115,7 @@ class IdPHandler:
         Get the Attribute Consumer Service URL on the current SP this IdP
         should send responses to.
         """
-        return self.sp.get_acs_url(self)
+        return self.sp.get_acs_url()
 
     def get_authn_request(
         self,
@@ -129,7 +129,7 @@ class IdPHandler:
             'REQUEST_ID': get_random_id(),
             'ISSUE_INSTANT': utcnow().isoformat(),
             'DESTINATION': self.get_idp_sso_url(),
-            'ISSUER': self.sp.get_sp_entity_id(self),
+            'ISSUER': self.sp.get_sp_entity_id(),
             'ACS_URL': self.get_sp_acs_url(),
             **parameters,
         })
@@ -147,7 +147,7 @@ class IdPHandler:
             'REQUEST_ID': get_random_id(),
             'ISSUE_INSTANT': utcnow().isoformat(),
             'DESTINATION': self.get_idp_slo_url(),
-            'ISSUER': self.sp.get_sp_entity_id(self),
+            'ISSUER': self.sp.get_sp_entity_id(),
             'SUBJECT': auth_data.nameid,
             'SUBJECT_FORMAT': auth_data.nameid_format,
             **parameters,
@@ -244,11 +244,14 @@ class IdPHandler:
 
             # Validate the AudienceRestriction elements, if they exist
             audiences = response._xpath(response.conditions, './saml:AudienceRestriction/saml:Audience')
-            entity_id = self.sp.get_sp_entity_id(self)
+            entity_id = self.sp.get_sp_entity_id()
             if len(audiences) and not any(el.text == entity_id for el in audiences):
                 raise CannotHandleAssertion("No valid AudienceRestriction found")
 
     def __str__(self):
         if self.display_name:
             return self.display_name
-        return self.name
+        return self.entity_id
+
+    def __repr__(self):
+        return f'<{type(self).__name__}: {self.entity_id}>'

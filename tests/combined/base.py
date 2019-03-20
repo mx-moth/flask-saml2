@@ -88,7 +88,7 @@ class IdentityProvider(flask_saml2.idp.IdentityProvider):
 
     def is_valid_redirect(self, url):
         url = urllib.parse.urlparse(url)
-        return url.scheme == 'https' and url.netloc == 'saml.serviceprovid.er'
+        return url.scheme == 'http' and url.netloc == 'saml.serviceprovid.er'
 
 
 class SamlTestCase:
@@ -97,7 +97,7 @@ class SamlTestCase:
     IDP_CONFIG = IdentityProvider settings to use.
     """
     IDP_CONFIG = [
-        ('test_idp', {
+        {
             'CLASS': 'flask_saml2.sp.idphandler.IdPHandler',
             'OPTIONS': {
                 'display_name': 'My Identity Provider',
@@ -106,18 +106,18 @@ class SamlTestCase:
                 'slo_url': 'http://idp.example.com/saml/logout/',
                 'certificate': IDP_CERTIFICATE,
             },
-        }),
+        }
     ]
 
     SP_CONFIG = [
-        ('test_sp', {
+        {
             'CLASS': 'flask_saml2.idp.sp.demo.SPHandler',
             'OPTIONS': {
-                'entity_id': 'http://sp.example.com/saml/metadata/test_idp.xml',
-                'acs_url': 'http://sp.example.com/saml/acs/test_idp/',
+                'entity_id': 'http://sp.example.com/saml/metadata.xml',
+                'acs_url': 'http://sp.example.com/saml/acs/',
                 'certificate': SP_CERTIFICATE,
             },
-        }),
+        }
     ]
 
     def create_sp_app(self, sp: flask_saml2.sp.ServiceProvider):

@@ -34,13 +34,13 @@ GOOGLE_APPS_ACS = 'https://www.google.com/a/example.com/acs'
 class TestGoogleAppsSPHandler(base.BaseSPHandlerTests):
     ACS_URL = GOOGLE_APPS_ACS
 
-    SP_CONFIG = [('google_apps', {
+    SP_CONFIG = [{
         'CLASS': 'flask_saml2.idp.sp.google_apps.GoogleAppsSPHandler',
         'OPTIONS': {
             'entity_id': 'google.com',
             'acs_url': GOOGLE_APPS_ACS,
         },
-    })]
+    }]
 
     REQUEST_DATA = {
         'SAMLRequest': SAML_REQUEST.decode('utf-8'),
