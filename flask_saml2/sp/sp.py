@@ -202,7 +202,8 @@ class ServiceProvider:
             abort(redirect(self.get_login_url()))
 
     def is_user_logged_in(self) -> bool:
-        return self.session_auth_data_key in session
+        return self.session_auth_data_key in session and \
+            AuthData.is_valid(self, session[self.session_auth_data_key])
 
     def logout(self) -> None:
         """Terminate the session for a logged in user."""
