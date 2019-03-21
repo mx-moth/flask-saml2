@@ -77,6 +77,7 @@ app.config['SAML2_SERVICE_PROVIDERS'] = [
     {
         'CLASS': 'flask_saml2.idp.sp.demo.AttributeSPHandler',
         'OPTIONS': {
+            'display_name': 'Example Service Provider',
             'entity_id': 'http://localhost:9000/saml/metadata.xml',
             'acs_url': 'http://localhost:9000/saml/acs/',
             'certificate': SP_CERTIFICATE,

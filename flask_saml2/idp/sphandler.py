@@ -24,6 +24,7 @@ class SPHandler(object):
     entity_id: str
     acs_url = None
     certificate: Optional[X509] = None
+    display_name: str = None
 
     subject_format = 'urn:oasis:names:tc:SAML:2.0:nameid-format:email'
 
@@ -33,6 +34,7 @@ class SPHandler(object):
         entity_id: str,
         acs_url: str = None,
         certificate: Optional[X509] = None,
+        display_name: str = None,
     ):
         self.idp = idp
 
@@ -44,6 +46,9 @@ class SPHandler(object):
 
         if certificate is not None:
             self.certificate = certificate
+
+        if display_name:
+            self.display_name = display_name
 
     @property
     def system_params(self):
@@ -137,6 +142,7 @@ class SPHandler(object):
     ):
         """Make a dictionary of parameters for the response template."""
         return {
+            'handler': self,
             'acs_url': request.acs_url,
             'saml_response': self.encode_response(response),
             'relay_state': relay_state,
@@ -228,4 +234,6 @@ class SPHandler(object):
             acs_url.scheme == redirect_url.scheme
 
     def __str__(self):
+        if self.display_name:
+            return self.display_name
         return self.entity_id
