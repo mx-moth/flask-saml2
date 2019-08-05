@@ -55,7 +55,6 @@ class IdentityProvider(IdentityProvider):
 
     def get_idp_config(self):
         return {
-            'issuer': 'Test IdP',
             'autosubmit': True,
             'certificate': CERTIFICATE,
             'private_key': PRIVATE_KEY,

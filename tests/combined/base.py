@@ -31,7 +31,6 @@ class ServiceProvider(flask_saml2.sp.ServiceProvider):
 
     def get_sp_config(self):
         return {
-            'issuer': 'Test IdP',
             'certificate': SP_CERTIFICATE,
             'private_key': SP_PRIVATE_KEY,
         }
@@ -54,7 +53,6 @@ class IdentityProvider(flask_saml2.idp.IdentityProvider):
 
     def get_idp_config(self):
         return {
-            'issuer': 'Test IdP',
             'autosubmit': True,
             'certificate': IDP_CERTIFICATE,
             'private_key': IDP_PRIVATE_KEY,

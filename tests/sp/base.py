@@ -42,7 +42,6 @@ class ServiceProvider(ServiceProvider):
 
     def get_sp_config(self):
         return {
-            'issuer': 'Test IdP',
             'certificate': CERTIFICATE,
             'private_key': PRIVATE_KEY,
         }

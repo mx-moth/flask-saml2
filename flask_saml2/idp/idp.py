@@ -36,7 +36,6 @@ class IdentityProvider(Generic[U]):
         .. code-block:: python
 
             {
-                'issuer': 'My Company',
                 'autosubmit': True,
                 'certificate': ...,
                 'private_key': ...,
