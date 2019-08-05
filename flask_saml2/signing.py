@@ -58,12 +58,6 @@ class RsaSha1Signer(Signer):
         return base64.b64encode(data).decode('ascii')
 
 
-def sign_with_certificate(certificate: X509, data: str, digest: str = 'sha1'):
-    """Sign some data, and return the base64 encoded string."""
-    data = OpenSSL.crypto.sign(certificate, data, digest)
-    return base64.b64encode(data).decode('ascii')
-
-
 def get_signature_xml(
     certificate: X509,
     digester: Digester,
