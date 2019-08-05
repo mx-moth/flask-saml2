@@ -4,14 +4,14 @@ import logging
 from flask import Flask, abort, redirect, request, session, url_for
 from flask.views import MethodView
 
-from flask_saml2.idp import create_blueprint, idp
+from flask_saml2.idp import IdentityProvider
 from tests.idp.base import CERTIFICATE, PRIVATE_KEY, User
 from tests.sp.base import CERTIFICATE as SP_CERTIFICATE
 
 logger = logging.getLogger(__name__)
 
 
-class IdentityProvider(idp.IdentityProvider):
+class ExampleIdentityProvider(IdentityProvider):
     def login_required(self):
         if not self.is_user_logged_in():
             next = url_for('login', next=request.url)
@@ -34,7 +34,7 @@ users = {user.username: user for user in [
 ]}
 
 
-idp = IdentityProvider()
+idp = ExampleIdentityProvider()
 
 
 class Login(MethodView):
@@ -86,7 +86,7 @@ app.config['SAML2_SERVICE_PROVIDERS'] = [
 ]
 
 app.add_url_rule('/login/', view_func=Login.as_view('login'))
-app.register_blueprint(create_blueprint(idp), url_prefix='/saml/')
+app.register_blueprint(idp.create_blueprint(), url_prefix='/saml/')
 
 
 if __name__ == '__main__':

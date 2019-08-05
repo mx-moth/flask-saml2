@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 from flask import Flask, url_for
 
-from flask_saml2.sp import ServiceProvider, create_blueprint
+from flask_saml2.sp import ServiceProvider
 from tests.idp.base import CERTIFICATE as IDP_CERTIFICATE
 from tests.sp.base import CERTIFICATE, PRIVATE_KEY
 
 
-class ServiceProvider(ServiceProvider):
+class ExampleServiceProvider(ServiceProvider):
     def get_logout_return_url(self):
         return url_for('index', _external=True)
 
@@ -14,7 +14,7 @@ class ServiceProvider(ServiceProvider):
         return url_for('index', _external=True)
 
 
-sp = ServiceProvider()
+sp = ExampleServiceProvider()
 
 app = Flask(__name__)
 app.debug = True
@@ -68,7 +68,7 @@ def index():
         return message + link
 
 
-app.register_blueprint(create_blueprint(sp), url_prefix='/saml/')
+app.register_blueprint(sp.create_blueprint(), url_prefix='/saml/')
 
 
 if __name__ == '__main__':

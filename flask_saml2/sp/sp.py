@@ -3,13 +3,18 @@ from typing import Iterable, Optional, Tuple
 from urllib.parse import urljoin
 
 from flask import (
-    abort, current_app, redirect, render_template, request, session, url_for)
+    Blueprint, abort, current_app, redirect, render_template, request,
+    session, url_for)
 
+from flask_saml2.exceptions import CannotHandleAssertion
 from flask_saml2.signing import Digester, RsaSha1Signer, Sha1Digester, Signer
 from flask_saml2.types import X509, PKey
 from flask_saml2.utils import certificate_to_string, import_string
 
 from .idphandler import AuthData, IdPHandler
+from .views import (
+    AssertionConsumer, CannotHandleAssertionView, Login, LoginIdP, Logout,
+    Metadata, SingleLogout)
 
 
 class ServiceProvider:
@@ -250,3 +255,26 @@ class ServiceProvider:
             'org': None,
             'contacts': [],
         }
+
+    def create_blueprint(self) -> Blueprint:
+        """Create a Flask :class:`flask.Blueprint` for this Service Provider.
+        """
+        idp_bp = Blueprint(self.blueprint_name, 'flask_saml2.sp', template_folder='templates')
+
+        idp_bp.add_url_rule('/login/', view_func=Login.as_view(
+            'login', sp=self))
+        idp_bp.add_url_rule('/login/idp/', view_func=LoginIdP.as_view(
+            'login_idp', sp=self))
+        idp_bp.add_url_rule('/logout/', view_func=Logout.as_view(
+            'logout', sp=self))
+        idp_bp.add_url_rule('/acs/', view_func=AssertionConsumer.as_view(
+            'acs', sp=self))
+        idp_bp.add_url_rule('/sls/', view_func=SingleLogout.as_view(
+            'sls', sp=self))
+        idp_bp.add_url_rule('/metadata.xml', view_func=Metadata.as_view(
+            'metadata', sp=self))
+
+        idp_bp.register_error_handler(CannotHandleAssertion, CannotHandleAssertionView.as_view(
+            'cannot_handle_assertion', sp=self))
+
+        return idp_bp

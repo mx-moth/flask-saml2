@@ -1,12 +1,16 @@
 from typing import Generic, Iterable, Optional, Tuple, TypeVar
 
-from flask import current_app, render_template, url_for
+from flask import Blueprint, current_app, render_template, url_for
 
+from flask_saml2.exceptions import CannotHandleAssertion, UserNotAuthorized
 from flask_saml2.signing import Digester, RsaSha1Signer, Sha1Digester, Signer
 from flask_saml2.types import X509, PKey
 from flask_saml2.utils import certificate_to_string, import_string
 
 from .sphandler import SPHandler
+from .views import (
+    CannotHandleAssertionView, LoginBegin, LoginProcess, Logout, Metadata,
+    UserNotAuthorizedView)
 
 U = TypeVar('User')
 
@@ -182,3 +186,28 @@ class IdentityProvider(Generic[U]):
             handler.is_valid_redirect(url)
             for handler in self.get_sp_handlers()
         )
+
+    def create_blueprint(self):
+        """Create a blueprint for this IdP.
+        This blueprint needs to be registered with a Flask application
+        to expose the IdP functionality.
+        """
+        bp = Blueprint(self.blueprint_name, 'flask_saml2.idp', template_folder='templates')
+
+        bp.add_url_rule('/login/', view_func=LoginBegin.as_view(
+            'login_begin', idp=self))
+        bp.add_url_rule('/login/process/', view_func=LoginProcess.as_view(
+            'login_process', idp=self))
+
+        bp.add_url_rule('/logout/', view_func=Logout.as_view(
+            'logout', idp=self))
+
+        bp.add_url_rule('/metadata.xml', view_func=Metadata.as_view(
+            'metadata', idp=self))
+
+        bp.register_error_handler(CannotHandleAssertion, CannotHandleAssertionView.as_view(
+            'cannot_handle_assertion', idp=self))
+        bp.register_error_handler(UserNotAuthorized, UserNotAuthorizedView.as_view(
+            'user_not_authorized', idp=self))
+
+        return bp

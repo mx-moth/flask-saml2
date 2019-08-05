@@ -129,7 +129,7 @@ class SamlTestCase:
 
         app.secret_key = 'not a secret'
 
-        app.register_blueprint(flask_saml2.sp.create_blueprint(sp), url_prefix='/saml/')
+        app.register_blueprint(sp.create_blueprint(), url_prefix='/saml/')
 
         return app
 
@@ -142,7 +142,7 @@ class SamlTestCase:
 
         app.secret_key = 'not a secret'
 
-        app.register_blueprint(flask_saml2.idp.create_blueprint(idp), url_prefix='/saml/')
+        app.register_blueprint(idp.create_blueprint(), url_prefix='/saml/')
 
         return app
 

@@ -5,13 +5,13 @@ from flask.views import MethodView, View
 
 from flask_saml2.exceptions import CannotHandleAssertion, UserNotAuthorized
 
-from .sp import ServiceProvider
+from . import sp
 
 logger = logging.getLogger(__name__)
 
 
 class SAML2ViewMixin:
-    def __init__(self, *, sp: ServiceProvider, **kwargs):
+    def __init__(self, *, sp: 'sp.ServiceProvider', **kwargs):
         super().__init__(**kwargs)
         self.sp = sp
 

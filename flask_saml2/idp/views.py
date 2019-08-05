@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class SAML2ViewMixin:
-    def __init__(self, *, idp: idp.IdentityProvider, **kwargs):
+    def __init__(self, *, idp: 'idp.IdentityProvider', **kwargs):
         super().__init__(**kwargs)
         self.idp = idp
 

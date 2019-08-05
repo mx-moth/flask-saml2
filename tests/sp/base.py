@@ -3,7 +3,7 @@ from pathlib import Path
 import attr
 from flask import Flask
 
-from flask_saml2.sp import ServiceProvider, create_blueprint
+from flask_saml2.sp import ServiceProvider
 from flask_saml2.utils import certificate_from_file, private_key_from_file
 
 KEY_DIR = Path(__file__).parent.parent / 'keys' / 'sample'
@@ -29,7 +29,7 @@ def create_test_app(sp: ServiceProvider):
 
     app.secret_key = 'not a secret'
 
-    app.register_blueprint(create_blueprint(sp))
+    app.register_blueprint(sp.create_blueprint())
 
     return app
 

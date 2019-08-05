@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 from flask import Flask, abort, redirect, url_for
 
 from flask_saml2 import codex
-from flask_saml2.idp import IdentityProvider, create_blueprint
+from flask_saml2.idp import IdentityProvider
 from flask_saml2.utils import certificate_from_file, private_key_from_file
 
 
@@ -100,7 +100,7 @@ def create_test_app(idp: IdentityProvider):
 
     app.secret_key = 'not a secret'
 
-    app.register_blueprint(create_blueprint(idp))
+    app.register_blueprint(idp.create_blueprint())
 
     return app
 
