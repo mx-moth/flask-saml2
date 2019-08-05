@@ -25,7 +25,7 @@ def _get_in_response_to(params):
 
 
 def get_assertion_xml(
-    template_klass: Type[XmlTemplate],
+    template: Type[XmlTemplate],
     parameters: dict,
     *,
     digester: Optional[Digester] = None,
@@ -34,7 +34,7 @@ def get_assertion_xml(
 ) -> XmlTemplate:
     params = _get_in_response_to(parameters)
 
-    assertion = template_klass(params)
+    assertion = template(params)
     if signer is None:
         return assertion
 
