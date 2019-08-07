@@ -5,6 +5,8 @@ flask-saml2
     :target: https://travis-ci.com/timheap/flask-saml2
 .. image:: https://badge.fury.io/py/flask-saml2.svg
     :target: https://pypi.org/project/flask-saml2/
+.. image:: https://readthedocs.org/projects/flask-saml2/badge/?version=latest
+    :target: https://flask-saml2.readthedocs.io/en/latest/
 
 This Flask plugin provides functionality for creating both SAML Service
 Providers and Identity Providers. Applications can implement one or both of
