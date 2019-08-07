@@ -17,9 +17,14 @@ U = TypeVar('User')
 
 class IdentityProvider(Generic[U]):
     """
-    Developers should subclass :class:`IdentityProvider` and implement all the
-    methods to interoperate with their specific environment. All user
-    interactions are performed through methods on this class.
+    Developers should subclass :class:`IdentityProvider`
+    and provide methods to interoperate with their specific environment.
+    All user interactions are performed through methods on this class.
+
+    Every subclass should implement :meth:`is_user_logged_in`,
+    :meth:`login_required`, :meth:`logout`, and :meth:`get_current_user`
+    as a minimum.
+    Other methods can be overridden as required.
     """
 
     blueprint_name = 'flask_saml2_idp'
@@ -28,27 +33,28 @@ class IdentityProvider(Generic[U]):
 
     def get_idp_config(self) -> dict:
         """
-        Get the configuration for this IdP. See the PySAML2 documentation for
-        what configuration options are available.
-
+        Get the configuration for this IdP.
+        Defaults to ``SAML2_IDP`` from :attr:`flask.Flask.config`.
         The configuration should be a dict like:
 
         .. code-block:: python
 
             {
+                # Should the IdP automatically redirect the user back to the
+                # Service Provider once authenticated.
                 'autosubmit': True,
+                # The X509 certificate and private key this IdP uses to
+                # encrypt, validate, and sign payloads.
                 'certificate': ...,
                 'private_key': ...,
             }
 
-        See
-        :func:`.utils.certificate_from_string`,
-        :func:`.utils.certificate_from_file`,
-        :func:`.utils.private_key_from_string`, and
-        :func:`.utils.private_key_from_file`
-        for loading the ``certificate`` and ``private_key`` files.
+        To load the ``certificate`` and ``private_key`` values, see
 
-        Defaults to ``current_app.config['SAML2_IDP']``.
+        - :func:`~.utils.certificate_from_string`
+        - :func:`~.utils.certificate_from_file`
+        - :func:`~.utils.private_key_from_string`
+        - :func:`~.utils.private_key_from_file`
         """
         return current_app.config['SAML2_IDP']
 
@@ -57,17 +63,27 @@ class IdentityProvider(Generic[U]):
             and self.get_idp_private_key() is not None
 
     def get_idp_entity_id(self) -> str:
+        """The unique identifier for this Identity Provider.
+        By default, this uses the metadata URL for this IdP.
+
+        See :func:`get_metadata_url`.
+        """
         return self.get_metadata_url()
 
     def get_idp_certificate(self) -> Optional[X509]:
-        """Get the public certificate for this IdP."""
+        """Get the public certificate for this IdP.
+        If this IdP does not sign its requests, returns None.
+        """
         return self.get_idp_config().get('certificate')
 
     def get_idp_private_key(self) -> Optional[PKey]:
-        """Get the private key for this IdP."""
+        """Get the private key for this IdP.
+        If this IdP does not sign its requests, returns None.
+        """
         return self.get_idp_config().get('private_key')
 
     def get_idp_autosubmit(self) -> bool:
+        """Should the IdP autosubmit responses to the Service Provider?"""
         return self.get_idp_config().get('autosubmit', False)
 
     def get_idp_signer(self) -> Optional[Signer]:
@@ -77,6 +93,7 @@ class IdentityProvider(Generic[U]):
             return RsaSha1Signer(private_key)
 
     def get_idp_digester(self) -> Digester:
+        """Get the method used to compute digests for the IdP."""
         return Sha1Digester()
 
     def get_service_providers(self) -> Iterable[Tuple[str, dict]]:
@@ -100,42 +117,51 @@ class IdentityProvider(Generic[U]):
         return current_app.config['SAML2_SERVICE_PROVIDERS']
 
     def get_sso_url(self):
+        """Get the URL for the Single Sign On endpoint for this IdP."""
         return url_for(self.blueprint_name + '.login_begin', _external=True)
 
     def get_slo_url(self):
+        """Get the URL for the Single Log Out endpoint for this IdP."""
         return url_for(self.blueprint_name + '.logout', _external=True)
 
     def get_metadata_url(self):
+        """Get the URL for the metadata XML document for this IdP."""
         return url_for(self.blueprint_name + '.metadata', _external=True)
 
     # Authentication
 
-    def login_required(self) -> None:
-        """
-        Check if a user is currently logged in to this session, and
-        :method:`flask.abort` with a redirect to the login page if not. It is
+    def login_required(self):
+        """Check if a user is currently logged in to this session, and
+        :func:`flask.abort` with a redirect to the login page if not. It is
         suggested to use :meth:`is_user_logged_in`.
         """
         raise NotImplementedError
 
     def is_user_logged_in(self) -> bool:
+        """Return True if a user is currently logged in.
+        Subclasses should implement this method
+        """
         raise NotImplementedError
 
-    def logout(self) -> None:
-        """
-        Terminate the session for a logged in user.
+    def logout(self):
+        """Terminate the session for a logged in user.
+        Subclasses should implement this method.
         """
         raise NotImplementedError
 
     # User
 
     def get_current_user(self) -> U:
+        """Get the user that is currently logged in.
+        """
         raise NotImplementedError
 
     def get_user_nameid(self, user: U, attribute: str):
-        """
-        Get the requested name or identifier from the user. ``attribute`` will
+        """Get the requested name or identifier from the user. ``attribute`` will
         be a ``urn:oasis:names:tc:SAML:2.0:nameid-format``-style urn.
+
+        Subclasses can override this to allow more attributes to be extracted.
+        By default, only email addresses are extracted using :meth:`get_user_email`.
         """
         if attribute == 'urn:oasis:names:tc:SAML:2.0:nameid-format:email':
             return self.get_user_email(user)
@@ -149,8 +175,7 @@ class IdentityProvider(Generic[U]):
     # SPHandlers
 
     def get_sp_handlers(self) -> Iterable[SPHandler]:
-        """
-        Get the SPHandler for each service provider defined.
+        """Get the SPHandler for each service provider defined.
         """
         for config in self.get_service_providers():
             cls = import_string(config['CLASS'])
@@ -160,16 +185,15 @@ class IdentityProvider(Generic[U]):
     # Misc
 
     def render_template(self, template: str, **context) -> str:
-        context = {
-            'idp': self,
-            **context,
-        }
+        """Render an HTML template.
+        This method can be overridden to inject more context variables if required.
+        """
+        context = {'idp': self, **context}
         return render_template(template, **context)
 
     def get_metadata_context(self) -> dict:
-        """
-        Get any extra context for the metadata template. Suggested extra
-        context variables include 'org' and 'contacts'.
+        """Get any extra context for the metadata template.
+        Suggested extra context variables include 'org' and 'contacts'.
         """
         return {
             'entity_id': self.get_idp_entity_id(),
@@ -181,6 +205,11 @@ class IdentityProvider(Generic[U]):
         }
 
     def is_valid_redirect(self, url: str) -> bool:
+        """Check if a URL is a valid and safe URL to redirect to,
+        according to any of the SPHandlers.
+        Only used from the non-standard logout page,
+        for non-compliant Service Providers such as Salesforce.
+        """
         return any(
             handler.is_valid_redirect(url)
             for handler in self.get_sp_handlers()

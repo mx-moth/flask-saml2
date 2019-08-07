@@ -3,7 +3,7 @@ from typing import Iterable, Optional, Tuple
 from urllib.parse import urljoin
 
 from flask import (
-    Blueprint, abort, current_app, redirect, render_template, request,
+    Blueprint, Response, abort, current_app, redirect, render_template, request,
     session, url_for)
 
 from flask_saml2.exceptions import CannotHandleAssertion
@@ -18,21 +18,35 @@ from .views import (
 
 
 class ServiceProvider:
+    """
+    Developers should subclass :class:`ServiceProvider`
+    and provide methods to interoperate with their specific environment.
+    All user interactions are performed through methods on this class.
 
+    There are no methods that must be overridden,
+    but overriding :meth:`get_default_login_return_url`
+    and :meth:`get_logout_return_url` is recommended.
+    """
+
+    #: What key to store authentication details under in the session.
     session_auth_data_key = 'saml_auth_data'
+
+    #: The name of the blueprint to generate.
     blueprint_name = 'flask_saml2_sp'
 
     def login_successful(
         self,
         auth_data: AuthData,
         relay_state: str,
-    ):
-        """
-        Called when a user is successfully logged on. Subclasses should
-        override this if they want to do more with the returned user data.
-        Subclasses *must* call
-        ``super().login_successful(auth_data, relay_state)``, but they can
-        return a different response.
+    ) -> Response:
+        """ Called when a user is successfully logged on.
+        Subclasses should override this if they want to do more
+        with the returned user data.
+        Returns a :class:`flask.Response`,
+        which is usually a redirect to :meth:`get_default_login_return_url`,
+        or a redirect to the protected resource the user initially requested.
+        Subclasses may override this method and return a different response,
+        but they *must* call ``super()``.
         """
         self.set_auth_data_in_session(auth_data)
         return redirect(relay_state)
@@ -41,21 +55,34 @@ class ServiceProvider:
 
     def get_sp_config(self) -> dict:
         """
-        Get the basic configuration for this service provider. This should be
-        a dict like the following:
+        Get the configuration for this SP.
+        Defaults to ``SAML2_SP`` from :attr:`flask.Flask.config`.
+        The configuration should be a dict like:
 
         .. code-block:: python
 
-            >>> sp.get_sp_config()
             {
-                'issuer': 'My Service Provider',
-                'certificate': certificate_from_file('certificate.pem'),
-                'private_key': certificate_from_file('private-key.pem'),
+                # The X509 certificate and private key this SP uses to
+                # encrypt, validate, and sign payloads.
+                'certificate': ...,
+                'private_key': ...,
             }
+
+        To load the ``certificate`` and ``private_key`` values, see
+
+        - :func:`~.utils.certificate_from_string`
+        - :func:`~.utils.certificate_from_file`
+        - :func:`~.utils.private_key_from_string`
+        - :func:`~.utils.private_key_from_file`
         """
         return current_app.config['SAML2_SP']
 
     def get_sp_entity_id(self) -> str:
+        """The unique identifier for this Service Provider.
+        By default, this uses the metadata URL for this SP.
+
+        See :func:`get_metadata_url`.
+        """
         return self.get_metadata_url()
 
     def get_sp_certificate(self) -> Optional[X509]:
@@ -106,22 +133,34 @@ class ServiceProvider:
         """
         return current_app.config['SAML2_IDENTITY_PROVIDERS']
 
-    def get_login_url(self):
+    def get_login_url(self) -> str:
+        """The URL of the endpoint that starts the login process.
+        """
         return url_for(self.blueprint_name + '.login')
 
-    def get_acs_url(self):
+    def get_acs_url(self) -> str:
+        """The URL for the Assertion Consumer Service for this SP.
+        """
         return url_for(self.blueprint_name + '.acs', _external=True)
 
-    def get_sls_url(self):
+    def get_sls_url(self) -> str:
+        """The URL for the Single Logout Service for this SP.
+        """
         return url_for(self.blueprint_name + '.sls', _external=True)
 
-    def get_metadata_url(self):
+    def get_metadata_url(self) -> str:
+        """The URL for the metadata xml for this SP.
+        """
         return url_for(self.blueprint_name + '.metadata', _external=True)
 
-    def get_default_login_return_url(self):
+    def get_default_login_return_url(self) -> Optional[str]:
+        """The default URL to redirect users to once the have logged in.
+        """
         return None
 
-    def get_login_return_url(self):
+    def get_login_return_url(self) -> Optional[str]:
+        """Get the URL to redirect the user to now that they have logged in.
+        """
         urls = [
             request.args.get('next'),
             self.get_default_login_return_url(),
@@ -135,13 +174,14 @@ class ServiceProvider:
 
         return None
 
-    def get_logout_return_url(self):
+    def get_logout_return_url(self) -> Optional[str]:
+        """The URL to redirect users to once they have logged out.
+        """
         return None
 
-    def is_valid_redirect_url(self, url):
-        """
-        Is this URL valid and safe to redirect to? Defaults to only allowing
-        URLs on the current server.
+    def is_valid_redirect_url(self, url: str) -> str:
+        """Is this URL valid and safe to redirect to?
+        Defaults to only allowing URLs on the current server.
         """
         bits = urllib.parse.urlsplit(url)
 
@@ -156,23 +196,26 @@ class ServiceProvider:
     # IdPHandlers
 
     def make_idp_handler(self, config) -> IdPHandler:
+        """Construct an :class:`IdPHandler` from a config dict from
+        :meth:`get_identity_providers`.
+        """
         cls = import_string(config['CLASS'])
         options = config.get('OPTIONS', {})
         return cls(self, **options)
 
     def get_idp_handlers(self) -> Iterable[IdPHandler]:
-        """
-        Get the IdPHandler for each service provider defined.
+        """Get the :class:`IdPHandler` for each service provider defined.
         """
         for config in self.get_identity_providers():
             yield self.make_idp_handler(config)
 
     def get_default_idp_handler(self) -> Optional[IdPHandler]:
-        """
-        Get the default IdP to sign in with. When logging in, if there is
-        a default IdP, the user will be automatically logged in with that IdP.
+        """Get the default IdP to sign in with.
+        When logging in, if there is a default IdP,
+        the user will be automatically logged in with that IdP.
+        Return ``None`` if there is no default IdP.
         If there is no default, a list of IdPs to sign in with will be
-        presented. Return ``None`` if there is no default IdP.
+        presented by the login view.
         """
         handlers = list(self.get_idp_handlers())
         if len(handlers) == 1:
@@ -180,72 +223,79 @@ class ServiceProvider:
         return None
 
     def get_idp_handler_by_entity_id(self, entity_id) -> IdPHandler:
-        """
-        Find a IdPHandler instance that can handle the current request.
+        """Find the :class:`IdPHandler` instance with a matching entity ID.
         """
         for handler in self.get_idp_handlers():
             if handler.entity_id == entity_id:
                 return handler
         raise ValueError(f"No IdP handler with entity ID {entity_id}")
 
-    def get_idp_handler_by_current_session(self):
-        """
-        Get the idphandler used to authenticate the currently logged in user.
+    def get_idp_handler_by_current_session(self) -> IdPHandler:
+        """Get the :class:`IdPHandler` used to authenticate
+        the currently logged in user.
         """
         auth_data = self.get_auth_data_in_session()
         return auth_data.handler
 
     # Authentication
 
-    def login_required(self) -> None:
-        """
-        Check if a user is currently logged in to this session, and
-        :method:`flask.abort` with a redirect to the login page if not. It is
-        suggested to use :meth:`is_user_logged_in`.
+    def login_required(self):
+        """Check if a user is currently logged in to this session,
+        and :meth:`flask.abort` with a redirect to the login page if not.
+        It is suggested to use :meth:`is_user_logged_in`.
         """
         if not self.is_user_logged_in():
             abort(redirect(self.get_login_url()))
 
     def is_user_logged_in(self) -> bool:
+        """Check if the user is currently logged in / authenticated with an IdP.
+        """
         return self.session_auth_data_key in session and \
             AuthData.is_valid(self, session[self.session_auth_data_key])
 
-    def logout(self) -> None:
+    def logout(self):
         """Terminate the session for a logged in user."""
         self.clear_auth_data_in_session()
 
     # Misc
 
     def render_template(self, template: str, **context) -> str:
-        context = {
-            'sp': self,
-            **context,
-        }
+        """Render an HTML template.
+        This method can be overridden to inject more context variables if required.
+        """
+        context = {'sp': self, **context}
         return render_template(template, **context)
 
     def set_auth_data_in_session(self, auth_data: AuthData):
+        """Store authentication details from the :class:`IdPHandler`
+        in the browser session.
+        """
         session[self.session_auth_data_key] = auth_data.to_dict()
 
     def clear_auth_data_in_session(self):
+        """Clear the authentication details from the session.
+        This will effectively log the user out.
+        """
         session.pop(self.session_auth_data_key, None)
 
     def get_auth_data_in_session(self) -> AuthData:
-        """
-        Get an AuthData instance from the data stored for the currently logged
-        in user.
+        """Get an :class:`AuthData` instance from the session data stored
+        for the currently logged in user.
         """
         return AuthData.from_dict(self, session[self.session_auth_data_key])
 
-    def make_absolute_url(self, url):
+    def make_absolute_url(self, url: str) -> str:
+        """Take a local URL and make it absolute
+        by prepending the current ``SERVER_NAME``.
+        """
         # TODO is there a better way of doing this?
         base = '{}://{}'.format(
             request.scheme, current_app.config['SERVER_NAME'])
         return urljoin(base, url)
 
     def get_metadata_context(self) -> dict:
-        """
-        Get any extra context for the metadata template. Suggested extra
-        context variables include 'org' and 'contacts'.
+        """Get any extra context for the metadata template.
+        Suggested extra context variables include 'org' and 'contacts'.
         """
         return {
             'sls_url': self.get_sls_url(),

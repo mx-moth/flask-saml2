@@ -1,3 +1,8 @@
+"""
+All the SAML-specific exceptions this library can throw.
+"""
+
+
 class SAML2Exception(Exception):
     """Base exception for all flask_saml2 exceptions."""
     pass

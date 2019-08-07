@@ -7,6 +7,15 @@ from flask_saml2.xml_templates import NameIDTemplate, XmlTemplate
 
 
 class AttributeTemplate(XmlTemplate):
+    """
+    .. code-block:: xml
+
+        <saml:Attribute Name="${ATTRIBUTE_NAME}" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic">
+            <saml:AttributeValue>
+                ${ATTRIBUTE_VALUE}
+            </saml:AttributeValue>
+        </saml:Attribute>
+    """
     namespace = 'saml'
 
     def generate_xml(self):
@@ -17,14 +26,15 @@ class AttributeTemplate(XmlTemplate):
             self.element('AttributeValue', text=self.params['ATTRIBUTE_VALUE']),
         ])
 
-    """
-        <saml:Attribute Name="${ATTRIBUTE_NAME}" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic">
-            <saml:AttributeValue>${ATTRIBUTE_VALUE}</saml:AttributeValue>
-        </saml:Attribute>
-    """
-
 
 class AttributeStatementTemplate(XmlTemplate):
+    """
+    .. code-block:: xml
+
+        <saml:AttributeStatement>
+            ${ATTRIBUTES}
+        </saml:AttributeStatement>
+    """
     namespace = 'saml'
 
     def generate_xml(self):
@@ -37,14 +47,24 @@ class AttributeStatementTemplate(XmlTemplate):
             for name, value in attributes.items()
         ])
 
-    """
-        <saml:AttributeStatement>
-        ${ATTRIBUTES}
-        </saml:AttributeStatement>
-    """
-
 
 class SubjectTemplate(XmlTemplate):
+    """
+    .. code-block:: xml
+
+        <saml:Subject>
+            <saml:NameID Format="${SUBJECT_FORMAT}" SPNameQualifier="${SP_NAME_QUALIFIER}">
+            ${SUBJECT}
+            </saml:NameID>
+            <saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
+                <saml:SubjectConfirmationData
+                    InResponseTo="${IN_RESPONSE_TO}"
+                    NotOnOrAfter="${NOT_ON_OR_AFTER}"
+                    Recipient="${ACS_URL}">
+                </saml:SubjectConfirmationData>
+            </saml:SubjectConfirmation>
+        </saml:Subject>
+    """
     namespace = 'saml'
 
     def generate_xml(self):
@@ -68,19 +88,6 @@ class SubjectTemplate(XmlTemplate):
         }, children=[
             self.element('SubjectConfirmationData', attrs=scd_attributes),
         ])
-
-    """
-        <saml:Subject>
-            <saml:NameID Format="${SUBJECT_FORMAT}" SPNameQualifier="${SP_NAME_QUALIFIER}">
-            ${SUBJECT}
-            </saml:NameID>
-            <saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
-                <saml:SubjectConfirmationData
-                ${IN_RESPONSE_TO}
-                NotOnOrAfter="${NOT_ON_OR_AFTER}" Recipient="${ACS_URL}"></saml:SubjectConfirmationData>
-            </saml:SubjectConfirmation>
-        </saml:Subject>
-    """
 
 
 class AssertionTemplate(SignableTemplate):

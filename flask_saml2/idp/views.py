@@ -60,7 +60,7 @@ class LoginProcess(SAML2View):
 class Logout(SAML2View):
     """
     Allows a non-SAML 2.0 URL to log out the user and
-    returns a standard logged-out page. (SalesForce and others use this method,
+    returns a standard logged-out page. (Salesforce and others use this method,
     though it's technically not SAML 2.0).
     """
     def get(self):

@@ -1,6 +1,3 @@
-"""
-XML templates for SAML 2.0
-"""
 from typing import Iterable, Mapping, Optional
 
 from lxml import etree
@@ -17,10 +14,17 @@ NAMESPACE_MAP: Mapping[str, str] = {  # Namespace map
 
 
 class XmlTemplate:
+    """Base XML template class.
+    A template can represent a single node, a tree, or a whole XML document.
+    """
 
+    #: XML namespace for this node or document
     namespace = None
 
     def __init__(self, params: dict = {}):
+        """Initialize this template using the supplied parameters dict.
+        The parameters will be used in :meth:`generate_xml`.
+        """
         self.params = params.copy()
 
     @cached_property
@@ -30,10 +34,17 @@ class XmlTemplate:
         """
         return self.generate_xml()
 
-    def generate_xml(self):
+    def generate_xml(self) -> XmlNode:
+        """Generate the XML node for this template.
+        Generally accessed through :attr:`xml`.
+        """
         raise NotImplementedError
 
-    def get_xml_string(self):
+    def get_xml_string(self) -> str:
+        """Render the XML node to a string.
+        The string representation is rendered as canonical c14n XML,
+        to make verification and signing possible.
+        """
         return etree.tostring(self.xml, method='c14n', exclusive=True).decode('utf-8')
 
     def element(
@@ -81,9 +92,15 @@ class XmlTemplate:
         return element
 
     def get_namespace_map(self) -> Mapping[str, str]:
+        """Get all the namespaces potentially used by this node, as a etree nsmap.
+        """
         return NAMESPACE_MAP
 
     def get_namespace(self) -> str:
+        """Get the namespace URI for this node.
+        Looks up the namespace alias :attr:`namespace`
+        in :meth:`get_namespace_map`.
+        """
         return self.get_namespace_map()[self.namespace]
 
 

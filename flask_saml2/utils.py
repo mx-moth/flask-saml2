@@ -1,7 +1,9 @@
 import datetime
+import pathlib
 import typing as T
 import uuid
 from importlib import import_module
+from typing import Union
 
 import OpenSSL.crypto
 import pytz
@@ -77,6 +79,7 @@ def get_random_id() -> str:
 
 
 def utcnow() -> datetime.datetime:
+    """Get the current time in UTC, as an aware :class:`datetime.datetime`."""
     return datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
 
 
@@ -84,6 +87,9 @@ def certificate_to_string(certificate: TS.X509) -> str:
     """
     Take an x509 certificate and encode it to a string suitable for adding to
     XML responses.
+
+    :param certificate: A certificate,
+        perhaps loaded from :func:`certificate_from_file`.
     """
     pem_bytes = OpenSSL.crypto.dump_certificate(
         OpenSSL.crypto.FILETYPE_PEM, certificate)
@@ -97,15 +103,22 @@ def certificate_from_string(
     """
     Load an X509 certificate from a string. This just strips off the header and
     footer text.
+
+    :param str: A certificate string.
+    :param format: The format of the certificate, from :doc:`OpenSSL:api/crypto`.
     """
     return OpenSSL.crypto.load_certificate(format, certificate)
 
 
 def certificate_from_file(
-    filename: str,
+    filename: Union[str, pathlib.Path],
     format=OpenSSL.crypto.FILETYPE_PEM,
 ) -> TS.X509:
-    """Load an X509 certificate from ``filename``."""
+    """Load an X509 certificate from ``filename``.
+
+    :param filename: The path to the certificate on disk.
+    :param format: The format of the certificate, from :doc:`OpenSSL:api/crypto`.
+    """
     with open(filename, 'r') as handle:
         return certificate_from_string(handle.read(), format)
 
@@ -114,14 +127,22 @@ def private_key_from_string(
     private_key: str,
     format=OpenSSL.crypto.FILETYPE_PEM,
 ) -> TS.PKey:
-    """Load a private key from a string."""
+    """Load a private key from a string.
+
+    :param str: A private key string.
+    :param format: The format of the private key, from :doc:`OpenSSL:api/crypto`.
+    """
     return OpenSSL.crypto.load_privatekey(format, private_key)
 
 
 def private_key_from_file(
-    filename: str,
+    filename: Union[str, pathlib.Path],
     format=OpenSSL.crypto.FILETYPE_PEM,
 ) -> TS.PKey:
-    """Load a private key from ``filename``."""
+    """Load a private key from ``filename``.
+
+    :param filename: The path to the private key on disk.
+    :param format: The format of the private key, from :doc:`OpenSSL:api/crypto`.
+    """
     with open(filename, 'r') as handle:
         return private_key_from_string(handle.read(), format)

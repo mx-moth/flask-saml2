@@ -1,3 +1,8 @@
+"""
+The :mod:`flask_saml2.xml_parser` provides tools
+for parsing XML documents from an IdP or a SP.
+If the documents are signed, they will be verified as part of parsing.
+"""
 import logging
 from typing import Iterable, Optional
 
@@ -10,17 +15,23 @@ from flask_saml2.xml_templates import NAMESPACE_MAP
 
 
 class XmlParser:
-    input_string: str
+    """Parse a possibly-signed XML document.
+    Subclasses must implement :meth:`is_signed`.
+    """
+    #: The input XML document as a string
     xml_string: str
+
+    #: The parsed XML document
     xml_tree: XmlNode
 
+    #: The certificate the document is signed with
     certificate: Optional[X509] = None
 
     def __init__(self, xml_string: str, certificate: Optional[X509]):
         """
-        :param saml_request: The SAML request provided by the client.
-        :param x509cert: A preshared X509 certificate to validate signed
-            requests with.
+        :param xml_string: The XML string to parse
+        :param x509cert: A preshared X509 certificate to validate the signed
+           XML document with
         """
         self._logger = logging.getLogger(__name__)
 
@@ -45,7 +56,10 @@ class XmlParser:
             raise ValueError(message)
 
     def is_signed(self):
-        """Is this request signed? Looks for a ``<ds:Signature>`` element."""
+        """Is this request signed? Looks for a ``<ds:Signature>`` element.
+        Different sources will generate different signed XML documents,
+        so this method must be implemented differently for each source.
+        """
         raise NotImplementedError
 
     def parse_signed(self, xml_tree: XmlNode, certificate: X509) -> XmlNode:

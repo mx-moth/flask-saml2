@@ -1,5 +1,5 @@
 """
-Signing code goes here.
+Functions and classes that deal with signing data and making digests.
 """
 import base64
 import hashlib
@@ -18,20 +18,42 @@ logger = logging.getLogger(__name__)
 
 
 class Digester:
-    """All the digest methods supported."""
+    """Base class for all the digest methods.
+    SAML2 digest methods have an identifier in the form of a URL,
+    and must produce a text digest.
+
+    Subclasses should set the :attr:`uri` attribute
+    and provide a :meth:`make_digest` method.
+
+    Implemented digest methods: :class:`Sha1Digester`.
+
+    Example:
+
+    .. code-block:: python
+
+        >>> from flask_saml2.signing import Sha1Digester
+        >>> digester = Sha1Digester()
+        >>> digester(b'Hello, world!')
+        'lDpwLQbzRZmu4fjajvn3KWAx1pk='
+    """
+    #: The URI identifing this digest method
     uri: ClassVar[str]
 
-    def __call__(self, data):
+    def __call__(self, data: bytes) -> str:
+        """Make a hex digest of some binary data.
+        """
         return base64.b64encode(self.make_digest(data)).decode('utf-8')
 
-    def make_digest(self, data):
+    def make_digest(self, data: bytes) -> bytes:
+        """Make a binary digest of some binary data using this digest method.
+        """
         raise NotImplementedError
 
 
 class Sha1Digester(Digester):
     uri = 'http://www.w3.org/2000/09/xmldsig#sha1'
 
-    def make_digest(self, data):
+    def make_digest(self, data: bytes) -> bytes:
         return hashlib.sha1(data).digest()
 
 
@@ -40,10 +62,25 @@ class Signer:
     Sign some data with a particular algorithm. Each Signer may take different
     constructor arguments, but each will have a uri attribute and will sign
     data when called.
+
+    Implemented signers: :class:`RsaSha1Signer`.
+
+    Example:
+
+    .. code-block:: python
+
+        >>> from flask_saml2.signing import RsaSha1Signer
+        >>> from flask_saml2.utils import private_key_from_file
+        >>> key = private_key_from_file('tests/keys/sample/idp-private-key.pem')
+        >>> signer = RsaSha1Signer(private_key)
+        >>> signer(b'Hello, world!')
+        'Yplg1oQDPLiozAWoY9ykgQ4eicojNnU+KjRrwGp67jHM5FGkQZ71Pk1Bgo631WA5B1hopQByRh/elqtEEN+vRA=='
     """
+    #: The URI identifing this signing method
     uri: ClassVar[str]
 
-    def __call__(self, data):
+    def __call__(self, data: bytes) -> str:
+        """Sign some binary data and return the string output."""
         raise NotImplementedError
 
 
