@@ -11,7 +11,7 @@ from flask_saml2.utils import get_random_id, utcnow
 from flask_saml2.xml_templates import XmlTemplate
 
 from .parser import AuthnRequestParser, LogoutRequestParser
-from .xml_render import get_response_xml
+from .xml_templates import AssertionTemplate, ResponseTemplate
 
 
 class SPHandler(object):
@@ -27,6 +27,8 @@ class SPHandler(object):
     display_name: str = None
 
     subject_format = 'urn:oasis:names:tc:SAML:2.0:nameid-format:email'
+    assertion_template = AssertionTemplate
+    response_template = ResponseTemplate
 
     def __init__(
         self, idp,
@@ -51,7 +53,7 @@ class SPHandler(object):
             self.display_name = display_name
 
     @property
-    def system_params(self):
+    def common_parameters(self):
         return {
             'ISSUER': self.idp.get_idp_entity_id(),
         }
@@ -66,8 +68,8 @@ class SPHandler(object):
 
         return {
             'ASSERTION_ID': self.get_assertion_id(),
-            'ASSERTION_SIGNATURE': '',  # it's unsigned
             'AUDIENCE': audience,
+            'IN_RESPONSE_TO': request.request_id,
             'AUTH_INSTANT': issue_instant.isoformat(),
             'ISSUE_INSTANT': issue_instant.isoformat(),
             'NOT_BEFORE': (issue_instant + datetime.timedelta(minutes=-3)).isoformat(),
@@ -76,7 +78,7 @@ class SPHandler(object):
             'SP_NAME_QUALIFIER': audience,
             'SUBJECT': self.get_subject(),
             'SUBJECT_FORMAT': self.subject_format,
-            **self.system_params,
+            **self.common_parameters,
             **self.extract_request_parameters(request),
         }
 
@@ -89,7 +91,8 @@ class SPHandler(object):
         return {
             'ISSUE_INSTANT': issue_instant.isoformat(),
             'RESPONSE_ID': self.get_response_id(),
-            **self.system_params,
+            'IN_RESPONSE_TO': request.request_id,
+            **self.common_parameters,
             **self.extract_request_parameters(request),
         }
 
@@ -99,28 +102,32 @@ class SPHandler(object):
         return base64.b64encode(data).decode('utf-8')
 
     def format_assertion(self, assertion_params: dict) -> XmlTemplate:
-        """
-        Makes an :class:`~.xml_templates.XmlTemplate` from `assertion_params`.
-        """
-        raise NotImplementedError
+        """Make a :class:`AssertionTemplate` to respond to this SP."""
+        assertion = self.assertion_template(assertion_params)
+
+        if self.idp.should_sign_responses():
+            assertion.sign(
+                certificate=self.idp.get_idp_certificate(),
+                digester=self.idp.get_idp_digester(),
+                signer=self.idp.get_idp_signer())
+
+        return assertion
 
     def format_response(
         self,
         response_params: dict,
         assertion: XmlTemplate,
     ) -> XmlTemplate:
-        """
-        Formats _response_params as _response_xml.
-        """
-        kwargs = {}
-        if self.idp.should_sign_responses():
-            kwargs.update({
-                'certificate': self.idp.get_idp_certificate(),
-                'signer': self.idp.get_idp_signer(),
-                'digester': self.idp.get_idp_digester(),
-            })
+        """Make a :class:`ResponseTemplate` to respond to this SP."""
+        response = self.response_template(response_params, assertion)
 
-        return get_response_xml(response_params, assertion, **kwargs)
+        if self.idp.should_sign_responses():
+            response.sign(
+                certificate=self.idp.get_idp_certificate(),
+                signer=self.idp.get_idp_signer(),
+                digester=self.idp.get_idp_digester())
+
+        return response
 
     def get_assertion_id(self):
         """Generates an ID for this assertion."""

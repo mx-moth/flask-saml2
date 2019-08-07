@@ -109,7 +109,7 @@ class SamlTestCase:
 
     SP_CONFIG = [
         {
-            'CLASS': 'flask_saml2.idp.sp.demo.SPHandler',
+            'CLASS': 'flask_saml2.idp.SPHandler',
             'OPTIONS': {
                 'entity_id': 'http://sp.example.com/saml/metadata.xml',
                 'acs_url': 'http://sp.example.com/saml/acs/',

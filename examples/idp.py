@@ -75,7 +75,7 @@ app.config['SAML2_IDP'] = {
 }
 app.config['SAML2_SERVICE_PROVIDERS'] = [
     {
-        'CLASS': 'flask_saml2.idp.sp.demo.AttributeSPHandler',
+        'CLASS': 'tests.idp.base.AttributeSPHandler',
         'OPTIONS': {
             'display_name': 'Example Service Provider',
             'entity_id': 'http://localhost:9000/saml/metadata.xml',

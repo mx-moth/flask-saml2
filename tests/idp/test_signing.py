@@ -4,10 +4,8 @@ import attr
 import lxml.etree
 from xmlunittest import XmlTestMixin
 
-from flask_saml2 import signing
-from flask_saml2.idp import xml_render, xml_templates
-from flask_saml2.idp.sp import salesforce
-from flask_saml2.signing import RsaSha1Signer, Sha1Digester
+from flask_saml2.idp.xml_templates import AssertionTemplate, ResponseTemplate
+from flask_saml2.signing import RsaSha1Signer, Sha1Digester, SignatureTemplate
 from flask_saml2.types import XmlNode
 from flask_saml2.utils import (
     certificate_from_file, certificate_from_string, private_key_from_file,
@@ -40,7 +38,6 @@ REQUEST_PARAMS = {
 
 ASSERTION_SALESFORCE_PARAMS = {
     'ASSERTION_ID': '_7ccdda8bc6b328570c03b218d7521772998da45374',
-    'ASSERTION_SIGNATURE': '',  # it's unsigned
     'AUDIENCE': 'example.net',
     'AUTH_INSTANT': '2011-08-11T23:38:34Z',
     'ISSUE_INSTANT': '2011-08-11T23:38:34Z',
@@ -50,7 +47,6 @@ ASSERTION_SALESFORCE_PARAMS = {
     'SP_NAME_QUALIFIER': 'example.net',
     'SUBJECT': 'randomuser@example.com',
     'SUBJECT_FORMAT': 'urn:oasis:names:tc:SAML:2.0:nameid-format:email',
-    '': 'b7HwOJQgKYvhWcrUH17T8WXTY24='
 }
 
 ASSERTION_SALESFORCE_STR = '<saml:Assertion xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" ID="_7ccdda8bc6b328570c03b218d7521772998da45374" IssueInstant="2011-08-11T23:38:34Z" Version="2.0"><saml:Issuer>http://127.0.0.1:8000</saml:Issuer><saml:Subject><saml:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:email" SPNameQualifier="example.net">randomuser@example.com</saml:NameID><saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer"><saml:SubjectConfirmationData InResponseTo="mpjibjdppiodcpciaefmdahiipjpcghdcfjodkbi" NotOnOrAfter="2011-08-11T23:43:34Z" Recipient="https://www.example.net/a/example.com/acs"></saml:SubjectConfirmationData></saml:SubjectConfirmation></saml:Subject><saml:Conditions NotBefore="2011-08-11T23:38:04Z" NotOnOrAfter="2011-08-11T23:43:34Z"><saml:AudienceRestriction><saml:Audience>example.net</saml:Audience></saml:AudienceRestriction></saml:Conditions><saml:AuthnStatement AuthnInstant="2011-08-11T23:38:34Z"><saml:AuthnContext><saml:AuthnContextClassRef>urn:oasis:names:tc:SAML:2.0:ac:classes:Password</saml:AuthnContextClassRef></saml:AuthnContext></saml:AuthnStatement></saml:Assertion>'
@@ -60,12 +56,14 @@ SIGNED_ASSERTION_SALESFORCE = FauxXmlTemplate(SIGNED_ASSERTION_SALESFORCE_STR)
 
 RESPONSE_PARAMS = {
     'ASSERTION': '',
+    'ACS_URL': 'https://www.example.net/a/example.com/acs',
     'ISSUE_INSTANT': '2011-08-11T23:38:34Z',
     'NOT_ON_OR_AFTER': '2011-08-11T23:43:34Z',
     'RESPONSE_ID': '_2972e82c07bb5453956cc11fb19cad97ed26ff8bb4',
     'SP_NAME_QUALIFIER': 'example.net',
     'SUBJECT': 'randomuser@example.com',
     'SUBJECT_FORMAT': 'urn:oasis:names:tc:SAML:2.0:nameid-format:email',
+    'IN_RESPONSE_TO': REQUEST_ID,
 }
 
 RESPONSE_XML = '<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" Destination="https://www.example.net/a/example.com/acs" ID="_2972e82c07bb5453956cc11fb19cad97ed26ff8bb4" InResponseTo="mpjibjdppiodcpciaefmdahiipjpcghdcfjodkbi" IssueInstant="2011-08-11T23:38:34Z" Version="2.0"><saml:Issuer xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion">http://127.0.0.1:8000</saml:Issuer><samlp:Status><samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"></samlp:StatusCode></samlp:Status><saml:Assertion xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" ID="_7ccdda8bc6b328570c03b218d7521772998da45374" IssueInstant="2011-08-11T23:38:34Z" Version="2.0"><saml:Issuer>http://127.0.0.1:8000</saml:Issuer><saml:Subject><saml:NameID Format="urn:oasis:names:tc:SAML:2.0:nameid-format:email" SPNameQualifier="example.net">randomuser@example.com</saml:NameID><saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer"><saml:SubjectConfirmationData InResponseTo="mpjibjdppiodcpciaefmdahiipjpcghdcfjodkbi" NotOnOrAfter="2011-08-11T23:43:34Z" Recipient="https://www.example.net/a/example.com/acs"></saml:SubjectConfirmationData></saml:SubjectConfirmation></saml:Subject><saml:Conditions NotBefore="2011-08-11T23:38:04Z" NotOnOrAfter="2011-08-11T23:43:34Z"><saml:AudienceRestriction><saml:Audience>example.net</saml:Audience></saml:AudienceRestriction></saml:Conditions><saml:AuthnStatement AuthnInstant="2011-08-11T23:38:34Z"><saml:AuthnContext><saml:AuthnContextClassRef>urn:oasis:names:tc:SAML:2.0:ac:classes:Password</saml:AuthnContextClassRef></saml:AuthnContext></saml:AuthnStatement></saml:Assertion></samlp:Response>'
@@ -107,8 +105,8 @@ class XmlTest(unittest.TestCase, XmlTestMixin):
         self.assertXmlEquivalentOutputs(got, exp)
 
     def _test_template(self, template_source, parameters, exp):
-        xml_render._get_in_response_to(parameters)
-        self._test(template_source(parameters).xml, exp)
+        template = template_source(parameters)
+        self._test(template.xml, exp)
 
 
 class TestSigning(XmlTest):
@@ -116,9 +114,10 @@ class TestSigning(XmlTest):
         digester = Sha1Digester()
         signer = RsaSha1Signer(PRIVATE_KEY)
 
-        signature_xml = signing.get_signature_xml(
-            CERTIFICATE, digester, signer, "this is a test", 'abcd' * 10)
-        expected_xml = '<ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:SignedInfo><ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"></ds:CanonicalizationMethod><ds:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"></ds:SignatureMethod><ds:Reference URI="#abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform><ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"></ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod><ds:DigestValue>+ia+Gd5r/5P3C8IwhDTkpEC7rQI=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>t1IywxEzobY8ZyHL+iuB+E3zzVAWByUjRqFTdyNerGbGSRwo0oYWx6hcYX+ST1DTDaQ50gV2PJeibbykFsA3vQ==</ds:SignatureValue><ds:KeyInfo><ds:X509Data><ds:X509Certificate>MIICKzCCAdWgAwIBAgIJAM8DxRNtPj90MA0GCSqGSIb3DQEBBQUAMEUxCzAJBgNVBAYTAkFVMRMwEQYDVQQIEwpTb21lLVN0YXRlMSEwHwYDVQQKExhJbnRlcm5ldCBXaWRnaXRzIFB0eSBMdGQwHhcNMTEwODEyMjA1MTIzWhcNMTIwODExMjA1MTIzWjBFMQswCQYDVQQGEwJBVTETMBEGA1UECBMKU29tZS1TdGF0ZTEhMB8GA1UEChMYSW50ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANcNmgm4YlSUAr2xdWei5aRU/DbWtsQ47gjkv28Ekje3ob+6q0M+D5phwYDcv9ygYmuJ5wOi1cPprsWdFWmvSusCAwEAAaOBpzCBpDAdBgNVHQ4EFgQUzyBR9+vE8bygqvD6CZ/w6aQPikMwdQYDVR0jBG4wbIAUzyBR9+vE8bygqvD6CZ/w6aQPikOhSaRHMEUxCzAJBgNVBAYTAkFVMRMwEQYDVQQIEwpTb21lLVN0YXRlMSEwHwYDVQQKExhJbnRlcm5ldCBXaWRnaXRzIFB0eSBMdGSCCQDPA8UTbT4/dDAMBgNVHRMEBTADAQH/MA0GCSqGSIb3DQEBBQUAA0EAIQuPLA/mlMJAMF680kL7reX5WgyRwAtRzJK6FgNjE7kRaLZQ79UKYVYa0VAyrRdoNEyVhG4tJFEiQJzaLWsl/A==</ds:X509Certificate></ds:X509Data></ds:KeyInfo></ds:Signature>'
+        signature = SignatureTemplate.sign(
+            "this is a test", CERTIFICATE, digester, signer, 'abcd' * 10)
+        signature_xml = signature.xml
+        expected_xml = SIGNATURE_TEMPLATE_STR
         self._test(signature_xml, expected_xml)
 
 
@@ -127,28 +126,25 @@ class TestAssertionSalesForce(XmlTest):
         # This test simply verifies that the template isn't bad.
         params = {
             **IDP_PARAMS,
-            **REQUEST_PARAMS,
             **RESPONSE_PARAMS,
             **ASSERTION_SALESFORCE_PARAMS,
         }
-        self._test_template(salesforce.SalesforceAssertionTemplate, params, ASSERTION_SALESFORCE.get_xml_string())
+        self._test_template(AssertionTemplate, params, ASSERTION_SALESFORCE.get_xml_string())
 
     def test_assertion_rendering(self):
         # Verifies that the xml rendering is OK.
         params = {
             **IDP_PARAMS,
-            **REQUEST_PARAMS,
             **RESPONSE_PARAMS,
             **ASSERTION_SALESFORCE_PARAMS,
         }
-        got = salesforce.get_assertion_xml(parameters=params)
+        got = AssertionTemplate(params)
         self._test(got.xml, ASSERTION_SALESFORCE.get_xml_string())
 
     def test_signed_assertion(self):
         # This test verifies that the assertion got signed properly.
         params = {
             **IDP_PARAMS,
-            **REQUEST_PARAMS,
             **RESPONSE_PARAMS,
             **ASSERTION_SALESFORCE_PARAMS,
         }
@@ -156,21 +152,20 @@ class TestAssertionSalesForce(XmlTest):
         digester = Sha1Digester()
         signer = RsaSha1Signer(PRIVATE_KEY)
 
-        got = salesforce.get_assertion_xml(
-            parameters=params, certificate=CERTIFICATE, signer=signer, digester=digester)
+        got = AssertionTemplate(params)
+        got.sign(certificate=CERTIFICATE, signer=signer, digester=digester)
         self._test(got.xml, SIGNED_ASSERTION_SALESFORCE.get_xml_string())
 
 
 class TestResponse(XmlTest):
     def test_response(self):
         # This test simply verifies that the template isn't bad.
-        params = xml_render._get_in_response_to({
+        params = {
             **IDP_PARAMS,
-            **REQUEST_PARAMS,
             **RESPONSE_PARAMS,
-        })
+        }
 
-        template = xml_templates.ResponseTemplate(params, ASSERTION_SALESFORCE.xml)
+        template = ResponseTemplate(params, ASSERTION_SALESFORCE)
         template.get_xml_string()
         self._test(template.xml, RESPONSE_XML)
 
@@ -178,36 +173,32 @@ class TestResponse(XmlTest):
         # Verifies that the rendering is OK.
         params = {
             **IDP_PARAMS,
-            **REQUEST_PARAMS,
             **RESPONSE_PARAMS,
         }
-        got = xml_render.get_response_xml(params, ASSERTION_SALESFORCE)
+        got = ResponseTemplate(params, ASSERTION_SALESFORCE)
         self._test(got.xml, RESPONSE_XML)
 
     def test_response_with_signed_assertion(self):
         # This test also verifies that the template isn't bad.
         params = {
             **IDP_PARAMS,
-            **REQUEST_PARAMS,
             **RESPONSE_PARAMS,
         }
-        got = xml_render.get_response_xml(params, SIGNED_ASSERTION_SALESFORCE)
+        got = ResponseTemplate(params, SIGNED_ASSERTION_SALESFORCE)
         self._test(got.xml, RESPONSE_WITH_SIGNED_ASSERTION_SALESFORCE_XML)
 
     def test_signed_response_with_signed_assertion(self):
         # This test verifies that the response got signed properly.
         params = {
             **IDP_PARAMS,
-            **REQUEST_PARAMS,
             **RESPONSE_PARAMS,
         }
 
         digester = Sha1Digester()
         signer = RsaSha1Signer(PRIVATE_KEY)
 
-        got = xml_render.get_response_xml(
-            params, SIGNED_ASSERTION_SALESFORCE,
-            certificate=CERTIFICATE, signer=signer, digester=digester)
+        got = ResponseTemplate(params, SIGNED_ASSERTION_SALESFORCE)
+        got.sign(certificate=CERTIFICATE, signer=signer, digester=digester)
         self._test(got.xml, SIGNED_RESPONSE_WITH_SIGNED_ASSERTION_SALESFORCE_XML)
 
 

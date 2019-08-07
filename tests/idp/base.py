@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 from flask import Flask, abort, redirect, url_for
 
 from flask_saml2 import codex
-from flask_saml2.idp import IdentityProvider
+from flask_saml2.idp import IdentityProvider, SPHandler
 from flask_saml2.utils import certificate_from_file, private_key_from_file
 
 
@@ -104,6 +104,16 @@ def create_test_app(idp: IdentityProvider):
     return app
 
 
+class AttributeSPHandler(SPHandler):
+    def build_assertion(self, request, *args, **kwargs):
+        return {
+            **super().build_assertion(request, *args, **kwargs),
+            'ATTRIBUTES': {
+                'foo': 'bar',
+            },
+        }
+
+
 class SamlTestCase:
     """
     Sub-classes must provide these class properties:
@@ -116,14 +126,14 @@ class SamlTestCase:
 
     SP_CONFIG = [
         {
-            'CLASS': 'flask_saml2.idp.sp.demo.SPHandler',
+            'CLASS': 'flask_saml2.idp.SPHandler',
             'OPTIONS': {
                 'entity_id': 'http://example.com/',
                 'acs_url': 'http://127.0.0.1:9000/sp/acs/',
             },
         },
         {
-            'CLASS': 'flask_saml2.idp.sp.demo.AttributeSPHandler',
+            'CLASS': 'tests.idp.base.AttributeSPHandler',
             'OPTIONS': {
                 'entity_id': 'http://example.com/',
                 'acs_url': 'http://127.0.0.1:9000/sp/acs/',

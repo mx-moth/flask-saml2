@@ -5,7 +5,7 @@ import base64
 
 from lxml import etree
 
-from flask_saml2.signing import RsaSha1Signer, Sha1Digester, get_signature_xml
+from flask_saml2.signing import RsaSha1Signer, Sha1Digester, SignatureTemplate
 from flask_saml2.utils import certificate_from_file, private_key_from_file
 
 from . import base
@@ -43,9 +43,10 @@ class TestSalesForceSPHandler(base.BaseSPHandlerTests):
         digester = Sha1Digester()
         signer = RsaSha1Signer(SALESFORCE_PRIVATE_KEY)
 
-        request_xml.insert(1, get_signature_xml(
-            SALESFORCE_CERTIFICATE, digester, signer,
-            base.c14n(request_xml).decode('utf-8'), request_id))
+        signature = SignatureTemplate.sign(
+            base.c14n(request_xml).decode('utf-8'),
+            SALESFORCE_CERTIFICATE, digester, signer, request_id)
+        request_xml.insert(1, signature.xml)
 
         cls.REQUEST_DATA = {
             'SAMLRequest': base64.b64encode(base.c14n(request_xml)).decode('utf-8'),

@@ -11,8 +11,8 @@ import OpenSSL.crypto
 
 from flask_saml2.types import X509, PKey, XmlNode
 
-from . import xml_templates
 from .utils import certificate_to_string
+from .xml_templates import XmlTemplate
 
 logger = logging.getLogger(__name__)
 
@@ -58,43 +58,200 @@ class RsaSha1Signer(Signer):
         return base64.b64encode(data).decode('ascii')
 
 
-def get_signature_xml(
-    certificate: X509,
-    digester: Digester,
-    signer: Signer,
-    subject: str,
-    reference_uri: str,
-) -> XmlNode:
+class SignedInfoTemplate(XmlTemplate):
+    """A ``<SignedInfo>`` node, such as:
+
+    .. code-block:: xml
+
+        <ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+            <ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"></ds:CanonicalizationMethod>
+            <ds:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"></ds:SignatureMethod>
+            <ds:Reference URI="#${REFERENCE_URI}">
+                <ds:Transforms>
+                    <ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform>
+                    <ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"></ds:Transform>
+                </ds:Transforms>
+                <ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod>
+                <ds:DigestValue>${SUBJECT_DIGEST}</ds:DigestValue>
+            </ds:Reference>
+        </ds:SignedInfo>
     """
-    Returns XML Signature for subject.
+    namespace = 'ds'
+
+    def generate_xml(self):
+        return self.element('SignedInfo', children=[
+            self._get_canon_method(),
+            self._get_signature_method(),
+            self._get_reference(),
+        ])
+
+    def _get_canon_method(self):
+        return self.element('CanonicalizationMethod', attrs={
+            'Algorithm': 'http://www.w3.org/2001/10/xml-exc-c14n#'})
+
+    def _get_signature_method(self):
+        return self.element('SignatureMethod', attrs={
+            'Algorithm': self.params['SIGNER'].uri})
+
+    def _get_reference(self):
+        return self.element('Reference', attrs={
+            'URI': '#' + self.params['REFERENCE_URI']
+        }, children=[
+            self._get_tranforms(),
+            self.element('DigestMethod', attrs={
+                'Algorithm': self.params['DIGESTER'].uri,
+            }),
+            self.element('DigestValue', text=self.params['SUBJECT_DIGEST'])
+        ])
+
+    def _get_tranforms(self):
+        return self.element('Transforms', children=[
+            self.element('Transform', attrs={
+                'Algorithm': 'http://www.w3.org/2000/09/xmldsig#enveloped-signature'
+            }),
+            self.element('Transform', attrs={
+                'Algorithm': 'http://www.w3.org/2001/10/xml-exc-c14n#'
+            }),
+        ])
+
     """
-    logger.debug('get_signature_xml - Begin.')
-    logger.debug('Subject: ' + subject)
+    """
 
-    # Hash the subject.
-    subject_digest = digester(subject.encode('utf-8'))
-    logger.debug('Subject digest: {}'.format(subject_digest))
 
-    # Create signed_info.
-    signed_info = xml_templates.SignedInfoTemplate({
-        'REFERENCE_URI': reference_uri,
-        'SUBJECT_DIGEST': subject_digest,
-        'DIGESTER': digester,
-        'SIGNER': signer,
-    })
+class SignatureTemplate(XmlTemplate):
+    """
+    A ``<Signature>`` node, such as:
 
-    signature = signer(signed_info.get_xml_string().encode('utf-8'))
-    logger.debug('Signature: {}'.format(signature))
+    .. code-block:: xml
 
-    # Put the signed_info and rsa_signature into the XML signature.
+        <ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+            ${SIGNED_INFO}
+            <ds:SignatureValue>${RSA_SIGNATURE}</ds:SignatureValue>
+            <ds:KeyInfo>
+                <ds:X509Data>
+                    <ds:X509Certificate>${CERTIFICATE}</ds:X509Certificate>
+                </ds:X509Data>
+            </ds:KeyInfo>
+        </ds:Signature>
+    """
+    namespace = 'ds'
 
-    signature_xml = xml_templates.SignatureTemplate({
-        'SIGNATURE': signature,
-        'SIGNED_INFO': signed_info.xml,
-        'CERTIFICATE': certificate_to_string(certificate),
-    })
+    @classmethod
+    def sign(
+        cls,
+        subject: str,
+        certificate: X509,
+        digester: Digester,
+        signer: Signer,
+        reference_uri: str,
+    ):
+        """Create a :class:`SignatureTemplate` by signing a ``subject`` string.
 
-    return signature_xml.xml
+        :param subject: The string to sign.
+            This is usually the canonical string representation
+            of the XML node this ``<Signature>`` verifies.
+        :param certificate: The certificate to sign the data with
+        :param digester: The algorithm used to make the digest
+        :param signer: The algorithm used to sign the data
+        :param reference_uri: The ID of the element that is signed
+
+        See also: :meth:`SignableTemplate.sign`
+        """
+        logger.debug('SignatureTemplate.sign - Begin.')
+        logger.debug('Subject: ' + subject)
+
+        # Hash the subject.
+        subject_digest = digester(subject.encode('utf-8'))
+        logger.debug('Subject digest: {}'.format(subject_digest))
+
+        # Create signed_info.
+        signed_info = SignedInfoTemplate({
+            'REFERENCE_URI': reference_uri,
+            'SUBJECT_DIGEST': subject_digest,
+            'DIGESTER': digester,
+            'SIGNER': signer,
+        })
+
+        signature = signer(signed_info.get_xml_string().encode('utf-8'))
+        logger.debug('Signature: {}'.format(signature))
+
+        return cls({
+            'SIGNATURE': signature,
+            'SIGNED_INFO': signed_info,
+            'CERTIFICATE': certificate_to_string(certificate),
+        })
+
+    def generate_xml(self):
+        return self.element('Signature', children=[
+            self.params['SIGNED_INFO'].xml,
+            self._get_signature_value(),
+            self._get_key_info(),
+        ])
+
+    def _get_signature_value(self):
+        return self.element('SignatureValue', text=self.params['SIGNATURE'])
+
+    def _get_key_info(self):
+        return self.element('KeyInfo', children=[
+            self.element('X509Data', children=[
+                self.element('X509Certificate', text=self.params['CERTIFICATE'])
+            ])
+        ])
+
+
+class SignableTemplate(XmlTemplate):
+    """
+    An :class:`XmlTemplate` that supports being signed,
+    by adding an :class:`\\<Signauture\\> <SignatureTemplate>` element.
+    """
+    #: The element index where the signature should be inserted
+    signature_index = 1
+
+    #: The parameter that contains the element ID
+    #:
+    #: See :meth:`get_id` and :meth:`sign`
+    id_parameter: str
+
+    def sign(
+        self,
+        certificate: X509,
+        digester: Digester,
+        signer: Signer,
+    ) -> XmlNode:
+        """Cryptographically sign this template by inserting a
+        :class:`\\<Signature\\> <SignatureTemplate>` element.
+
+        The ID of the node to sign is fetched from :meth:`get_id`.
+
+        :param certificate: The certificate to sign the data with
+        :param digester: The algorithm used to make the digest
+        :param signer: The algorithm used to sign the data
+        """
+        signature = self.make_signature(certificate, digester, signer)
+        self.add_signature(signature)
+
+    def make_signature(
+        self,
+        certificate: X509,
+        digester: Digester,
+        signer: Signer,
+    ) -> SignatureTemplate:
+        """
+        Create XML ``<Signature>`` node for the ``subject`` text.
+        """
+        subject = self.get_xml_string()
+        return SignatureTemplate.sign(subject, certificate, digester, signer, self.get_id())
+
+    def add_signature(self, signature: SignatureTemplate):
+        """Insert a :class:`\\<Signature\\> <SignatureTemplate>` into this node.
+        """
+        self.xml.insert(self.signature_index, signature.xml)
+
+    def get_id(self) -> str:
+        """Get the ID of the root node, required to :meth:`sign` this node.
+        By default, grabs the ID from the parameter named in :attr:`id_parameter`.
+        """
+        return self.params[self.id_parameter]
 
 
 def sign_query_parameters(
