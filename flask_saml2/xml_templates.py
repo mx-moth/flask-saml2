@@ -6,6 +6,7 @@ from typing import Iterable, Mapping, Optional
 from lxml import etree
 
 from flask_saml2.types import XmlNode
+from flask_saml2.utils import cached_property
 
 NAMESPACE_MAP: Mapping[str, str] = {  # Namespace map
     'samlp': 'urn:oasis:names:tc:SAML:2.0:protocol',
@@ -18,23 +19,19 @@ NAMESPACE_MAP: Mapping[str, str] = {  # Namespace map
 class XmlTemplate:
 
     namespace = None
-    _xml = None
 
     def __init__(self, params: dict = {}):
         self.params = params.copy()
 
+    @cached_property
+    def xml(self) -> XmlNode:
+        """The XML node this template constructed.
+        Generated using :meth:`generate_xml`.
+        """
+        return self.generate_xml()
+
     def generate_xml(self):
         raise NotImplementedError
-
-    def _get_xml(self) -> XmlNode:
-        if self._xml is None:
-            self._xml = self.generate_xml()
-        return self._xml
-
-    def _set_xml(self, xml: XmlNode):
-        self._xml = xml
-
-    xml = property(_get_xml, _set_xml)
 
     def get_xml_string(self):
         return etree.tostring(self.xml, method='c14n', exclusive=True).decode('utf-8')
