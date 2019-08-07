@@ -1,0 +1,5 @@
+Sphinx~=2.1.2
+sphinx_rtd_theme~=0.4.3
+sphinx-autodoc-typehints~=1.6.0
+inotify~=0.2.10
+sphobjinv~=2.0.0
