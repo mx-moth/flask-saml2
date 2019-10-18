@@ -10,6 +10,7 @@ from flask_saml2.types import X509
 from flask_saml2.utils import get_random_id, utcnow
 from flask_saml2.xml_templates import XmlTemplate
 
+from ..constants import NAMEID_SAML1_1_EMAIL
 from .parser import AuthnRequestParser, LogoutRequestParser
 from .xml_templates import AssertionTemplate, ResponseTemplate
 
@@ -26,7 +27,7 @@ class SPHandler(object):
     certificate: Optional[X509] = None
     display_name: str = None
 
-    subject_format = 'urn:oasis:names:tc:SAML:2.0:nameid-format:email'
+    subject_format = NAMEID_SAML1_1_EMAIL
     assertion_template = AssertionTemplate
     response_template = ResponseTemplate
 

@@ -7,6 +7,7 @@ from flask_saml2.signing import Digester, RsaSha1Signer, Sha1Digester, Signer
 from flask_saml2.types import X509, PKey
 from flask_saml2.utils import certificate_to_string, import_string
 
+from ..constants import NAMEID_EMAIL, NAMEID_SAML1_1_EMAIL
 from .sphandler import SPHandler
 from .views import (
     CannotHandleAssertionView, LoginBegin, LoginProcess, Logout, Metadata,
@@ -28,6 +29,8 @@ class IdentityProvider(Generic[U]):
     """
 
     blueprint_name = 'flask_saml2_idp'
+
+    nameid_format = NAMEID_SAML1_1_EMAIL
 
     # Configuration
 
@@ -96,6 +99,9 @@ class IdentityProvider(Generic[U]):
         """Get the method used to compute digests for the IdP."""
         return Sha1Digester()
 
+    def get_idp_nameid_format(self) -> str:
+        return self.nameid_format
+
     def get_service_providers(self) -> Iterable[Tuple[str, dict]]:
         """
         Get an iterable of service provider ``config`` dicts. ``config`` should
@@ -163,7 +169,7 @@ class IdentityProvider(Generic[U]):
         Subclasses can override this to allow more attributes to be extracted.
         By default, only email addresses are extracted using :meth:`get_user_email`.
         """
-        if attribute == 'urn:oasis:names:tc:SAML:2.0:nameid-format:email':
+        if attribute in NAMEID_EMAIL:
             return self.get_user_email(user)
 
         raise NotImplementedError("Can't fetch attribute {} from user".format(attribute))
@@ -196,6 +202,8 @@ class IdentityProvider(Generic[U]):
         Suggested extra context variables include 'org' and 'contacts'.
         """
         return {
+            'idp': self,
+            'nameid_format': self.get_idp_nameid_format(),
             'entity_id': self.get_idp_entity_id(),
             'certificate': certificate_to_string(self.get_idp_certificate()),
             'slo_url': self.get_slo_url(),

@@ -5,6 +5,8 @@ from flask_saml2.signing import SignableTemplate
 from flask_saml2.types import XmlNode
 from flask_saml2.xml_templates import NameIDTemplate, XmlTemplate
 
+from ..constants import ATTR_SAML2_0_BASIC
+
 
 class AttributeTemplate(XmlTemplate):
     """
@@ -17,11 +19,12 @@ class AttributeTemplate(XmlTemplate):
         </saml:Attribute>
     """
     namespace = 'saml'
+    default_attribute_format = ATTR_SAML2_0_BASIC
 
     def generate_xml(self):
         return self.element('Attribute', attrs={
             'Name': self.params['ATTRIBUTE_NAME'],
-            'NameFormat': 'urn:oasis:names:tc:SAML:2.0:attrname-format:basic',
+            'NameFormat': self.params.get('ATTRIBUTE_FORMAT', self.default_attribute_format),
         }, children=[
             self.element('AttributeValue', text=self.params['ATTRIBUTE_VALUE']),
         ])
