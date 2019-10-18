@@ -206,8 +206,8 @@ class IdentityProvider(Generic[U]):
             'nameid_format': self.get_idp_nameid_format(),
             'entity_id': self.get_idp_entity_id(),
             'certificate': certificate_to_string(self.get_idp_certificate()),
-            'slo_url': self.get_slo_url(),
             'sso_url': self.get_sso_url(),
+            'slo_url': self.get_slo_url(),
             'org': None,
             'contacts': [],
         }
