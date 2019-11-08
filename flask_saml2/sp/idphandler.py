@@ -199,7 +199,7 @@ class IdPHandler:
         if self.sp.should_sign_requests():
             query = sign_query_parameters(self.sp.get_sp_signer(), parameters)
         else:
-            query = urlencode(parameters).encode('utf-8')
+            query = urlencode(parameters)
 
         return f'{url}?{query}'
 
