@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 
 from flask_saml2 import codex
 from flask_saml2.exceptions import CannotHandleAssertion
+from flask_saml2.signing import Digester, Signer
 from flask_saml2.types import X509
 from flask_saml2.utils import get_random_id, utcnow
 from flask_saml2.xml_templates import XmlTemplate
@@ -58,6 +59,22 @@ class SPHandler(object):
             'ISSUER': self.idp.get_idp_entity_id(),
         }
 
+    def get_sp_signer(self) -> Signer:
+        """
+        Get the :class:`~flask_saml2.signing.Signer` to use for this SP.
+        Default to the one used by the IdP. If a particular SP requires
+        a particular signing method, that SP can override it.
+        """
+        return self.idp.get_idp_signer()
+
+    def get_sp_digester(self) -> Digester:
+        """
+        Get the :class:`~flask_saml2.signing.Digester` to use for this SP.
+        Default to the one used by the IdP. If a particular SP requires
+        a particular digest method, that SP can override it.
+        """
+        return self.idp.get_idp_digester()
+
     def build_assertion(
         self,
         request: AuthnRequestParser,
@@ -70,11 +87,11 @@ class SPHandler(object):
             'ASSERTION_ID': self.get_assertion_id(),
             'AUDIENCE': audience,
             'IN_RESPONSE_TO': request.request_id,
-            'AUTH_INSTANT': issue_instant.isoformat(),
-            'ISSUE_INSTANT': issue_instant.isoformat(),
-            'NOT_BEFORE': (issue_instant + datetime.timedelta(minutes=-3)).isoformat(),
-            'NOT_ON_OR_AFTER': (issue_instant + datetime.timedelta(minutes=15)).isoformat(),
-            'SESSION_NOT_ON_OR_AFTER': (issue_instant + datetime.timedelta(hours=8)).isoformat(),
+            'AUTH_INSTANT': self.format_datetime(issue_instant),
+            'ISSUE_INSTANT': self.format_datetime(issue_instant),
+            'NOT_BEFORE': self.format_datetime(issue_instant + datetime.timedelta(minutes=-3)),
+            'NOT_ON_OR_AFTER': self.format_datetime(issue_instant + datetime.timedelta(minutes=15)),
+            'SESSION_NOT_ON_OR_AFTER': self.format_datetime(issue_instant + datetime.timedelta(hours=8)),
             'SP_NAME_QUALIFIER': audience,
             'SUBJECT': self.get_subject(),
             'SUBJECT_FORMAT': self.subject_format,
@@ -89,7 +106,7 @@ class SPHandler(object):
     ) -> dict:
         """Build parameters for the response template."""
         return {
-            'ISSUE_INSTANT': issue_instant.isoformat(),
+            'ISSUE_INSTANT': self.format_datetime(issue_instant),
             'RESPONSE_ID': self.get_response_id(),
             'IN_RESPONSE_TO': request.request_id,
             **self.common_parameters,
@@ -108,8 +125,8 @@ class SPHandler(object):
         if self.idp.should_sign_responses():
             assertion.sign(
                 certificate=self.idp.get_idp_certificate(),
-                digester=self.idp.get_idp_digester(),
-                signer=self.idp.get_idp_signer())
+                digester=self.get_sp_digester(),
+                signer=self.get_sp_signer())
 
         return assertion
 
@@ -124,8 +141,8 @@ class SPHandler(object):
         if self.idp.should_sign_responses():
             response.sign(
                 certificate=self.idp.get_idp_certificate(),
-                signer=self.idp.get_idp_signer(),
-                digester=self.idp.get_idp_digester())
+                signer=self.get_sp_signer(),
+                digester=self.get_sp_digester())
 
         return response
 
@@ -239,6 +256,14 @@ class SPHandler(object):
         redirect_url = urlparse(url)
         return acs_url.netloc == redirect_url.netloc and\
             acs_url.scheme == redirect_url.scheme
+
+    def format_datetime(self, value: datetime.datetime) -> str:
+        """
+        Format a datetime for this SP. Some SPs are picky about their date
+        formatting, and don't support the format produced by
+        :meth:`datetime.datetime.isoformat`.
+        """
+        return value.isoformat()
 
     def __str__(self):
         if self.display_name:
