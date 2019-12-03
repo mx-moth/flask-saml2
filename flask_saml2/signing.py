@@ -102,6 +102,17 @@ class RsaSha1Signer(Signer):
         return base64.b64encode(data).decode('ascii')
 
 
+class RsaSha256Signer(Signer):
+    uri = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
+
+    def __init__(self, key: Union[X509, PKey]):
+        self.key = key
+
+    def __call__(self, data: bytes):
+        data = OpenSSL.crypto.sign(self.key, data, "sha256")
+        return base64.b64encode(data).decode('ascii')
+
+
 class SignedInfoTemplate(XmlTemplate):
     """A ``<SignedInfo>`` node, such as:
 

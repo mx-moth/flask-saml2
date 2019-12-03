@@ -31,6 +31,9 @@ class SPHandler(object):
     assertion_template = AssertionTemplate
     response_template = ResponseTemplate
 
+    # If the Service Provider uses the <AuthnRequest> Destination attribute
+    require_destination = True
+
     def __init__(
         self, idp,
         *,
@@ -202,8 +205,15 @@ class SPHandler(object):
             CannotHandleAssertion: if the ACS URL specified in the SAML request
                 doesn't match the one specified in the SP handler config.
         """
-        if self.idp.get_sso_url() != request.destination:
-            raise CannotHandleAssertion(f'Invalid Destination')
+        if self.require_destination:
+            if request.destination is None:
+                raise CannotHandleAssertion(f'No <AuthnRequest> Destination attribute set')
+            if self.idp.get_sso_url() != request.destination:
+                raise CannotHandleAssertion(
+                    f'Destination mismatch {self.idp.get_sso_url()} != {request.destination}')
+        else:
+            if request.destination is not None:
+                raise CannotHandleAssertion(f'<AuthnRequest> Destination is unexpectedly set')
 
         if self.entity_id != request.issuer:
             raise CannotHandleAssertion(
