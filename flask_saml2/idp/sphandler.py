@@ -205,20 +205,37 @@ class SPHandler(object):
             CannotHandleAssertion: if the ACS URL specified in the SAML request
                 doesn't match the one specified in the SP handler config.
         """
-        if self.require_destination:
-            if request.destination is None:
-                raise CannotHandleAssertion(f'No <AuthnRequest> Destination attribute set')
+
+        self.validate_destination(request)
+        self.validate_entity_id(request)
+        self.validate_acs_url(request)
+
+    def validate_destination(self, request: AuthnRequestParser):
+        """
+        Validate an ``<AuthnRequest>`` Destination attribute, if it is set.
+        """
+        if request.destination is not None:
             if self.idp.get_sso_url() != request.destination:
                 raise CannotHandleAssertion(
                     f'Destination mismatch {self.idp.get_sso_url()} != {request.destination}')
-        else:
-            if request.destination is not None:
-                raise CannotHandleAssertion(f'<AuthnRequest> Destination is unexpectedly set')
+        elif self.require_destination:
+            raise CannotHandleAssertion(f'No <AuthnRequest> Destination attribute set')
 
+    def validate_entity_id(self, request: AuthnRequestParser):
+        """
+        Validate that the ``<AuthnRequest>`` Issuer attribute matches this
+        Service Provider.
+        """
         if self.entity_id != request.issuer:
             raise CannotHandleAssertion(
-                f'EntityID mismatch {self.entity_id} != {request.issuer}')
+                'AuthnRequest Issuer does not match expected Entity ID, '
+                f'{self.entity_id} != {request.issuer}')
 
+    def validate_acs_url(self, request: AuthnRequestParser):
+        """
+        Validate that the ``<AuthnRequest>`` AssertionConsumerServiceURL
+        attribute matches the expected ACS URL for this Service Provider.
+        """
         if self.acs_url != request.acs_url:
             raise CannotHandleAssertion(
                 f'ACS URL mismatch {self.acs_url} != {request.acs_url}')
