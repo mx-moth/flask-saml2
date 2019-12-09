@@ -7,7 +7,7 @@ Identity providers
 When users need to authenticate themselves with a Service Provider (SP),
 the SP will redirect the user to an Identity Provider (IdP).
 The users will authenticate with the Identity Provider,
-and will be redirected back to the Identity Provider with a payload that identifies the user.
+and will be redirected back to the Service Provider with a payload that identifies the user.
 
 Flask SAML2 implements all parts of the IdP workflow,
 except for authenticating your users against your user database
