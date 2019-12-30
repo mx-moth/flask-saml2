@@ -1,3 +1,4 @@
+import datetime
 from typing import Mapping, Optional
 from urllib.parse import urlencode
 
@@ -138,7 +139,7 @@ class IdPHandler:
         """
         return template({
             'REQUEST_ID': get_random_id(),
-            'ISSUE_INSTANT': utcnow().isoformat(),
+            'ISSUE_INSTANT': self.format_datetime(utcnow()),
             'DESTINATION': self.get_idp_sso_url(),
             'ISSUER': self.sp.get_sp_entity_id(),
             'ACS_URL': self.get_sp_acs_url(),
@@ -156,7 +157,7 @@ class IdPHandler:
         """
         return template({
             'REQUEST_ID': get_random_id(),
-            'ISSUE_INSTANT': utcnow().isoformat(),
+            'ISSUE_INSTANT': self.format_datetime(utcnow()),
             'DESTINATION': self.get_idp_slo_url(),
             'ISSUER': self.sp.get_sp_entity_id(),
             'SUBJECT': auth_data.nameid,
@@ -258,6 +259,14 @@ class IdPHandler:
             entity_id = self.sp.get_sp_entity_id()
             if len(audiences) and not any(el.text == entity_id for el in audiences):
                 raise CannotHandleAssertion("No valid AudienceRestriction found")
+
+    def format_datetime(self, value: datetime.datetime) -> str:
+        """
+        Format a datetime for this IdP. Some IdPs are picky about their date
+        formatting, and don't support the format produced by
+        :meth:`datetime.datetime.isoformat`.
+        """
+        return value.isoformat()
 
     def __str__(self):
         if self.display_name:

@@ -25,7 +25,7 @@ class Digester:
     Subclasses should set the :attr:`uri` attribute
     and provide a :meth:`make_digest` method.
 
-    Implemented digest methods: :class:`Sha1Digester`.
+    Implemented digest methods: :class:`Sha1Digester`, :class:`Sha256Digester`.
 
     Example:
 
@@ -55,6 +55,13 @@ class Sha1Digester(Digester):
 
     def make_digest(self, data: bytes) -> bytes:
         return hashlib.sha1(data).digest()
+
+
+class Sha256Digester(Digester):
+    uri = 'http://www.w3.org/2001/04/xmlenc#sha256'
+
+    def make_digest(self, data: bytes) -> bytes:
+        return hashlib.sha256(data).digest()
 
 
 class Signer:
@@ -92,6 +99,17 @@ class RsaSha1Signer(Signer):
 
     def __call__(self, data: bytes):
         data = OpenSSL.crypto.sign(self.key, data, "sha1")
+        return base64.b64encode(data).decode('ascii')
+
+
+class RsaSha256Signer(Signer):
+    uri = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
+
+    def __init__(self, key: Union[X509, PKey]):
+        self.key = key
+
+    def __call__(self, data: bytes):
+        data = OpenSSL.crypto.sign(self.key, data, "sha256")
         return base64.b64encode(data).decode('ascii')
 
 
