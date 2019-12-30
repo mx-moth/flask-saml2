@@ -30,5 +30,5 @@ def make_version_string(version_info):
     return version_str
 
 
-version_info = (0, 2, 1)
+version_info = (0, 3, 0)
 version_str = make_version_string(version_info)
