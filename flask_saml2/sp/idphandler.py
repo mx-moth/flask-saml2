@@ -107,7 +107,6 @@ class IdPHandler:
         ``sp_key_path``, which are paths to an xmlsec1 binary and your sp's key
         for decrypting the attributes
         """
-        super().__init__(**kwargs)
 
         self.sp = sp
         self.entity_id = entity_id
