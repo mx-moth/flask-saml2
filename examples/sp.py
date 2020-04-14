@@ -5,16 +5,9 @@ from flask_saml2.sp import ServiceProvider
 from tests.idp.base import CERTIFICATE as IDP_CERTIFICATE
 from tests.sp.base import CERTIFICATE, PRIVATE_KEY
 
-
-class ExampleServiceProvider(ServiceProvider):
-    def get_logout_return_url(self):
-        return url_for('index', _external=True)
-
-    def get_default_login_return_url(self):
-        return url_for('index', _external=True)
-
-
-sp = ExampleServiceProvider()
+sp = ServiceProvider()
+sp.set_default_login_return_endpoint('index')
+sp.set_logout_return_endpoint('index')
 
 app = Flask(__name__)
 app.debug = True

@@ -34,6 +34,11 @@ class ServiceProvider:
     #: The name of the blueprint to generate.
     blueprint_name = 'flask_saml2_sp'
 
+    scheme = 'http'
+    logout_return_endpoint = None
+    default_login_return_endpoint = None
+    acs_redirect_endpoint = None
+
     def login_successful(
         self,
         auth_data: AuthData,
@@ -153,10 +158,15 @@ class ServiceProvider:
         """
         return url_for(self.blueprint_name + '.metadata', _external=True)
 
+    def set_default_login_return_endpoint(self, endpoint) -> Optional[str]:
+        """Set the default URL to redirect users to once the have logged in.
+        """
+        self.default_login_return_endpoint = endpoint
+
     def get_default_login_return_url(self) -> Optional[str]:
         """The default URL to redirect users to once the have logged in.
         """
-        return None
+        return url_for(self.default_login_return_endpoint, _external=True)
 
     def get_login_return_url(self) -> Optional[str]:
         """Get the URL to redirect the user to now that they have logged in.
@@ -174,10 +184,15 @@ class ServiceProvider:
 
         return None
 
+    def set_logout_return_endpoint(self, endpoint):
+        """Set the URL to redirect the user to now that they have logged out.
+        """
+        self.logout_return_endpoint = endpoint
+
     def get_logout_return_url(self) -> Optional[str]:
         """The URL to redirect users to once they have logged out.
         """
-        return None
+        return url_for(self.logout_return_endpoint, _external=True)
 
     def is_valid_redirect_url(self, url: str) -> str:
         """Is this URL valid and safe to redirect to?
@@ -306,22 +321,41 @@ class ServiceProvider:
             'contacts': [],
         }
 
-    def create_blueprint(self) -> Blueprint:
+    def set_scheme(self, scheme):
+        self.scheme = scheme
+    
+    def get_scheme(self) -> str:
+        return self.scheme
+
+    def set_acs_redirect_endpoint(self, acs_redirect_endpoint):
+        self.acs_redirect_endpoint = acs_redirect_endpoint
+    
+    def get_acs_redirect_endpoint(self) -> str:
+        return self.acs_redirect_endpoint
+
+    #With acs_redirect_url, you can set the url that the Access Consumer Service redirects to upon successful login 
+    #This is unnecessary if you expect a "relay_state" parameter in the SAML request to the ACS
+    def create_blueprint(self, login_endpoint='/login/', login_idp_endpoint='/login/idp/', \
+                        logout_endpoint='/logout/', acs_endpoint='/acs/', sls_endpoint='/sls/', \
+                        metadata_endpoint='/metadata.xml', scheme='http') -> Blueprint:
+
         """Create a Flask :class:`flask.Blueprint` for this Service Provider.
         """
+        self.set_scheme(scheme)
+
         idp_bp = Blueprint(self.blueprint_name, 'flask_saml2.sp', template_folder='templates')
 
-        idp_bp.add_url_rule('/login/', view_func=Login.as_view(
+        idp_bp.add_url_rule(login_endpoint, view_func=Login.as_view(
             'login', sp=self))
-        idp_bp.add_url_rule('/login/idp/', view_func=LoginIdP.as_view(
+        idp_bp.add_url_rule(login_idp_endpoint, view_func=LoginIdP.as_view(
             'login_idp', sp=self))
-        idp_bp.add_url_rule('/logout/', view_func=Logout.as_view(
+        idp_bp.add_url_rule(logout_endpoint, view_func=Logout.as_view(
             'logout', sp=self))
-        idp_bp.add_url_rule('/acs/', view_func=AssertionConsumer.as_view(
+        idp_bp.add_url_rule(acs_endpoint, view_func=AssertionConsumer.as_view(
             'acs', sp=self))
-        idp_bp.add_url_rule('/sls/', view_func=SingleLogout.as_view(
+        idp_bp.add_url_rule(sls_endpoint, view_func=SingleLogout.as_view(
             'sls', sp=self))
-        idp_bp.add_url_rule('/metadata.xml', view_func=Metadata.as_view(
+        idp_bp.add_url_rule(metadata_endpoint, view_func=Metadata.as_view(
             'metadata', sp=self))
 
         idp_bp.register_error_handler(CannotHandleAssertion, CannotHandleAssertionView.as_view(
