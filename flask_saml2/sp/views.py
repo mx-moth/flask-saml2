@@ -80,7 +80,7 @@ class SingleLogout(SAML2View):
 class AssertionConsumer(SAML2View):
     def post(self):
         saml_request = request.form['SAMLResponse']
-        if self.sp.get_acs_redirect_endpoint() == None:
+        if self.sp.get_acs_redirect_endpoint() is None:
             relay_state = request.form['RelayState']
         else:
             relay_state = self.sp.make_absolute_url(self.sp.get_acs_redirect_endpoint())

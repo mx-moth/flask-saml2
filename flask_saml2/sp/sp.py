@@ -166,7 +166,7 @@ class ServiceProvider:
     def get_default_login_return_url(self) -> Optional[str]:
         """The default URL to redirect users to once the have logged in.
         """
-        if self.default_login_return_endpoint!=None:
+        if self.default_login_return_endpoint is not None:
             return url_for(self.default_login_return_endpoint, _external=True)
         return None
 
@@ -194,7 +194,7 @@ class ServiceProvider:
     def get_logout_return_url(self) -> Optional[str]:
         """The URL to redirect users to once they have logged out.
         """
-        if self.logout_return_endpoint!=None:
+        if self.logout_return_endpoint is not None:
             return url_for(self.logout_return_endpoint, _external=True)
         return None
 
@@ -327,21 +327,21 @@ class ServiceProvider:
 
     def set_scheme(self, scheme):
         self.scheme = scheme
-    
+
     def get_scheme(self) -> str:
         return self.scheme
 
     def set_acs_redirect_endpoint(self, acs_redirect_endpoint):
         self.acs_redirect_endpoint = acs_redirect_endpoint
-    
+
     def get_acs_redirect_endpoint(self) -> str:
         return self.acs_redirect_endpoint
 
-    #With acs_redirect_url, you can set the url that the Access Consumer Service redirects to upon successful login 
-    #This is unnecessary if you expect a "relay_state" parameter in the SAML request to the ACS
-    def create_blueprint(self, login_endpoint='/login/', login_idp_endpoint='/login/idp/', \
-                        logout_endpoint='/logout/', acs_endpoint='/acs/', sls_endpoint='/sls/', \
-                        metadata_endpoint='/metadata.xml', scheme='http') -> Blueprint:
+    # With acs_redirect_url, you can set the url that the Access Consumer Service redirects to upon successful login
+    # This is unnecessary if you expect a "relay_state" parameter in the SAML request to the ACS
+    def create_blueprint(self, login_endpoint='/login/', login_idp_endpoint='/login/idp/', 
+                            logout_endpoint='/logout/', acs_endpoint='/acs/', sls_endpoint='/sls/', 
+                            metadata_endpoint='/metadata.xml', scheme='http') -> Blueprint:
 
         """Create a Flask :class:`flask.Blueprint` for this Service Provider.
         """
