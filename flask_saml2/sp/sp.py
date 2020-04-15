@@ -166,7 +166,9 @@ class ServiceProvider:
     def get_default_login_return_url(self) -> Optional[str]:
         """The default URL to redirect users to once the have logged in.
         """
-        return url_for(self.default_login_return_endpoint, _external=True)
+        if self.default_login_return_endpoint!=None:
+            return url_for(self.default_login_return_endpoint, _external=True)
+        return None
 
     def get_login_return_url(self) -> Optional[str]:
         """Get the URL to redirect the user to now that they have logged in.
@@ -192,7 +194,9 @@ class ServiceProvider:
     def get_logout_return_url(self) -> Optional[str]:
         """The URL to redirect users to once they have logged out.
         """
-        return url_for(self.logout_return_endpoint, _external=True)
+        if self.logout_return_endpoint!=None:
+            return url_for(self.logout_return_endpoint, _external=True)
+        return None
 
     def is_valid_redirect_url(self, url: str) -> str:
         """Is this URL valid and safe to redirect to?
