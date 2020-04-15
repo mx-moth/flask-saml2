@@ -339,9 +339,9 @@ class ServiceProvider:
 
     # With acs_redirect_url, you can set the url that the Access Consumer Service redirects to upon successful login
     # This is unnecessary if you expect a "relay_state" parameter in the SAML request to the ACS
-    def create_blueprint(self, login_endpoint='/login/', login_idp_endpoint='/login/idp/', 
-                            logout_endpoint='/logout/', acs_endpoint='/acs/', sls_endpoint='/sls/', 
-                            metadata_endpoint='/metadata.xml', scheme='http') -> Blueprint:
+    def create_blueprint(self, login_endpoint='/login/', login_idp_endpoint='/login/idp/',
+                         logout_endpoint='/logout/', acs_endpoint='/acs/', sls_endpoint='/sls/',
+                         metadata_endpoint='/metadata.xml', scheme='http') -> Blueprint:
 
         """Create a Flask :class:`flask.Blueprint` for this Service Provider.
         """
