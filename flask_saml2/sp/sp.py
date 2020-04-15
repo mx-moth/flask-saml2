@@ -38,6 +38,7 @@ class ServiceProvider:
     logout_return_endpoint = None
     default_login_return_endpoint = None
     acs_redirect_endpoint = None
+    entity_id = None
 
     def login_successful(
         self,
@@ -82,13 +83,19 @@ class ServiceProvider:
         """
         return current_app.config['SAML2_SP']
 
+    def set_sp_entity_id(self, entity_id: str):
+        self.entity_id = entity_id
+
     def get_sp_entity_id(self) -> str:
         """The unique identifier for this Service Provider.
         By default, this uses the metadata URL for this SP.
 
         See :func:`get_metadata_url`.
         """
-        return self.get_metadata_url()
+        if self.entity_id is None:
+            return self.get_metadata_url()
+        else:
+            return self.entity_id
 
     def get_sp_certificate(self) -> Optional[X509]:
         """Get the public certificate for this SP."""
@@ -158,7 +165,7 @@ class ServiceProvider:
         """
         return url_for(self.blueprint_name + '.metadata', _external=True)
 
-    def set_default_login_return_endpoint(self, endpoint) -> Optional[str]:
+    def set_default_login_return_endpoint(self, endpoint: str):
         """Set the default URL to redirect users to once the have logged in.
         """
         self.default_login_return_endpoint = endpoint
@@ -186,7 +193,7 @@ class ServiceProvider:
 
         return None
 
-    def set_logout_return_endpoint(self, endpoint):
+    def set_logout_return_endpoint(self, endpoint: str):
         """Set the URL to redirect the user to now that they have logged out.
         """
         self.logout_return_endpoint = endpoint
