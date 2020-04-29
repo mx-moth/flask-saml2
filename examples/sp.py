@@ -6,8 +6,8 @@ from tests.idp.base import CERTIFICATE as IDP_CERTIFICATE
 from tests.sp.base import CERTIFICATE, PRIVATE_KEY
 
 sp = ServiceProvider()
-sp.set_default_login_return_endpoint('index')
-sp.set_logout_return_endpoint('index')
+sp.default_login_return_endpoint = 'index'
+sp.logout_return_endpoint = 'index'
 
 app = Flask(__name__)
 app.debug = True

@@ -34,10 +34,19 @@ class ServiceProvider:
     #: The name of the blueprint to generate.
     blueprint_name = 'flask_saml2_sp'
 
+    #: Set this to http or https
     scheme = 'http'
+
+    #: Set these to your desired endpoints
     logout_return_endpoint = None
     default_login_return_endpoint = None
     acs_redirect_endpoint = None
+
+    """
+    Set this value to override the default metadata return value
+    of :meth: `get_sp_entity_id`. By setting this, you can return
+    only the entity_id value, rather than the url to the full metadata xml.
+    """
     entity_id = None
 
     def login_successful(
@@ -82,9 +91,6 @@ class ServiceProvider:
         - :func:`~.utils.private_key_from_file`
         """
         return current_app.config['SAML2_SP']
-
-    def set_sp_entity_id(self, entity_id: str):
-        self.entity_id = entity_id
 
     def get_sp_entity_id(self) -> str:
         """The unique identifier for this Service Provider.
@@ -165,11 +171,6 @@ class ServiceProvider:
         """
         return url_for(self.blueprint_name + '.metadata', _external=True)
 
-    def set_default_login_return_endpoint(self, endpoint: str):
-        """Set the default URL to redirect users to once the have logged in.
-        """
-        self.default_login_return_endpoint = endpoint
-
     def get_default_login_return_url(self) -> Optional[str]:
         """The default URL to redirect users to once the have logged in.
         """
@@ -192,11 +193,6 @@ class ServiceProvider:
                 return url
 
         return None
-
-    def set_logout_return_endpoint(self, endpoint: str):
-        """Set the URL to redirect the user to now that they have logged out.
-        """
-        self.logout_return_endpoint = endpoint
 
     def get_logout_return_url(self) -> Optional[str]:
         """The URL to redirect users to once they have logged out.
@@ -332,14 +328,8 @@ class ServiceProvider:
             'contacts': [],
         }
 
-    def set_scheme(self, scheme):
-        self.scheme = scheme
-
     def get_scheme(self) -> str:
         return self.scheme
-
-    def set_acs_redirect_endpoint(self, acs_redirect_endpoint):
-        self.acs_redirect_endpoint = acs_redirect_endpoint
 
     def get_acs_redirect_endpoint(self) -> str:
         return self.acs_redirect_endpoint
@@ -352,7 +342,7 @@ class ServiceProvider:
 
         """Create a Flask :class:`flask.Blueprint` for this Service Provider.
         """
-        self.set_scheme(scheme)
+        self.scheme = scheme
 
         idp_bp = Blueprint(self.blueprint_name, 'flask_saml2.sp', template_folder='templates')
 
