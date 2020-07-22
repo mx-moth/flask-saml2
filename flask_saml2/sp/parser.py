@@ -1,4 +1,4 @@
-from typing import Mapping, Optional, List, Union
+from typing import List, Mapping, Optional, Union
 
 from flask_saml2.types import XmlNode
 from flask_saml2.utils import cached_property
