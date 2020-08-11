@@ -81,15 +81,17 @@ class AssertionConsumer(SAML2View):
         saml_request = request.form['SAMLResponse']
         relay_state = request.form['RelayState']
 
+        print("In ACs")
+        print(saml_request)
+        print(relay_state)
         for handler in self.sp.get_idp_handlers():
+            print(handler)
             try:
                 response = handler.get_response_parser(saml_request)
                 print("got response", response)
                 auth_data = handler.get_auth_data(response)
                 return self.sp.login_successful(auth_data, relay_state)
             except CannotHandleAssertion:
-                print(saml_request)
-                print(relay_state)
                 continue
             except UserNotAuthorized:
                 return self.sp.render_template('flask_saml2_sp/user_not_authorized.html')
