@@ -131,6 +131,7 @@ class ServiceProvider:
 
         Defaults to ``current_app.config['SAML2_IDENTITY_PROVIDERS']``.
         """
+        print(current_app.config)
         return current_app.config['SAML2_IDENTITY_PROVIDERS']
 
     def get_login_url(self) -> str:
