@@ -82,6 +82,7 @@ class AssertionConsumer(SAML2View):
         relay_state = request.form['RelayState']
 
         print("In ACs")
+        print("request", request.form)
         print("saml_request", saml_request)
         print("relay_state", relay_state)
         for handler in self.sp.get_idp_handlers():
