@@ -29,7 +29,6 @@ class AuthData:
         Return a dict of all attributes. You can store this dict in a session
         store, and recreate this instance using :meth:`from_dict`.
         """
-        print("doing to dict", flush=True)
         data = attr.asdict(self, filter=lambda a, v: a.name != 'handler')
         return {
             'data': data,
@@ -42,8 +41,6 @@ class AuthData:
         Construct an :class:`AuthData` instance from a dict such as
         :meth:`to_dict` produces.
         """
-        print("in from dict", flush=True)
-        print("handler data", data['handler'], flush=True)
         return cls(**{
             **data['data'],
             'handler': sp.get_idp_handler_by_entity_id(data['handler']),
@@ -240,9 +237,7 @@ class IdPHandler:
 
     def validate_response(self, response: ResponseParser):
         # Check it came from the right place
-        print("validating response", flush=True)
         if self.entity_id != response.issuer:
-            print("entity id not equal to response.issue", self.entity_id, response.issuer, flush=True)
             raise CannotHandleAssertion(
                 f'Entity ID mismatch {self.entity_id} != {response.issuer}')
 
@@ -253,13 +248,9 @@ class IdPHandler:
             not_on_or_after = response.conditions.get('NotOnOrAfter')
             try:
                 if not_before is not None and now < iso8601.parse_date(not_before):
-                    print(f'NotBefore={not_before} check failed', flush=True)
                     raise CannotHandleAssertion(f'NotBefore={not_before} check failed')
                 if not_on_or_after is not None and now >= iso8601.parse_date(not_on_or_after):
-                    print(f'NotOnOrAfter={not_on_or_after} check failed', flush=True)
-                    raise CannotHandleAssertion(f'NotOnOrAfter={not_on_or_after} check failed')
             except ValueError as err:
-                print(f'could not parse date {not_before} or {not_on_or_after}', flush=True)
                 raise CannotHandleAssertion("Could not parse date") from err
 
             # Validate the AudienceRestriction elements, if they exist
@@ -267,7 +258,6 @@ class IdPHandler:
             entity_id = self.sp.get_sp_entity_id()
             adnc = [el.text for el in audiences]
             if len(audiences) and not any(el.text == entity_id for el in audiences):
-                print("No valid audiences", audiences, entity_id, adnc, flush=True)
                 raise CannotHandleAssertion(f"No valid AudienceRestriction found: {adnc}, {entity_id}")
 
     def format_datetime(self, value: datetime.datetime) -> str:
