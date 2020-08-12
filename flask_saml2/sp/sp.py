@@ -48,6 +48,7 @@ class ServiceProvider:
         Subclasses may override this method and return a different response,
         but they *must* call ``super()``.
         """
+        print("in login success")
         self.set_auth_data_in_session(auth_data)
         return redirect(relay_state)
 
@@ -271,6 +272,7 @@ class ServiceProvider:
         """Store authentication details from the :class:`IdPHandler`
         in the browser session.
         """
+        print("setting auth data in session")
         session[self.session_auth_data_key] = auth_data.to_dict()
 
     def clear_auth_data_in_session(self):

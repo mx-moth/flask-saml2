@@ -29,6 +29,7 @@ class AuthData:
         Return a dict of all attributes. You can store this dict in a session
         store, and recreate this instance using :meth:`from_dict`.
         """
+        print("doing to dict")
         data = attr.asdict(self, filter=lambda a, v: a.name != 'handler')
         return {
             'data': data,
