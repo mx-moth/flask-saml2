@@ -42,6 +42,8 @@ class AuthData:
         Construct an :class:`AuthData` instance from a dict such as
         :meth:`to_dict` produces.
         """
+        print("in from dict")
+        print("handler data", data['handler'])
         return cls(**{
             **data['data'],
             'handler': sp.get_idp_handler_by_entity_id(data['handler']),

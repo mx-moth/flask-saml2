@@ -132,7 +132,6 @@ class ServiceProvider:
 
         Defaults to ``current_app.config['SAML2_IDENTITY_PROVIDERS']``.
         """
-        print(current_app.config)
         return current_app.config['SAML2_IDENTITY_PROVIDERS']
 
     def get_login_url(self) -> str:
@@ -230,6 +229,7 @@ class ServiceProvider:
         for handler in self.get_idp_handlers():
             if handler.entity_id == entity_id:
                 return handler
+        print("NO IDP HANDLER IWTH ENTITY ID")
         raise ValueError(f"No IdP handler with entity ID {entity_id}")
 
     def get_idp_handler_by_current_session(self) -> IdPHandler:
@@ -285,6 +285,7 @@ class ServiceProvider:
         """Get an :class:`AuthData` instance from the session data stored
         for the currently logged in user.
         """
+        print("getting auth data")
         return AuthData.from_dict(self, session[self.session_auth_data_key])
 
     def make_absolute_url(self, url: str) -> str:
