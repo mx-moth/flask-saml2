@@ -266,7 +266,7 @@ class IdPHandler:
             audiences = response._xpath(response.conditions, './saml:AudienceRestriction/saml:Audience')
             entity_id = self.sp.get_sp_entity_id()
             if len(audiences) and not any(el.text == entity_id for el in audiences):
-                print("No valid audiences", audiences, entity_id flush=True)
+                print("No valid audiences", audiences, entity_id, flush=True)
                 raise CannotHandleAssertion("No valid AudienceRestriction found")
 
     def format_datetime(self, value: datetime.datetime) -> str:
