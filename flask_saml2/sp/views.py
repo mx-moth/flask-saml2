@@ -82,12 +82,12 @@ class AssertionConsumer(SAML2View):
         relay_state = request.form['RelayState']
 
         for handler in self.sp.get_idp_handlers():
-            print("handler", handler)
+            print("handler", handler, flush=True)
             try:
                 response = handler.get_response_parser(saml_request)
-                print("got response", response)
+                print("got response", response, flush=True)
                 auth_data = handler.get_auth_data(response)
-                print("got auth data", auth_data)
+                print("got auth data", auth_data, flush=True)
                 return self.sp.login_successful(auth_data, relay_state)
             except CannotHandleAssertion:
                 continue

@@ -48,7 +48,7 @@ class ServiceProvider:
         Subclasses may override this method and return a different response,
         but they *must* call ``super()``.
         """
-        print("in login success")
+        print("in login success", flush=True)
         self.set_auth_data_in_session(auth_data)
         return redirect(relay_state)
 
@@ -229,7 +229,7 @@ class ServiceProvider:
         for handler in self.get_idp_handlers():
             if handler.entity_id == entity_id:
                 return handler
-        print("NO IDP HANDLER IWTH ENTITY ID")
+        print("NO IDP HANDLER IWTH ENTITY ID", flush=True)
         raise ValueError(f"No IdP handler with entity ID {entity_id}")
 
     def get_idp_handler_by_current_session(self) -> IdPHandler:
@@ -272,7 +272,7 @@ class ServiceProvider:
         """Store authentication details from the :class:`IdPHandler`
         in the browser session.
         """
-        print("setting auth data in session")
+        print("setting auth data in session", flush=True)
         session[self.session_auth_data_key] = auth_data.to_dict()
 
     def clear_auth_data_in_session(self):
@@ -285,7 +285,7 @@ class ServiceProvider:
         """Get an :class:`AuthData` instance from the session data stored
         for the currently logged in user.
         """
-        print("getting auth data")
+        print("getting auth data", flush=True)
         return AuthData.from_dict(self, session[self.session_auth_data_key])
 
     def make_absolute_url(self, url: str) -> str:
