@@ -240,7 +240,9 @@ class IdPHandler:
 
     def validate_response(self, response: ResponseParser):
         # Check it came from the right place
+        print("validating response", flush=True)
         if self.entity_id != response.issuer:
+            print("entity id not equal to response.issue", self.entity_id, response.issuer, flush=True)
             raise CannotHandleAssertion(
                 f'Entity ID mismatch {self.entity_id} != {response.issuer}')
 
@@ -251,16 +253,20 @@ class IdPHandler:
             not_on_or_after = response.conditions.get('NotOnOrAfter')
             try:
                 if not_before is not None and now < iso8601.parse_date(not_before):
+                    print(f'NotBefore={not_before} check failed', flush=True)
                     raise CannotHandleAssertion(f'NotBefore={not_before} check failed')
                 if not_on_or_after is not None and now >= iso8601.parse_date(not_on_or_after):
+                    print(f'NotOnOrAfter={not_on_or_after} check failed', flush=True)
                     raise CannotHandleAssertion(f'NotOnOrAfter={not_on_or_after} check failed')
             except ValueError as err:
+                print(f'could not parse date {not_before} or {not_on_or_after}', flush=True)
                 raise CannotHandleAssertion("Could not parse date") from err
 
             # Validate the AudienceRestriction elements, if they exist
             audiences = response._xpath(response.conditions, './saml:AudienceRestriction/saml:Audience')
             entity_id = self.sp.get_sp_entity_id()
             if len(audiences) and not any(el.text == entity_id for el in audiences):
+                print("No valid audiences", audiences, entity_id flush=True)
                 raise CannotHandleAssertion("No valid AudienceRestriction found")
 
     def format_datetime(self, value: datetime.datetime) -> str:

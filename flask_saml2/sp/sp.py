@@ -236,6 +236,7 @@ class ServiceProvider:
         """Get the :class:`IdPHandler` used to authenticate
         the currently logged in user.
         """
+        print("")
         auth_data = self.get_auth_data_in_session()
         return auth_data.handler
 
