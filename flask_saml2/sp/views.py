@@ -81,6 +81,8 @@ class AssertionConsumer(SAML2View):
         saml_request = request.form['SAMLResponse']
         relay_state = request.form['RelayState']
 
+        errors = []
+
         for handler in self.sp.get_idp_handlers():
             print("handler", handler, flush=True)
             try:
@@ -89,10 +91,14 @@ class AssertionConsumer(SAML2View):
                 auth_data = handler.get_auth_data(response)
                 print("got auth data", auth_data, flush=True)
                 return self.sp.login_successful(auth_data, relay_state)
-            except CannotHandleAssertion:
-                continue
+            except CannotHandleAssertion as e:
+                errors.append(e)
             except UserNotAuthorized:
                 return self.sp.render_template('flask_saml2_sp/user_not_authorized.html')
+        error_string = ""
+        for e in errors:
+            error_string = f"{error_string} - {e} \n"
+        return f"Could not log in for various reasons, here is a list of errors encountered: \n {error_string}"
 
 
 class Metadata(SAML2View):
