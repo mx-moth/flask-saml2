@@ -250,6 +250,7 @@ class IdPHandler:
                 if not_before is not None and now < iso8601.parse_date(not_before):
                     raise CannotHandleAssertion(f'NotBefore={not_before} check failed')
                 if not_on_or_after is not None and now >= iso8601.parse_date(not_on_or_after):
+                    raise CannotHandleAssertion(f'NotOnOrAfter={not_on_or_after} check failed')
             except ValueError as err:
                 raise CannotHandleAssertion("Could not parse date") from err
 
