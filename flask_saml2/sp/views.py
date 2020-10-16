@@ -29,6 +29,9 @@ class Login(SAML2View):
         login_next = self.sp.get_login_return_url()
         if handler:
             return redirect(url_for('.login_idp', entity_id=handler.entity_id, next=login_next))
+        handlers = list(self.sp.get_idp_handlers())
+        if len(handlers) == 0:
+            return redirect("/saml/error")
         return self.sp.render_template(
             'flask_saml2_sp/choose_idp.html',
             login_next=login_next,
