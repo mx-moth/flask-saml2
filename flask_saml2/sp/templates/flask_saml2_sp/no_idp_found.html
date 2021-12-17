@@ -1,0 +1,73 @@
+<!doctype html>
+{#
+    This is a placeholder template. You can override this flask_saml2_sp/base.html
+    template to make all the flask_saml2_sp templates fit better into your site's
+    look-and-feel. That may be easier than overriding all the flask_saml2_sp templates
+    individually.
+#}
+<html>
+<head>
+<meta charset="utf-8">
+<title>Synzi SAML Service Provider</title>
+</head>
+<body>
+	<div
+	style="
+	  position: fixed;
+	  top: 0;
+	  left: 0;
+	  width: 100%;
+	  height: 100%;
+	  background-color: #92aad7;
+	  display: flex;
+	  flex-direction: column;
+	  justify-content: center;
+	  align-items: center;
+	"
+  >
+	<h1
+	  style="
+		margin: 0 0 40px 0;
+		font: 36px sans-serif;
+		color: #ffffff;
+		font-weight: 900;
+	  "
+	>
+	  Synzi SSO Processor
+	</h1>
+	<h6
+	  style="
+		margin: 0 0 60px 0;
+		font: 24px sans-serif;
+		color: #ffffff;
+		font-weight: 500;
+	  "
+	>
+	SSO configuration is not valid!
+	</h6>
+
+	<p
+	  style="
+		margin: 0 0 16px 0;
+		margin-bottom: 16px;
+		font: 16px sans-serif;
+		color: #ffffff;
+		font-weight: 300;
+	  "
+	>
+		SSO configuration is not valid.
+		Please confirm you have sent the correct configuration.
+	</p>
+	<p
+	  style="
+		margin: 0;
+		font: 16px sans-serif;
+		color: #ffffff;
+		font-weight: 300;
+	  "
+	>
+	  Please update your request and try again.
+	</p>
+  </div>
+</body>
+</html>

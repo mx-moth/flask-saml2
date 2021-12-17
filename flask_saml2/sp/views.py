@@ -95,7 +95,7 @@ class AssertionConsumer(SAML2View):
                 continue
             except UserNotAuthorized:
                 return self.sp.render_template('flask_saml2_sp/user_not_authorized.html')
-        return None
+        return self.sp.render_template('flask_saml2_sp/no_idp_found.html')
 
 
 
