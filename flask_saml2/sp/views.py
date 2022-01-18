@@ -79,7 +79,7 @@ class SingleLogout(SAML2View):
 class AssertionConsumer(SAML2View):
     def post(self):
         saml_request = request.form['SAMLResponse']
-        relay_state = request.form['RelayState']
+        relay_state = request.form.get('RelayState')
 
         for handler in self.sp.get_idp_handlers():
             try:
