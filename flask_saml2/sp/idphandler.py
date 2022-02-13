@@ -1,6 +1,6 @@
 import datetime
 from typing import Mapping, Optional
-from urllib.parse import urlencode, parse_qsl, urlparse
+from urllib.parse import urlencode, parse_qsl, urlparse, urlunparse
 
 import attr
 import iso8601
