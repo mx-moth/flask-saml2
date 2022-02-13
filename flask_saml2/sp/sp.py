@@ -85,6 +85,10 @@ class ServiceProvider:
         """
         return self.get_metadata_url()
 
+    def get_nameid_format(self) -> str:
+        """Get the NameIDFormat for this SP."""
+        return self.get_sp_config().get('nameid_format')
+
     def get_sp_certificate(self) -> Optional[X509]:
         """Get the public certificate for this SP."""
         return self.get_sp_config().get('certificate')
@@ -302,6 +306,7 @@ class ServiceProvider:
             'acs_url': self.get_acs_url(),
             'entity_id': self.get_sp_entity_id(),
             'certificate': certificate_to_string(self.get_sp_certificate()),
+            'nameid_format': self.get_nameid_format(),
             'org': None,
             'contacts': [],
         }
