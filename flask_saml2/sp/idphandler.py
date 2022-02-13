@@ -1,6 +1,6 @@
 import datetime
 from typing import Mapping, Optional
-from urllib.parse import urlencode
+from urllib.parse import urlencode, parse_qsl, urlparse
 
 import attr
 import iso8601
@@ -204,12 +204,19 @@ class IdPHandler:
         """
         Make a URL to the SAML IdP, signing the query parameters if required.
         """
-        if self.sp.should_sign_requests():
-            query = sign_query_parameters(self.sp.get_sp_signer(), parameters)
-        else:
-            query = urlencode(parameters)
 
-        return f'{url}?{query}'
+        parsed_url = urlparse(url)
+        query_dict = dict(parse_qsl(parsed_url.query)
+        parameter_dict = { k: v for k,v in parameters }
+        parameter_dict.update(query_dict)
+
+        if self.sp.should_sign_requests():
+            query = sign_query_parameters(self.sp.get_sp_signer(), [ (k,v) for k, v in query_dict ])
+        else:
+            query = urlencode(query_dict)
+
+        url = parsed_url._replace(query=query)
+        return f'{url}'
 
     def decode_saml_string(self, saml_string: str) -> bytes:
         """Decode an incoming SAMLResponse into an XML string."""
