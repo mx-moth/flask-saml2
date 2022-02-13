@@ -206,7 +206,7 @@ class IdPHandler:
         """
 
         parsed_url = urlparse(url)
-        query_dict = dict(parse_qsl(parsed_url.query)
+        query_dict = dict(parse_qsl(parsed_url.query))
         parameter_dict = { k: v for k,v in parameters }
         parameter_dict.update(query_dict)
 
