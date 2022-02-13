@@ -1,5 +1,5 @@
 import subprocess
-from typing import Mapping, Optional
+from typing import Mapping, Optional, Union, List
 
 from flask_saml2.types import XmlNode
 from flask_saml2.utils import cached_property
@@ -62,10 +62,20 @@ class ResponseParser(XmlParser):
         return self._xpath(self.subject, 'saml:NameID/@Format')[0]
 
     @cached_property
-    def attributes(self) -> Mapping[str, str]:
+    def attributes(self) -> Mapping[str, Union[str, List[str]]]:
         attributes = self._xpath(self.assertion, 'saml:AttributeStatement/saml:Attribute')
-        return {el.get('Name'): self._xpath(el, 'saml:AttributeValue')[0].text
-                for el in attributes}
+        ret = {}
+        for el in attributes:
+            name = el.get('Name')
+            attrs = self._xpath(el, 'saml:AttributeValue')
+            if len(attrs) == 1:
+                ret[name] = attrs[0].text
+            else:
+                vals = []
+                for a in attrs:
+                    vals.append(a.text)
+                ret[name] = vals
+        return ret
 
     @cached_property
     def conditions(self) -> Optional[XmlNode]:
