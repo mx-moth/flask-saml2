@@ -216,7 +216,7 @@ class IdPHandler:
             query = urlencode(query_dict)
 
         url = parsed_url._replace(query=query)
-        return f'{url}'
+        return urlunparse(url)
 
     def decode_saml_string(self, saml_string: str) -> bytes:
         """Decode an incoming SAMLResponse into an XML string."""
