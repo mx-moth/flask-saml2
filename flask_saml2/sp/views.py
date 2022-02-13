@@ -28,7 +28,8 @@ class Login(SAML2View):
         handler = self.sp.get_default_idp_handler()
         login_next = self.sp.get_login_return_url()
         if handler:
-            return redirect(url_for('.login_idp', entity_id=handler.entity_id, next=login_next))
+            return redirect(url_for('.login_idp', entity_id=handler.entity_id, next=login_next,
+                            _scheme=self.sp.get_scheme(), _external=True))
         return self.sp.render_template(
             'flask_saml2_sp/choose_idp.html',
             login_next=login_next,
@@ -79,9 +80,11 @@ class SingleLogout(SAML2View):
 class AssertionConsumer(SAML2View):
     def post(self):
         saml_request = request.form['SAMLResponse']
-        relay_state = request.form.get('RelayState')
-
         errors = []
+        if self.sp.get_acs_redirect_endpoint() is None:
+            relay_state = request.form['RelayState']
+        else:
+            relay_state = self.sp.make_absolute_url(self.sp.get_acs_redirect_endpoint())
 
         for handler in self.sp.get_idp_handlers():
             try:
