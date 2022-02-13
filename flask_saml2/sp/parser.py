@@ -1,3 +1,4 @@
+import subprocess
 from typing import Mapping, Optional
 
 from flask_saml2.types import XmlNode
@@ -6,6 +7,16 @@ from flask_saml2.xml_parser import XmlParser
 
 
 class ResponseParser(XmlParser):
+    def __init__(self, xml_string, *args, encrypted_attributes=None, **kwargs):
+        super().__init__(xml_string, *args, **kwargs)
+        if encrypted_attributes:
+            xml_string = subprocess.check_output([
+                encrypted_attributes['xmlsec1_path'],
+                '--decrypt',
+                '--privkey-pem', encrypted_attributes['sp_key_path'],
+                '/dev/stdin'], input=xml_string)
+            self.xml_string = xml_string
+            self.xml_tree = self.parse_request(self.xml_string)
 
     def is_signed(self):
         sig = self.xml_tree.xpath('/samlp:Response/ds:Signature', namespaces=self.get_namespace_map())
@@ -36,7 +47,7 @@ class ResponseParser(XmlParser):
 
     @cached_property
     def assertion(self) -> XmlNode:
-        return self._xpath_xml_tree('/samlp:Response/saml:Assertion')[0]
+        return self._xpath_xml_tree('.//saml:Assertion')[0]
 
     @cached_property
     def subject(self) -> XmlNode:
