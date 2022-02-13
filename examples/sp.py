@@ -35,6 +35,11 @@ app.config['SAML2_IDENTITY_PROVIDERS'] = [
             'sso_url': 'http://localhost:8000/saml/login/',
             'slo_url': 'http://localhost:8000/saml/logout/',
             'certificate': IDP_CERTIFICATE,
+            # for decrypting attributes with xmlsec1
+            # 'encrypted_attributes': {
+            #     'xmlsec1_path': 'xmlsec1',
+            #     'sp_key_path': '../testd/keys/sample/sp-private-key.pem',
+            # },
         },
     },
 ]

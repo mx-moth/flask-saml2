@@ -76,6 +76,7 @@ class IdPHandler:
         sso_url: Optional[str] = None,
         slo_url: Optional[str] = None,
         certificate: Optional[X509] = None,
+        encrypted_attributes: Mapping[str, str] = None,
         **kwargs,
     ):
         """
@@ -99,11 +100,17 @@ class IdPHandler:
 
         The ``sso_url``, ``slo_url``, and ``certificate`` can all be found in
         the IdP's metadata.
+
+        ``encrypted_attributes`` is a map with extra configuration for decrypting
+        the saml EncryptedAttributes tag using xmlsec1. this requires installing
+        the xmlsec1 program to work. the map consists of ``xmlsec1_path`` and
+        ``sp_key_path``, which are paths to an xmlsec1 binary and your sp's key
+        for decrypting the attributes
         """
-        super().__init__(**kwargs)
 
         self.sp = sp
         self.entity_id = entity_id
+        self.encrypted_attributes = encrypted_attributes
 
         if display_name is not None:
             self.display_name = display_name
@@ -219,7 +226,8 @@ class IdPHandler:
         """
         return ResponseParser(
             self.decode_saml_string(saml_response),
-            certificate=self.certificate)
+            certificate=self.certificate,
+            encrypted_attributes=self.encrypted_attributes)
 
     def get_auth_data(self, response: ResponseParser) -> AuthData:
         """
