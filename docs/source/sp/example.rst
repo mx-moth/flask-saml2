@@ -4,7 +4,7 @@ Example
 
 To make your application into a Service Provider,
 create a :class:`ServiceProvider` subclass, instantiate it,
-and register it's :class:`~flask.Blueprint`
+and register its :class:`~flask.Blueprint`
 with your :class:`Flask application <flask.Flask>`:
 
 .. code-block:: python
