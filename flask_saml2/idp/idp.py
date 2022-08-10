@@ -31,6 +31,19 @@ class IdentityProvider(Generic[U]):
     blueprint_name = 'flask_saml2_idp'
 
     nameid_format = NAMEID_SAML1_1_EMAIL
+    #: The specific :class:`digest <~flask_saml2.signing.Digester>` method to
+    #: use in this IdP when creating responses.
+    #:
+    #: See also: :meth:`get_idp_digester`,
+    #: :meth:`~.sp.SPHandler.get_sp_digester`.
+    idp_digester_class: Digester = Sha1Digester
+
+    #: The specific :class:`signing <~flask_saml2.signing.Signer>` method to
+    #: use in this IdP when creating responses.
+    #:
+    #: See also: :meth:`get_idp_signer`,
+    #: :meth:`~.sp.SPHandler.get_sp_signer`.
+    idp_signer_class: Signer = RsaSha1Signer
 
     # Configuration
 
@@ -93,11 +106,11 @@ class IdentityProvider(Generic[U]):
         """Get the signing algorithm used by this IdP."""
         private_key = self.get_idp_private_key()
         if private_key is not None:
-            return RsaSha1Signer(private_key)
+            return self.idp_signer_class(private_key)
 
     def get_idp_digester(self) -> Digester:
         """Get the method used to compute digests for the IdP."""
-        return Sha1Digester()
+        return self.idp_digester_class()
 
     def get_idp_nameid_format(self) -> str:
         return self.nameid_format

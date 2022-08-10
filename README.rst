@@ -1,6 +1,11 @@
 flask-saml2
 ===========
 
+.. note::
+    **Looking for maintainers**. This project is unmaintained. The library works, or did when I last used it,
+    but I no longer work on the project this was built for. If you are interested in taking over leadership
+    and maintenance of this project, please get in touch.
+
 .. image:: https://travis-ci.com/timheap/flask-saml2.svg?branch=master
     :target: https://travis-ci.com/timheap/flask-saml2
 .. image:: https://badge.fury.io/py/flask-saml2.svg

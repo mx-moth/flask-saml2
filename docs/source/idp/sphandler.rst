@@ -22,3 +22,6 @@ Some handlers for common Service Providers have been bundled with this project:
 
 .. module:: flask_saml2.idp.sp.google_apps
 .. autoclass:: flask_saml2.idp.sp.google_apps.GoogleAppsSPHandler
+
+.. module:: flask_saml2.idp.sp.dropbox
+.. autoclass:: flask_saml2.idp.sp.dropbox.DropboxSPHandler
