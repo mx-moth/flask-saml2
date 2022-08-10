@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 import logging
+import pathlib
 
 from flask import Flask, abort, redirect, request, session, url_for
 from flask.views import MethodView
 
 from flask_saml2.idp import IdentityProvider
+from flask_saml2.utils import certificate_from_file
 from tests.idp.base import CERTIFICATE, PRIVATE_KEY, User
 from tests.sp.base import CERTIFICATE as SP_CERTIFICATE
 
 logger = logging.getLogger(__name__)
+keys = pathlib.Path(__file__).parent / 'keys'
 
 
 class ExampleIdentityProvider(IdentityProvider):
@@ -26,6 +29,9 @@ class ExampleIdentityProvider(IdentityProvider):
 
     def get_current_user(self):
         return users[session['user']]
+
+    def get_slo_url(self):
+        return None
 
 
 users = {user.username: user for user in [
@@ -82,7 +88,16 @@ app.config['SAML2_SERVICE_PROVIDERS'] = [
             'acs_url': 'http://localhost:9000/saml/acs/',
             'certificate': SP_CERTIFICATE,
         },
-    }
+    },
+    {
+        'CLASS': 'flask_saml2.idp.SPHandler',
+        'OPTIONS': {
+            'display_name': 'samltest.id',
+            'entity_id': 'https://samltest.id/saml/sp',
+            'acs_url': 'https://samltest.id/Shibboleth.sso/SAML2/POST',
+            'certificate': certificate_from_file(keys / 'samltest-sp.key'),
+        }
+    },
 ]
 
 app.add_url_rule('/login/', view_func=Login.as_view('login'))

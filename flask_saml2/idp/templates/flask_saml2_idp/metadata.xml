@@ -15,9 +15,11 @@
         </ds:X509Data>
       </ds:KeyInfo>
     </md:KeyDescriptor>
-    <md:NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:email</md:NameIDFormat>
+    <md:NameIDFormat>{{ nameid_format }}</md:NameIDFormat>
     <md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="{{ sso_url }}"/>
+    {% if slo_url %}
     <md:SingleLogoutService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="{{ slo_url }}"/>
+    {% endif %}
   </md:IDPSSODescriptor>
 {% if org %}
   <md:Organization>
