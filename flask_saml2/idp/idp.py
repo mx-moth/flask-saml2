@@ -3,7 +3,8 @@ from typing import Generic, Iterable, Optional, Tuple, TypeVar
 from flask import Blueprint, current_app, render_template, url_for
 
 from flask_saml2.exceptions import CannotHandleAssertion, UserNotAuthorized
-from flask_saml2.signing import Digester, RsaSha1Signer, Sha1Digester, Signer
+from flask_saml2.signing import (
+    Digester, RsaSha256Signer, Sha256Digester, Signer)
 from flask_saml2.types import X509, PKey
 from flask_saml2.utils import certificate_to_string, import_string
 
@@ -34,14 +35,14 @@ class IdentityProvider(Generic[U]):
     #:
     #: See also: :meth:`get_idp_digester`,
     #: :meth:`~.sp.SPHandler.get_sp_digester`.
-    idp_digester_class: Digester = Sha1Digester
+    idp_digester_class: Digester = Sha256Digester
 
     #: The specific :class:`signing <~flask_saml2.signing.Signer>` method to
     #: use in this IdP when creating responses.
     #:
     #: See also: :meth:`get_idp_signer`,
     #: :meth:`~.sp.SPHandler.get_sp_signer`.
-    idp_signer_class: Signer = RsaSha1Signer
+    idp_signer_class: Signer = RsaSha256Signer
 
     # Configuration
 
