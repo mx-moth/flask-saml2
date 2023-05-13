@@ -7,7 +7,8 @@ from flask import (
     session, url_for)
 
 from flask_saml2.exceptions import CannotHandleAssertion
-from flask_saml2.signing import Digester, RsaSha1Signer, Sha1Digester, Signer
+from flask_saml2.signing import (
+    Digester, RsaSha256Signer, Sha256Digester, Signer)
 from flask_saml2.types import X509, PKey
 from flask_saml2.utils import certificate_to_string, import_string
 
@@ -97,11 +98,11 @@ class ServiceProvider:
         """Get the signing algorithm used by this SP."""
         private_key = self.get_sp_private_key()
         if private_key is not None:
-            return RsaSha1Signer(private_key)
+            return RsaSha256Signer(private_key)
 
     def get_sp_digester(self) -> Digester:
         """Get the digest algorithm used by this SP."""
-        return Sha1Digester()
+        return Sha256Digester()
 
     def should_sign_requests(self) -> bool:
         """

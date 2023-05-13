@@ -27,7 +27,7 @@ setup_kwargs = dict(
         'Flask>=1.0.0',
         'signxml>=2.4.0',
         'lxml>=3.8.0',
-        'pyopenssl<18',
+        'pyopenssl==23.1.1',
         'defusedxml>=0.5.0',
         'pytz>=0',
         'iso8601~=0.1.12',
